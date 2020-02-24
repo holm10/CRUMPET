@@ -103,6 +103,10 @@ class CRUM:
                 # TODO: Correct once energies enter the input deck
                 for j in range(cards[i]+1,cards[i+1],2): # Look between this card and the next: two lines per reactions
                     rname=lines[j].split()[1]   # Name is the second entry on the first line: subcard first entry, discarded
+                    try:
+                        rtype=lines[j].split()[2]
+                    except:
+                        rtype=None
 
                     if rname.upper()=='CUSTOM': # If custom reactions deck, store the filepath, which is the only entry on subcard
                         reactionlist.append(    [   rname, lines[j+1].strip()   ]   ) # Store name and path
