@@ -1,0 +1,589 @@
+Diagnostic reaction matrix for CRUM run in /Users/holma2/Dropbox (Aalto)/Molecules/CRM on 2020-02-21 15:00:04
+
+
+
+======== H(n=1) ========
+H(n=1) DEPLETION:
+                 ['-1.0*UE_IONIZ*[ne]', '-1.0*ADAS_EXCITATION_1-2*[ne]', '-1.0*ADAS_EXCITATION_1-3*[ne]', '-1.0*ADAS_EXCITATION_1-4*[ne]', '-1.0*ADAS_EXCITATION_1-5*[ne]', '-1.0*ADAS_EXCITATION_1-6*[ne]', '-1.0*ADAS_EXCITATION_1-7*[ne]', '-1.0*ADAS_EXCITATION_1-8*[ne]']
+From H2(v=0):
+                 ['+1.0*HYDHEL_2.2.6*[ne]', '+2.0*H2VIBR_2.0l1*[ne]', '+1.0*HYDHEL_2.2.8*[ne]', '+1.0*HYDHEL_2.2.10*[ne]', '+1.0*H2VIBR_2.0l3*[ne]', '+1.0*H2VIBR_2.0l2*[ni]']
+From H2(v=1):
+                 ['+2.0*H2VIBR_2.1l1*[ne]', '+1.0*H2VIBR_2.1l3*[ne]', '+1.0*H2VIBR_2.1l2*[ni]']
+From H2(v=2):
+                 ['+2.0*H2VIBR_2.2l1*[ne]', '+1.0*H2VIBR_2.2l3*[ne]', '+1.0*H2VIBR_2.2l2*[ni]']
+From H2(v=3):
+                 ['+2.0*H2VIBR_2.3l1*[ne]', '+1.0*H2VIBR_2.3l3*[ne]', '+1.0*H2VIBR_2.3l2*[ni]']
+From H2(v=4):
+                 ['+2.0*H2VIBR_2.4l1*[ne]', '+1.0*H2VIBR_2.4l3*[ne]', '+1.0*H2VIBR_2.4l2*[ni]']
+From H2(v=5):
+                 ['+2.0*H2VIBR_2.5l1*[ne]', '+1.0*H2VIBR_2.5l3*[ne]', '+1.0*H2VIBR_2.5l2*[ni]']
+From H2(v=6):
+                 ['+2.0*H2VIBR_2.6l1*[ne]', '+1.0*H2VIBR_2.6l3*[ne]', '+1.0*H2VIBR_2.6l2*[ni]']
+From H2(v=7):
+                 ['+2.0*H2VIBR_2.7l1*[ne]', '+1.0*H2VIBR_2.7l3*[ne]', '+1.0*H2VIBR_2.7l2*[ni]']
+From H2(v=8):
+                 ['+2.0*H2VIBR_2.8l1*[ne]', '+1.0*H2VIBR_2.8l3*[ne]', '+1.0*H2VIBR_2.8l2*[ni]']
+From H2(v=9):
+                 ['+2.0*H2VIBR_2.9l1*[ne]', '+1.0*H2VIBR_2.9l3*[ne]', '+1.0*H2VIBR_2.9l2*[ni]']
+From H2(v=10):
+                 ['+2.0*H2VIBR_2.10l1*[ne]', '+1.0*H2VIBR_2.10l3*[ne]', '+1.0*H2VIBR_2.10l2*[ni]']
+From H2(v=11):
+                 ['+2.0*H2VIBR_2.11l1*[ne]', '+1.0*H2VIBR_2.11l3*[ne]', '+1.0*H2VIBR_2.11l2*[ni]']
+From H2(v=12):
+                 ['+2.0*H2VIBR_2.12l1*[ne]', '+1.0*H2VIBR_2.12l3*[ne]', '+1.0*H2VIBR_2.12l2*[ni]']
+From H2(v=13):
+                 ['+2.0*H2VIBR_2.13l1*[ne]', '+1.0*H2VIBR_2.13l3*[ne]', '+1.0*H2VIBR_2.13l2*[ni]']
+From H2(v=14):
+                 ['+2.0*H2VIBR_2.14l1*[ne]', '+1.0*H2VIBR_2.14l3*[ne]', '+1.0*H2VIBR_2.14l2*[ni]']
+From H(n=2):
+                 ['+1.0*ADAS_RELAXATION_2-1']
+From H(n=3):
+                 ['+1.0*ADAS_RELAXATION_3-1']
+From H(n=4):
+                 ['+1.0*ADAS_RELAXATION_4-1']
+From H(n=5):
+                 ['+1.0*ADAS_RELAXATION_5-1']
+From H(n=6):
+                 ['+1.0*ADAS_RELAXATION_6-1']
+From H(n=7):
+                 ['+1.0*ADAS_RELAXATION_7-1']
+From H(n=8):
+                 ['+1.0*ADAS_RELAXATION_8-1']
+From H2(n=B):
+                 ['+2.0*SAWADA_B-diss']
+From H2(n=C):
+                 ['+2.0*SAWADA_C-diss']
+From H2(n=b):
+                 ['+2.0*SAWADA_b-diss']
+H(n=1) EXTERNAL SOURCE:
+                 ['+1.0*UE_REC*[ne]*[ni]']
+
+
+
+======== H2(v=0) ========
+H2(v=0) DEPLETION:
+                 ['-1.0*HYDHEL_2.2.4*[ne]', '-1.0*HYDHEL_2.2.5*[ne]', '-1.0*HYDHEL_2.2.6*[ne]', '-1.0*H2VIBR_2.0l1*[ne]', '-1.0*HYDHEL_2.2.7*[ne]', '-1.0*HYDHEL_2.2.8*[ne]', '-1.0*H2VIBR_2.0l4*[ne]', '-1.0*HYDHEL_2.2.10*[ne]', '-1.0*H2VIBR_2.0l3*[ne]', '-1.0*H2VIBR_2.0l2*[ni]', '-1.0*HYDHEL_3.2.5*[ni]', '-1.0*H2VIBR_2.0v1*[ne]', '-1.0*SAWADA_0-B*[ne]', '-1.0*SAWADA_0-C*[ne]', '-1.0*SAWADA_X-c*[ne]']
+From H2(v=1):
+                 ['+1.0*H2VIBR_2.1v0*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-0']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-0']
+
+
+
+======== H2+ ========
+H2+ DEPLETION:
+                 []
+From H2(v=0):
+                 ['+1.0*H2VIBR_2.0l4*[ne]', '+1.0*H2VIBR_2.0l2*[ni]', '+1.0*HYDHEL_3.2.5*[ni]']
+From H2(v=1):
+                 ['+1.0*H2VIBR_2.1l4*[ne]', '+1.0*H2VIBR_2.1l2*[ni]']
+From H2(v=2):
+                 ['+1.0*H2VIBR_2.2l4*[ne]', '+1.0*H2VIBR_2.2l2*[ni]']
+From H2(v=3):
+                 ['+1.0*H2VIBR_2.3l4*[ne]', '+1.0*H2VIBR_2.3l2*[ni]']
+From H2(v=4):
+                 ['+1.0*H2VIBR_2.4l4*[ne]', '+1.0*H2VIBR_2.4l2*[ni]']
+From H2(v=5):
+                 ['+1.0*H2VIBR_2.5l4*[ne]', '+1.0*H2VIBR_2.5l2*[ni]']
+From H2(v=6):
+                 ['+1.0*H2VIBR_2.6l4*[ne]', '+1.0*H2VIBR_2.6l2*[ni]']
+From H2(v=7):
+                 ['+1.0*H2VIBR_2.7l4*[ne]', '+1.0*H2VIBR_2.7l2*[ni]']
+From H2(v=8):
+                 ['+1.0*H2VIBR_2.8l4*[ne]', '+1.0*H2VIBR_2.8l2*[ni]']
+From H2(v=9):
+                 ['+1.0*H2VIBR_2.9l4*[ne]', '+1.0*H2VIBR_2.9l2*[ni]']
+From H2(v=10):
+                 ['+1.0*H2VIBR_2.10l4*[ne]', '+1.0*H2VIBR_2.10l2*[ni]']
+From H2(v=11):
+                 ['+1.0*H2VIBR_2.11l4*[ne]', '+1.0*H2VIBR_2.11l2*[ni]']
+From H2(v=12):
+                 ['+1.0*H2VIBR_2.12l4*[ne]', '+1.0*H2VIBR_2.12l2*[ni]']
+From H2(v=13):
+                 ['+1.0*H2VIBR_2.13l4*[ne]', '+1.0*H2VIBR_2.13l2*[ni]']
+From H2(v=14):
+                 ['+1.0*H2VIBR_2.14l4*[ne]', '+1.0*H2VIBR_2.14l2*[ni]']
+
+
+
+======== H2(v=1) ========
+H2(v=1) DEPLETION:
+                 ['-1.0*H2VIBR_2.1l1*[ne]', '-1.0*H2VIBR_2.1l4*[ne]', '-1.0*H2VIBR_2.1l3*[ne]', '-1.0*H2VIBR_2.1l2*[ni]', '-1.0*H2VIBR_2.1v0*[ne]', '-1.0*H2VIBR_2.1v2*[ne]', '-1.0*SAWADA_1-B*[ne]', '-1.0*SAWADA_1-C*[ne]']
+From H2(v=0):
+                 ['+1.0*H2VIBR_2.0v1*[ne]']
+From H2(v=2):
+                 ['+1.0*H2VIBR_2.2v1*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-1']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-1']
+
+
+
+======== H2(v=2) ========
+H2(v=2) DEPLETION:
+                 ['-1.0*H2VIBR_2.2l1*[ne]', '-1.0*H2VIBR_2.2l4*[ne]', '-1.0*H2VIBR_2.2l3*[ne]', '-1.0*H2VIBR_2.2l2*[ni]', '-1.0*H2VIBR_2.2v1*[ne]', '-1.0*H2VIBR_2.2v3*[ne]', '-1.0*SAWADA_2-B*[ne]', '-1.0*SAWADA_2-C*[ne]']
+From H2(v=1):
+                 ['+1.0*H2VIBR_2.1v2*[ne]']
+From H2(v=3):
+                 ['+1.0*H2VIBR_2.3v2*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-2']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-2']
+
+
+
+======== H2(v=3) ========
+H2(v=3) DEPLETION:
+                 ['-1.0*H2VIBR_2.3l1*[ne]', '-1.0*H2VIBR_2.3l4*[ne]', '-1.0*H2VIBR_2.3l3*[ne]', '-1.0*H2VIBR_2.3l2*[ni]', '-1.0*H2VIBR_2.3v2*[ne]', '-1.0*H2VIBR_2.3v4*[ne]', '-1.0*SAWADA_3-B*[ne]', '-1.0*SAWADA_3-C*[ne]']
+From H2(v=2):
+                 ['+1.0*H2VIBR_2.2v3*[ne]']
+From H2(v=4):
+                 ['+1.0*H2VIBR_2.4v3*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-3']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-3']
+
+
+
+======== H2(v=4) ========
+H2(v=4) DEPLETION:
+                 ['-1.0*H2VIBR_2.4l1*[ne]', '-1.0*H2VIBR_2.4l4*[ne]', '-1.0*H2VIBR_2.4l3*[ne]', '-1.0*H2VIBR_2.4l2*[ni]', '-1.0*H2VIBR_2.4v3*[ne]', '-1.0*H2VIBR_2.4v5*[ne]', '-1.0*SAWADA_4-B*[ne]', '-1.0*SAWADA_4-C*[ne]']
+From H2(v=3):
+                 ['+1.0*H2VIBR_2.3v4*[ne]']
+From H2(v=5):
+                 ['+1.0*H2VIBR_2.5v4*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-4']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-4']
+
+
+
+======== H2(v=5) ========
+H2(v=5) DEPLETION:
+                 ['-1.0*H2VIBR_2.5l1*[ne]', '-1.0*H2VIBR_2.5l4*[ne]', '-1.0*H2VIBR_2.5l3*[ne]', '-1.0*H2VIBR_2.5l2*[ni]', '-1.0*H2VIBR_2.5v4*[ne]', '-1.0*H2VIBR_2.5v6*[ne]', '-1.0*SAWADA_5-B*[ne]', '-1.0*SAWADA_5-C*[ne]']
+From H2(v=4):
+                 ['+1.0*H2VIBR_2.4v5*[ne]']
+From H2(v=6):
+                 ['+1.0*H2VIBR_2.6v5*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-5']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-5']
+
+
+
+======== H2(v=6) ========
+H2(v=6) DEPLETION:
+                 ['-1.0*H2VIBR_2.6l1*[ne]', '-1.0*H2VIBR_2.6l4*[ne]', '-1.0*H2VIBR_2.6l3*[ne]', '-1.0*H2VIBR_2.6l2*[ni]', '-1.0*H2VIBR_2.6v5*[ne]', '-1.0*H2VIBR_2.6v7*[ne]', '-1.0*SAWADA_6-B*[ne]', '-1.0*SAWADA_6-C*[ne]']
+From H2(v=5):
+                 ['+1.0*H2VIBR_2.5v6*[ne]']
+From H2(v=7):
+                 ['+1.0*H2VIBR_2.7v6*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-6']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-6']
+
+
+
+======== H2(v=7) ========
+H2(v=7) DEPLETION:
+                 ['-1.0*H2VIBR_2.7l1*[ne]', '-1.0*H2VIBR_2.7l4*[ne]', '-1.0*H2VIBR_2.7l3*[ne]', '-1.0*H2VIBR_2.7l2*[ni]', '-1.0*H2VIBR_2.7v6*[ne]', '-1.0*H2VIBR_2.7v8*[ne]', '-1.0*SAWADA_7-B*[ne]', '-1.0*SAWADA_7-C*[ne]']
+From H2(v=6):
+                 ['+1.0*H2VIBR_2.6v7*[ne]']
+From H2(v=8):
+                 ['+1.0*H2VIBR_2.8v7*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-7']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-7']
+
+
+
+======== H2(v=8) ========
+H2(v=8) DEPLETION:
+                 ['-1.0*H2VIBR_2.8l1*[ne]', '-1.0*H2VIBR_2.8l4*[ne]', '-1.0*H2VIBR_2.8l3*[ne]', '-1.0*H2VIBR_2.8l2*[ni]', '-1.0*H2VIBR_2.8v7*[ne]', '-1.0*H2VIBR_2.8v9*[ne]', '-1.0*SAWADA_8-B*[ne]', '-1.0*SAWADA_8-C*[ne]']
+From H2(v=7):
+                 ['+1.0*H2VIBR_2.7v8*[ne]']
+From H2(v=9):
+                 ['+1.0*H2VIBR_2.9v8*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-8']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-8']
+
+
+
+======== H2(v=9) ========
+H2(v=9) DEPLETION:
+                 ['-1.0*H2VIBR_2.9l1*[ne]', '-1.0*H2VIBR_2.9l4*[ne]', '-1.0*H2VIBR_2.9l3*[ne]', '-1.0*H2VIBR_2.9l2*[ni]', '-1.0*H2VIBR_2.9v8*[ne]', '-1.0*H2VIBR_2.9v10*[ne]', '-1.0*SAWADA_9-B*[ne]', '-1.0*SAWADA_9-C*[ne]']
+From H2(v=8):
+                 ['+1.0*H2VIBR_2.8v9*[ne]']
+From H2(v=10):
+                 ['+1.0*H2VIBR_2.10v9*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-9']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-9']
+
+
+
+======== H2(v=10) ========
+H2(v=10) DEPLETION:
+                 ['-1.0*H2VIBR_2.10l1*[ne]', '-1.0*H2VIBR_2.10l4*[ne]', '-1.0*H2VIBR_2.10l3*[ne]', '-1.0*H2VIBR_2.10l2*[ni]', '-1.0*H2VIBR_2.10v9*[ne]', '-1.0*H2VIBR_2.10v11*[ne]', '-1.0*SAWADA_10-B*[ne]', '-1.0*SAWADA_10-C*[ne]']
+From H2(v=9):
+                 ['+1.0*H2VIBR_2.9v10*[ne]']
+From H2(v=11):
+                 ['+1.0*H2VIBR_2.11v10*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-10']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-10']
+
+
+
+======== H2(v=11) ========
+H2(v=11) DEPLETION:
+                 ['-1.0*H2VIBR_2.11l1*[ne]', '-1.0*H2VIBR_2.11l4*[ne]', '-1.0*H2VIBR_2.11l3*[ne]', '-1.0*H2VIBR_2.11l2*[ni]', '-1.0*H2VIBR_2.11v10*[ne]', '-1.0*H2VIBR_2.11v12*[ne]', '-1.0*SAWADA_11-B*[ne]', '-1.0*SAWADA_11-C*[ne]']
+From H2(v=10):
+                 ['+1.0*H2VIBR_2.10v11*[ne]']
+From H2(v=12):
+                 ['+1.0*H2VIBR_2.12v11*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-11']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-11']
+
+
+
+======== H2(v=12) ========
+H2(v=12) DEPLETION:
+                 ['-1.0*H2VIBR_2.12l1*[ne]', '-1.0*H2VIBR_2.12l4*[ne]', '-1.0*H2VIBR_2.12l3*[ne]', '-1.0*H2VIBR_2.12l2*[ni]', '-1.0*H2VIBR_2.12v11*[ne]', '-1.0*H2VIBR_2.12v13*[ne]', '-1.0*SAWADA_12-B*[ne]', '-1.0*SAWADA_12-C*[ne]']
+From H2(v=11):
+                 ['+1.0*H2VIBR_2.11v12*[ne]']
+From H2(v=13):
+                 ['+1.0*H2VIBR_2.13v12*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-12']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-12']
+
+
+
+======== H2(v=13) ========
+H2(v=13) DEPLETION:
+                 ['-1.0*H2VIBR_2.13l1*[ne]', '-1.0*H2VIBR_2.13l4*[ne]', '-1.0*H2VIBR_2.13l3*[ne]', '-1.0*H2VIBR_2.13l2*[ni]', '-1.0*H2VIBR_2.13v12*[ne]', '-1.0*H2VIBR_2.13v14*[ne]', '-1.0*SAWADA_13-B*[ne]', '-1.0*SAWADA_13-C*[ne]']
+From H2(v=12):
+                 ['+1.0*H2VIBR_2.12v13*[ne]']
+From H2(v=14):
+                 ['+1.0*H2VIBR_2.14v13*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-13']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-13']
+
+
+
+======== H2(v=14) ========
+H2(v=14) DEPLETION:
+                 ['-1.0*H2VIBR_2.14l1*[ne]', '-1.0*H2VIBR_2.14l4*[ne]', '-1.0*H2VIBR_2.14l3*[ne]', '-1.0*H2VIBR_2.14l2*[ni]', '-1.0*H2VIBR_2.14v13*[ne]', '-1.0*SAWADA_14-B*[ne]', '-1.0*SAWADA_14-C*[ne]']
+From H2(v=13):
+                 ['+1.0*H2VIBR_2.13v14*[ne]']
+From H2(n=B):
+                 ['+1.0*SAWADA_B-14']
+From H2(n=C):
+                 ['+1.0*SAWADA_C-14']
+
+
+
+======== H(n=2) ========
+H(n=2) DEPLETION:
+                 ['-1.0*ADAS_EXCITATION_2-3*[ne]', '-1.0*ADAS_EXCITATION_2-4*[ne]', '-1.0*ADAS_EXCITATION_2-5*[ne]', '-1.0*ADAS_EXCITATION_2-6*[ne]', '-1.0*ADAS_EXCITATION_2-7*[ne]', '-1.0*ADAS_EXCITATION_2-8*[ne]', '-1.0*ADAS_RELAXATION_2-1']
+From H(n=1):
+                 ['+1.0*ADAS_EXCITATION_1-2*[ne]']
+From H2(v=0):
+                 ['+1.0*HYDHEL_2.2.6*[ne]', '+2.0*HYDHEL_2.2.7*[ne]']
+From H(n=3):
+                 ['+1.0*ADAS_RELAXATION_3-2']
+From H(n=4):
+                 ['+1.0*ADAS_RELAXATION_4-2']
+From H(n=5):
+                 ['+1.0*ADAS_RELAXATION_5-2']
+From H(n=6):
+                 ['+1.0*ADAS_RELAXATION_6-2']
+From H(n=7):
+                 ['+1.0*ADAS_RELAXATION_7-2']
+From H(n=8):
+                 ['+1.0*ADAS_RELAXATION_8-2']
+
+
+
+======== H(n=3) ========
+H(n=3) DEPLETION:
+                 ['-1.0*ADAS_EXCITATION_3-4*[ne]', '-1.0*ADAS_EXCITATION_3-5*[ne]', '-1.0*ADAS_EXCITATION_3-6*[ne]', '-1.0*ADAS_EXCITATION_3-7*[ne]', '-1.0*ADAS_EXCITATION_3-8*[ne]', '-1.0*ADAS_RELAXATION_3-1', '-1.0*ADAS_RELAXATION_3-2']
+From H(n=1):
+                 ['+1.0*ADAS_EXCITATION_1-3*[ne]']
+From H2(v=0):
+                 ['+1.0*HYDHEL_2.2.8*[ne]']
+From H(n=2):
+                 ['+1.0*ADAS_EXCITATION_2-3*[ne]']
+From H(n=4):
+                 ['+1.0*ADAS_RELAXATION_4-3']
+From H(n=5):
+                 ['+1.0*ADAS_RELAXATION_5-3']
+From H(n=6):
+                 ['+1.0*ADAS_RELAXATION_6-3']
+From H(n=7):
+                 ['+1.0*ADAS_RELAXATION_7-3']
+From H(n=8):
+                 ['+1.0*ADAS_RELAXATION_8-3']
+
+
+
+======== H(n=4) ========
+H(n=4) DEPLETION:
+                 ['-1.0*ADAS_EXCITATION_4-5*[ne]', '-1.0*ADAS_EXCITATION_4-6*[ne]', '-1.0*ADAS_EXCITATION_4-7*[ne]', '-1.0*ADAS_EXCITATION_4-8*[ne]', '-1.0*ADAS_RELAXATION_4-1', '-1.0*ADAS_RELAXATION_4-2', '-1.0*ADAS_RELAXATION_4-3']
+From H(n=1):
+                 ['+1.0*ADAS_EXCITATION_1-4*[ne]']
+From H(n=2):
+                 ['+1.0*ADAS_EXCITATION_2-4*[ne]']
+From H(n=3):
+                 ['+1.0*ADAS_EXCITATION_3-4*[ne]']
+From H(n=5):
+                 ['+1.0*ADAS_RELAXATION_5-4']
+From H(n=6):
+                 ['+1.0*ADAS_RELAXATION_6-4']
+From H(n=7):
+                 ['+1.0*ADAS_RELAXATION_7-4']
+From H(n=8):
+                 ['+1.0*ADAS_RELAXATION_8-4']
+
+
+
+======== H(n=5) ========
+H(n=5) DEPLETION:
+                 ['-1.0*ADAS_EXCITATION_5-6*[ne]', '-1.0*ADAS_EXCITATION_5-7*[ne]', '-1.0*ADAS_EXCITATION_5-8*[ne]', '-1.0*ADAS_RELAXATION_5-1', '-1.0*ADAS_RELAXATION_5-2', '-1.0*ADAS_RELAXATION_5-3', '-1.0*ADAS_RELAXATION_5-4']
+From H(n=1):
+                 ['+1.0*ADAS_EXCITATION_1-5*[ne]']
+From H(n=2):
+                 ['+1.0*ADAS_EXCITATION_2-5*[ne]']
+From H(n=3):
+                 ['+1.0*ADAS_EXCITATION_3-5*[ne]']
+From H(n=4):
+                 ['+1.0*ADAS_EXCITATION_4-5*[ne]']
+From H(n=6):
+                 ['+1.0*ADAS_RELAXATION_6-5']
+From H(n=7):
+                 ['+1.0*ADAS_RELAXATION_7-5']
+From H(n=8):
+                 ['+1.0*ADAS_RELAXATION_8-5']
+
+
+
+======== H(n=6) ========
+H(n=6) DEPLETION:
+                 ['-1.0*ADAS_EXCITATION_6-7*[ne]', '-1.0*ADAS_EXCITATION_6-8*[ne]', '-1.0*ADAS_RELAXATION_6-1', '-1.0*ADAS_RELAXATION_6-2', '-1.0*ADAS_RELAXATION_6-3', '-1.0*ADAS_RELAXATION_6-4', '-1.0*ADAS_RELAXATION_6-5']
+From H(n=1):
+                 ['+1.0*ADAS_EXCITATION_1-6*[ne]']
+From H(n=2):
+                 ['+1.0*ADAS_EXCITATION_2-6*[ne]']
+From H(n=3):
+                 ['+1.0*ADAS_EXCITATION_3-6*[ne]']
+From H(n=4):
+                 ['+1.0*ADAS_EXCITATION_4-6*[ne]']
+From H(n=5):
+                 ['+1.0*ADAS_EXCITATION_5-6*[ne]']
+From H(n=7):
+                 ['+1.0*ADAS_RELAXATION_7-6']
+From H(n=8):
+                 ['+1.0*ADAS_RELAXATION_8-6']
+
+
+
+======== H(n=7) ========
+H(n=7) DEPLETION:
+                 ['-1.0*ADAS_EXCITATION_7-8*[ne]', '-1.0*ADAS_RELAXATION_7-1', '-1.0*ADAS_RELAXATION_7-2', '-1.0*ADAS_RELAXATION_7-3', '-1.0*ADAS_RELAXATION_7-4', '-1.0*ADAS_RELAXATION_7-5', '-1.0*ADAS_RELAXATION_7-6']
+From H(n=1):
+                 ['+1.0*ADAS_EXCITATION_1-7*[ne]']
+From H(n=2):
+                 ['+1.0*ADAS_EXCITATION_2-7*[ne]']
+From H(n=3):
+                 ['+1.0*ADAS_EXCITATION_3-7*[ne]']
+From H(n=4):
+                 ['+1.0*ADAS_EXCITATION_4-7*[ne]']
+From H(n=5):
+                 ['+1.0*ADAS_EXCITATION_5-7*[ne]']
+From H(n=6):
+                 ['+1.0*ADAS_EXCITATION_6-7*[ne]']
+From H(n=8):
+                 ['+1.0*ADAS_RELAXATION_8-7']
+
+
+
+======== H(n=8) ========
+H(n=8) DEPLETION:
+                 ['-1.0*ADAS_RELAXATION_8-1', '-1.0*ADAS_RELAXATION_8-2', '-1.0*ADAS_RELAXATION_8-3', '-1.0*ADAS_RELAXATION_8-4', '-1.0*ADAS_RELAXATION_8-5', '-1.0*ADAS_RELAXATION_8-6', '-1.0*ADAS_RELAXATION_8-7']
+From H(n=1):
+                 ['+1.0*ADAS_EXCITATION_1-8*[ne]']
+From H(n=2):
+                 ['+1.0*ADAS_EXCITATION_2-8*[ne]']
+From H(n=3):
+                 ['+1.0*ADAS_EXCITATION_3-8*[ne]']
+From H(n=4):
+                 ['+1.0*ADAS_EXCITATION_4-8*[ne]']
+From H(n=5):
+                 ['+1.0*ADAS_EXCITATION_5-8*[ne]']
+From H(n=6):
+                 ['+1.0*ADAS_EXCITATION_6-8*[ne]']
+From H(n=7):
+                 ['+1.0*ADAS_EXCITATION_7-8*[ne]']
+
+
+
+======== H2(n=B) ========
+H2(n=B) DEPLETION:
+                 ['-1.0*SAWADA_B-0', '-1.0*SAWADA_B-1', '-1.0*SAWADA_B-2', '-1.0*SAWADA_B-3', '-1.0*SAWADA_B-4', '-1.0*SAWADA_B-5', '-1.0*SAWADA_B-6', '-1.0*SAWADA_B-7', '-1.0*SAWADA_B-8', '-1.0*SAWADA_B-9', '-1.0*SAWADA_B-10', '-1.0*SAWADA_B-11', '-1.0*SAWADA_B-12', '-1.0*SAWADA_B-13', '-1.0*SAWADA_B-14', '-1.0*SAWADA_B-diss']
+From H2(v=0):
+                 ['+1.0*SAWADA_0-B*[ne]']
+From H2(v=1):
+                 ['+1.0*SAWADA_1-B*[ne]']
+From H2(v=2):
+                 ['+1.0*SAWADA_2-B*[ne]']
+From H2(v=3):
+                 ['+1.0*SAWADA_3-B*[ne]']
+From H2(v=4):
+                 ['+1.0*SAWADA_4-B*[ne]']
+From H2(v=5):
+                 ['+1.0*SAWADA_5-B*[ne]']
+From H2(v=6):
+                 ['+1.0*SAWADA_6-B*[ne]']
+From H2(v=7):
+                 ['+1.0*SAWADA_7-B*[ne]']
+From H2(v=8):
+                 ['+1.0*SAWADA_8-B*[ne]']
+From H2(v=9):
+                 ['+1.0*SAWADA_9-B*[ne]']
+From H2(v=10):
+                 ['+1.0*SAWADA_10-B*[ne]']
+From H2(v=11):
+                 ['+1.0*SAWADA_11-B*[ne]']
+From H2(v=12):
+                 ['+1.0*SAWADA_12-B*[ne]']
+From H2(v=13):
+                 ['+1.0*SAWADA_13-B*[ne]']
+From H2(v=14):
+                 ['+1.0*SAWADA_14-B*[ne]']
+From H2(n=EF):
+                 ['+1.0*SAWADA_EF-B']
+
+
+
+======== H2(n=C) ========
+H2(n=C) DEPLETION:
+                 ['-1.0*SAWADA_C-0', '-1.0*SAWADA_C-1', '-1.0*SAWADA_C-2', '-1.0*SAWADA_C-3', '-1.0*SAWADA_C-4', '-1.0*SAWADA_C-5', '-1.0*SAWADA_C-6', '-1.0*SAWADA_C-7', '-1.0*SAWADA_C-8', '-1.0*SAWADA_C-9', '-1.0*SAWADA_C-10', '-1.0*SAWADA_C-11', '-1.0*SAWADA_C-12', '-1.0*SAWADA_C-13', '-1.0*SAWADA_C-14', '-1.0*SAWADA_C-diss']
+From H2(v=0):
+                 ['+1.0*SAWADA_0-C*[ne]']
+From H2(v=1):
+                 ['+1.0*SAWADA_1-C*[ne]']
+From H2(v=2):
+                 ['+1.0*SAWADA_2-C*[ne]']
+From H2(v=3):
+                 ['+1.0*SAWADA_3-C*[ne]']
+From H2(v=4):
+                 ['+1.0*SAWADA_4-C*[ne]']
+From H2(v=5):
+                 ['+1.0*SAWADA_5-C*[ne]']
+From H2(v=6):
+                 ['+1.0*SAWADA_6-C*[ne]']
+From H2(v=7):
+                 ['+1.0*SAWADA_7-C*[ne]']
+From H2(v=8):
+                 ['+1.0*SAWADA_8-C*[ne]']
+From H2(v=9):
+                 ['+1.0*SAWADA_9-C*[ne]']
+From H2(v=10):
+                 ['+1.0*SAWADA_10-C*[ne]']
+From H2(v=11):
+                 ['+1.0*SAWADA_11-C*[ne]']
+From H2(v=12):
+                 ['+1.0*SAWADA_12-C*[ne]']
+From H2(v=13):
+                 ['+1.0*SAWADA_13-C*[ne]']
+From H2(v=14):
+                 ['+1.0*SAWADA_14-C*[ne]']
+
+
+
+======== H2(n=EF) ========
+H2(n=EF) DEPLETION:
+                 ['-1.0*SAWADA_EF-B']
+From H2(v=0):
+                 ['+1.0*HYDHEL_2.2.4*[ne]']
+
+
+
+======== H2(n=a) ========
+H2(n=a) DEPLETION:
+                 ['-1.0*SAWADA_a-b']
+From H2(v=0):
+                 ['+1.0*HYDHEL_2.2.5*[ne]']
+From H2(n=c):
+                 ['+1.0*SAWADA_c-a']
+
+
+
+======== H2(n=b) ========
+H2(n=b) DEPLETION:
+                 ['-1.0*SAWADA_b-diss']
+From H2(n=a):
+                 ['+1.0*SAWADA_a-b']
+
+
+
+======== H2(n=c) ========
+H2(n=c) DEPLETION:
+                 ['-1.0*SAWADA_c-a']
+From H2(v=0):
+                 ['+1.0*SAWADA_X-c*[ne]']
+
+
+
+======== H- ========
+H- DEPLETION:
+                 []
+From H2(v=0):
+                 ['+1.0*H2VIBR_2.0l3*[ne]']
+From H2(v=1):
+                 ['+1.0*H2VIBR_2.1l3*[ne]']
+From H2(v=2):
+                 ['+1.0*H2VIBR_2.2l3*[ne]']
+From H2(v=3):
+                 ['+1.0*H2VIBR_2.3l3*[ne]']
+From H2(v=4):
+                 ['+1.0*H2VIBR_2.4l3*[ne]']
+From H2(v=5):
+                 ['+1.0*H2VIBR_2.5l3*[ne]']
+From H2(v=6):
+                 ['+1.0*H2VIBR_2.6l3*[ne]']
+From H2(v=7):
+                 ['+1.0*H2VIBR_2.7l3*[ne]']
+From H2(v=8):
+                 ['+1.0*H2VIBR_2.8l3*[ne]']
+From H2(v=9):
+                 ['+1.0*H2VIBR_2.9l3*[ne]']
+From H2(v=10):
+                 ['+1.0*H2VIBR_2.10l3*[ne]']
+From H2(v=11):
+                 ['+1.0*H2VIBR_2.11l3*[ne]']
+From H2(v=12):
+                 ['+1.0*H2VIBR_2.12l3*[ne]']
+From H2(v=13):
+                 ['+1.0*H2VIBR_2.13l3*[ne]']
+From H2(v=14):
+                 ['+1.0*H2VIBR_2.14l3*[ne]']
