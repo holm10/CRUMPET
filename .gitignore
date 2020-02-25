@@ -5,3 +5,4 @@ rates/ehr2.dat
 logs/*
 main.py
 *.swp
+.DS_Store
