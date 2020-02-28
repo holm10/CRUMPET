@@ -4,7 +4,7 @@
 # 200205 - Separated from CRUM.py #holm10
 
 class CRM:
-    def __init__(self,species,reactions,settings,path='.'):
+    def __init__(self,species,reactions,settings,path='.',recrad=None,ionizrad=None):
         ''' Creates a CRM class, at the heart of CRUM
             __init__(species,reactions,settings)
 
@@ -30,6 +30,8 @@ class CRM:
         self.Np=settings[1]
         self.n0=settings[2]
         self.path=path
+        self.ionizrad=ionizrad
+        self.recrad=recrad
 
         # Ensure that there is a logs directory under the run path
         try:
@@ -57,8 +59,29 @@ class CRM:
         self.DIAGNOSTIC()
 
         
+    def getS(self,val,reactants,rad,Te,Ti,Tm,E,ne,bg):
+        if isinstance(val,str):  
+            temp=val.replace('erl1','0').replace('erl2','0')
+            temp=temp.replace('Te',str(Te))
+            temp=temp.replace('Ti',str(Ti))
+            temp=temp.replace('Ta',str(Ti))         
+            temp=temp.replace('Tm',str((Tm is not False)*Tm+(Tm is False)*E))
 
-    def populate(self,mode,Te,ne,Ti=None,ni=None,E=0):
+            
+            ext=val.replace('erl1',str(rad*self.ionizrad.rate(Te,Ti,E,ne)))
+            ext=ext.replace('erl2',str(rad*self.recrad.rate(Te,Ti,E,ne)))
+
+            S=(bg in reactants)*eval(temp)
+
+        else:
+            S=(bg in reactants)*val  
+        
+        return(S)
+
+        
+
+
+    def populate(self,mode,Te,ne,Ti=None,ni=None,E=0,rad=True,Sind=None,Tm=False):
         ''' Function populating a matrix according to the chosen mode 
             populate(mode,Te,ne,*keys)
             mode    -   Matrix writing mode
@@ -72,6 +95,7 @@ class CRM:
             Ti (None)   -   Background plasma ion temperature [eV]. Ti=Te assumed if None
             ni (None)   -   Background plasma ion density [cm**-3]. ni=ne assumed if None
             E (0.1)     -   Target particle energy [eV]
+            rad
 
             Returns
             matrix,ext_source
@@ -104,6 +128,25 @@ class CRM:
 
             for r in self.reactions:
                 ''' Sort the species of each reaction into the appropriate column '''
+        
+                ''' Get the energy loss term '''
+                if mode=='S':
+                    if Sind=='el':   # Calc electron loss
+                        S=self.getS(r.S_r,r.reactants,rad,Te,Ti,Tm,E,ne,'e') 
+                    elif Sind=='eg': # Electron interaction radiation
+                        S=self.getS(r.S_g,r.reactants,rad,Te,Ti,Tm,E,ne,'e') 
+                    elif Sind=='eV': # Electron interaction potential
+                        S=self.getS(r.S_V,r.reactants,rad,Te,Ti,Tm,E,ne,'e') 
+                    elif Sind=='pe': # Proton electron energy transfer
+                        S=self.getS(r.S_e,r.reactants,rad,Te,Ti,Tm,E,ne,'p') 
+                    elif Sind=='pg': # Proton interaction radiation
+                        S=self.getS(r.S_g,r.reactants,rad,Te,Ti,Tm,E,ne,'p') 
+                    elif Sind=='pV': # Proton interaction potential
+                        S=self.getS(r.S_V,r.reactants,rad,Te,Ti,Tm,E,ne,'p') 
+                
+                
+
+
                 
                 # TODO: what if three-particle reaction?
                 bg=('e' in r.reactants)*ne+('p' in r.reactants)*ni # Specify density for reactions
@@ -137,6 +180,11 @@ class CRM:
                             ''' Rate matrix '''
                             ret[i,i]-=multiplier*r.rate(Te,Ti,E,ne)*bg # Calculate the rate and store appropriately
 
+                        elif mode=='S':
+                            ''' Energy source matrix '''
+                            # TODO: no self-sink?
+                            ret[i,i]+=multiplier*r.rate(Te,Ti,E,ne)*bg*0 # Calculate the rate and store appropriately
+
                 for frag in range(len(r.fragments)):    # Loop through the reaction fragments
                     ''' SOURCE '''
                     multiplier=r.f_mult[frag]   # Fragment multiplier
@@ -162,6 +210,10 @@ class CRM:
                                     ''' Rate matrix '''
                                     ext_source[i]+=multiplier*r.rate(Te,Ti,E,ne)*bgm
 
+                                elif mode=='S':
+                                    ''' Energy source matrix '''
+                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E,ne)*bgm*S
+
                             else: # No trigger of external source, store to appropriate location in matrix
                                 ''' INTERNAL SOURCE '''
 
@@ -176,6 +228,11 @@ class CRM:
                                 elif mode=='M':
                                     ''' Rate matrix '''
                                     ret[i,j]+=multiplier*r.rate(Te,Ti,E,ne)*bg
+
+                                elif mode=='S':
+                                    ''' Energy loss matrix '''
+                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E,ne)*bg*S
+
 
         return ret,ext_source
 
@@ -204,9 +261,12 @@ class CRM:
             elif char=='M': # Rate matrix is being written
                 f.write('Diagnostic rate (density-dependend) matrix for CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
                 f.write('Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 1/cm**3, E={} eV\n'.format(te,ti,ne,ni,E))
+            elif char=='S': # Rate matrix is being written
+                f.write('Diagnostic energy loss (density-dependend) matrix for CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
+                f.write('Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 1/cm**3, E={} eV\n'.format(te,ti,ne,ni,E))
             
             # Create header line
-            out='{}-MATRIX |'.format(char.upper()) 
+            out='{}-MAT|'.format(char.upper()).rjust(10) 
             for s in self.species:
                 out+=s.rjust(10,' ')
             f.write(out+'\n'+'_'*(1+len(self.species))*10+'\n')
@@ -335,22 +395,110 @@ class CRM:
     
         return M,ext
  
-    def Se(self,Te,ne,Ti=None,ni=None,E=0.1):
+    def S(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,Tm=False,write=False):
         # TODO
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
 
+        Sel,extel=self.populate('S',Te,ne,Ti,ni,E,Sind='el',Tm=Tm)
+        Seg,exteg=self.populate('S',Te,ne,Ti,ni,E,Sind='eg',Tm=Tm)
+        SeV,extev=self.populate('S',Te,ne,Ti,ni,E,Sind='eV',Tm=Tm)
+        Spe,extpe=self.populate('S',Te,ne,Ti,ni,E,Sind='pe',Tm=Tm)
+        Spg,extpg=self.populate('S',Te,ne,Ti,ni,E,Sind='pg',Tm=Tm)
+        SpV,extpv=self.populate('S',Te,ne,Ti,ni,E,Sind='pV',Tm=Tm)
+        
+        if write:
+            self.write_matrix(Sel,extel,'Sel',Te,ne,Ti,ni,E)
+            self.write_matrix(Seg,extel,'Seg',Te,ne,Ti,ni,E)
+            self.write_matrix(SeV,extel,'SeV',Te,ne,Ti,ni,E)
+            self.write_matrix(Spe,extel,'Spe',Te,ne,Ti,ni,E)
+            self.write_matrix(Spg,extel,'Spg',Te,ne,Ti,ni,E)
+            self.write_matrix(SpV,extel,'Spg',Te,ne,Ti,ni,E)
+        
+        return [Sel,Seg,SeV,Spe,Spg,SpV],[extel,exteg,extev,extpe,extpg,extpv]
+    
 
-    def gl_crm(self,Te,ne,Ti=None,ni=None,E=0.1,Sext=True,n=None,matrices=False):
+    def S_gl(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,Sext=True,n=False,Tm=False,write=False):
+        from numpy import matmul,concatenate
+        from numpy.linalg import inv
+
+
+        mat,ext=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
+        
+        U,Uext=self.S(Te,ne,Ti,ni,E,rad,Tm)
+        
+
+        if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
+        
+        # Create block matrix from M
+        MP=mat[:self.Np,:self.Np]
+        MQ=mat[self.Np:,self.Np:]
+        V=mat[self.Np:,:self.Np]
+        H=mat[:self.Np,self.Np:]
+        nP0p=n[:self.Np]-matmul(matmul(H,inv(MQ)),n[self.Np:])
+
+        [Sel,Seg,SeV,Spe,Spg,SpV],[extel,exteg,extev,extpe,extpg,extpv]=self.S(Te,ne,Ti,ni,E,rad,Tm)
+        
+
+        ret=[]
+        for S in [  [Sel+Spe, extel+extpe],                     # e- energy source
+                    [Spe+Spg+SpV-Sel, extpe+extpg+extpv-extel], # Ion/atom energy source
+                    [Seg+Spg, exteg+extpg],                     # Radiation source
+                    [SeV+SpV, extev+extpv]                      # Potential source
+                 ]:
+        
+
+
+            UP=S[0][:self.Np,:self.Np]
+            UQ=S[0][self.Np:,self.Np:]
+            UV=S[0][self.Np:,:self.Np]
+            UH=S[0][:self.Np,self.Np:]
+        
+            P=UP-matmul(UH,matmul(inv(MQ),V))
+            Q=UV-matmul(UQ,matmul(inv(MQ),V))
+
+
+            ret.append([concatenate((P,Q),axis=0),S[1],nP0p])
+        
+        return ret
+        
+    def gl_Et(self,Te,ne,t,Ti=None,ni=None,E=0.1,n=None,Tm=False,rad=True,Sext=True,write=False):
+        from scipy.integrate import solve_ivp 
+        from numpy import pad,array
+
+        def dEdt(t,n,m1,m2,ext): return [m1*n[0]+m2*n[1]+ext,0]
+
+        if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
+        
+        [Sel,Sia,Sg,SV]=self.S_gl(Te,ne,Ti,ni,E,rad,Sext,n,Tm,write) # Set up Greenland model 
+
+        Selt,Siat,Sgt,SVt=[],[],[],[]
+        for i in range(len(Sel[0])):
+            Selt.append(solve_ivp(lambda x,y: dEdt(x,y,Sel[0][i,0],Sel[0][i,1],Sel[1][i]),(0,t),Sel[2]))#,method='LSODA'))
+            Siat.append(solve_ivp(lambda x,y: dEdt(x,y,Sia[0][i,0],Sia[0][i,1],Sia[1][i]),(0,t),Sia[2]))#,method='LSODA'))
+            Sgt.append(solve_ivp(lambda x,y: dEdt(x,y,Sg[0][i,0],Sg[0][i,1],Sg[1][i]),(0,t),Sg[2]))#,method='LSODA'))
+            SVt.append(solve_ivp(lambda x,y: dEdt(x,y,SV[0][i,0],SV[0][i,1],SV[1][i]),(0,t),SV[2]))#,method='LSODA'))
+
+        ret=[]
+        for S in [Selt,Siat,Sgt,SVt]:
+            s=[]
+            for i in range(len(Sel[0])):
+                s.append([array(S[i].t),array(S[i].y[0])])
+            ret.append(S)
+
+        return ret
+        
+       # return  [   solve_ivp(lambda x,y: self.dEdt(x,y,Sel[0],Sel[1]),(0,t),Sel[2],'LSODA'),
+#                    solve_ivp(lambda x,y: self.dndt(x,y,Sia[0],Sia[1]),(0,t),Sia[2],method='LSODA'),
+#                    solve_ivp(lambda x,y: self.dndt(x,y,Sg[0],Sg[1]),(0,t),Sg[2],method='LSODA'),
+#                    solve_ivp(lambda x,y: self.dndt(x,y,SV[0],SV[1]),(0,t),SV[2],method='LSODA')
+       #         ]
+
+    def gl_crm(self,mat,ext,Sext=True,n=None,matrices=False):
         ''' Returns the P-space matrices according to Greenland 2001
-            gl_crm(Te,ne,*keys)
-            Te      -   Background plasma electron temperature [eV]
-            ne      -   Background plasma electron density [cm**-3]
+            gl_crm(ne,*keys)
 
             Optional parameters
-            Ti (None)   -   Background plasma ion temperature [eV]. Ti=Te assumed if None
-            ni (None)   -   Background plasma ion density [cm**-3]. ni=ne assumed if None
-            E (0.1)     -   Target particle energy [eV]
             Sext (True) -   Include external source (from background plasma reactions into CRM species)
             n (None)    -   Initial distribution of particeles, taken as n0 specified in input if None
             matrices (False)    -   Switch determining whether to return the CRM or the matrices
@@ -374,7 +522,6 @@ class CRM:
 
         if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
         
-        mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Generate the rate matrix
 
         # Create block matric from M
         MP=mat[:self.Np,:self.Np]
@@ -409,6 +556,23 @@ class CRM:
         
         if matrices is False:
             return Meff,GPp,nP0p
+
+    def dEdt(self,t,n,mat,ext):
+        ''' Returns the time-derivative of the density for the CRM i
+            dndt(t,n,mat,ext)
+        
+            t   -   Time of evaluation [s]
+            n   -   Vector of initial density distribution [cm**-3]
+            mat -   Rate matrix
+            ext -   External source vector
+        '''
+        from numpy import matmul,zeros
+        ret=zeros((len(mat),))
+
+        print((matmul(mat,n)+ext).shape)
+        ret= matmul(mat,n)+ext
+        return ret
+
 
 
     def dndt(self,t,n,mat,ext):
@@ -446,7 +610,7 @@ class CRM:
 
         if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
         
-        Meff,GPp,nP0p=self.gl_crm(Te,ne,Ti,ni,E,Sext,n) # Set up Greenland model 
+        Meff,GPp,nP0p=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),Sext,n) # Set up Greenland model 
         
         # Solve and return
         return solve_ivp(lambda x,y: self.dndt(x,y,Meff,GPp),(0,t),nP0p,method='LSODA')
@@ -456,7 +620,7 @@ class CRM:
         ''' Generates the optimal CRMs per Greenland 2001 '''
         from numpy import array,where,matmul
         from numpy.linalg import inv
-        M,T,D=self.gl_crm(Te,ne,Ti=Ti,ni=ni,E=E,Sext=Sext,n=n,matrices=True) # Get matrices and eigenvalues/-vectors
+        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),Sext=Sext,n=n,matrices=True) # Get matrices and eigenvalues/-vectors
         # Construct indicator matrix
         I=abs(T)
         I[I<=kappa]=0

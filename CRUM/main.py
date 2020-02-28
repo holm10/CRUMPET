@@ -59,12 +59,12 @@ class CRUM:
         def XY2num(string,X=None,Y=None):
             ''' Replaces 'X' or 'Y' with X and Y, respectively - or both, depending on which is defined '''
 
-            if Y is None:   # If no Y-values, only replace X
-                return string.replace('X',str(X))
-            elif X is None: # If no X-values, only replace y
-                return string.replace('Y',str(Y))
-            elif (X is None) and (Y is None): # No changes requested, return input
+            if (X is None) and (Y is None): # No changes requested, return input
                 return string
+            elif Y is None:   # If no Y-values, only replace X
+                    return string.replace('X',str(X))
+            elif X is None: # If no X-values, only replace y
+                    return string.replace('Y',str(Y))
             else:   # Both X and Y are replaced
                 return string.replace('X',str(X)).replace('Y',str(Y))
 
@@ -77,6 +77,70 @@ class CRUM:
             return string.split(' > ')
 
 
+        def getS(energies,ene,X=None,Y=None):
+            sauces=[k[:3] for k in energies]
+            if 'S_e' not in sauces: S_e=None
+
+            dia=[None,None,None,None]
+            ener_s=[None,None,None,None]
+
+            ret=[0,0,0,0]
+
+            for i in energies:
+                st=XY2num(i,X,Y)
+            if st[:3]=='S_r': ener_s[0]=st
+            elif st[:3]=='S_g': ener_s[1]=st
+            elif st[:3]=='S_V': ener_s[2]=st
+            elif st[:3]=='S_e': ener_s[3]=st
+
+
+            for i in energies:
+                st=XY2num(i,X,Y)
+
+                if i[:3] in ['S_r','S_g','S_V','S_e']:
+                    
+
+                    for v in list(ene.keys())[::-1]:
+                        st=st.replace(str(v),str(ene[v]))
+
+                        
+                    
+                    if i[:3]=='S_r': 
+                        dia[0]=st
+                        try:
+                            exec(st,globals())
+                            ret[0]=S_r
+                        except:
+                            ret[0]=st
+                    elif i[:3]=='S_g':
+                        dia[1]=st
+                        try:
+                            exec(st,globals())
+                            ret[1]=S_g
+                        except:
+                            ret[1]=st
+                    elif i[:3]=='S_V':
+                        dia[2]=st
+                        try:
+                            exec(st,globals())
+                            ret[2]=S_V
+                        except:
+                            ret[2]=st
+                    elif i[:3]=='S_e':
+                        dia[3]=st
+                        try:
+                            exec(st,globals())
+                            ret[3]=S_e
+                        except:
+                            ret[3]=st
+
+             
+            #print(energies)
+            #print(ener_s)
+            #print(dia)
+            #print(ret)
+
+            return ret
 
 
         # Read the input file into a list
@@ -101,18 +165,21 @@ class CRUM:
             elif lines[cards[i]].split()[1].upper()=='REACTIONS':
                 reactionlist=[]
                 # TODO: Correct once energies enter the input deck
-                for j in range(cards[i]+1,cards[i+1],2): # Look between this card and the next: two lines per reactions
-                    rname=lines[j].split()[1]   # Name is the second entry on the first line: subcard first entry, discarded
-                    try:
-                        rtype=lines[j].split()[2]
-                    except:
-                        rtype=None
+#                for j in range(cards[i]+1,cards[i+1],2): # Look between this card and the next: two lines per reactions
+                for k in range(subcards.index(cards[i])+1,subcards.index(cards[i+1])):
+
+                    rname=lines[subcards[k]].split()[1]   # Name is the second entry on the first line: subcard first entry, discarded
 
                     if rname.upper()=='CUSTOM': # If custom reactions deck, store the filepath, which is the only entry on subcard
-                        reactionlist.append(    [   rname, lines[j+1].strip()   ]   ) # Store name and path
+                        reactionlist.append(    [   rname, lines[subcards[k]+1].strip()   ]   ) # Store name and path
 
                     else: # If regular reaction, create two lists with reactants and fragments and unpack
-                        reactionlist.append(    [   rname, *[x.split(' + ') for x in rf(lines[j+1])]    ]   ) # Store name, reactants and framgents
+                        energies=[]
+                        for l in range(subcards[k]+2,subcards[k+1]): # Loop through the lines following the declaration looking for energy sinks/sources
+                            energies.append(lines[l].strip())
+
+                        reactionlist.append(    [   rname, *[x.split(' + ') for x in rf(lines[subcards[k]+1])], energies  ]   ) # Store name, reactants and framgents
+                        
 
 
                 ''' Store the locations of the standard rate data files relative to CWD'''
@@ -168,10 +235,23 @@ class CRUM:
                         continue
 
 
+                ''' Store energies '''
+            elif lines[cards[i]].split()[1].upper()=='ENERGIES':
+                elst,_,_=file2list(path,lines[cards[i]+1].strip())
+                ene=dict() # Dictionary for energy handles
+                for el in elst: # Loop through each line
+                    ene[el.split('=')[0].strip()]=float(el.split('=')[1].strip()) 
+
+                # Make energy handles available within function
+                locals().update(ene) 
+
+
                 ''' Unknown card, abort '''
             else:
                 print('Unknown card "{}": aborting!'.format(lines[cards[i]].split()[1]))
                 return
+
+
          
 
         ''' END CARDS LOOP '''
@@ -181,6 +261,8 @@ class CRUM:
 
         ''' LOOP OVER ALL THE DEFINED REACTIONS '''
         for r in reactionlist:
+
+
 
             # Split the definitions into names and databases
             database=r[0].split('_')[0]
@@ -195,13 +277,18 @@ class CRUM:
                     for y in [-1,1]: # Assume only ladder-like vibrational transitions (dv=+/-1)
                         if x+y in range(vmax+1): # Make sure we do not excite beyond vmax
                             vID=XY2num(ID,x,x+y) # Substitute initial and final state into temporary string
+                            
+                    
+
                             # Create reaction object
                             reactions.append(REACTION(              vID, # Reaction name
                                                                     database, # Reaction database
                                                                     [XY2num(i,x,x+y) for i in r[1]], # Reactant with vib. level numbers
                                                                     [XY2num(i,x,x+y) for i in r[2]], # Product with vib. level numbers
                                                                     self.ratedata.get_coeff(database,vID), # Coefficients of the reaction
-                                                                    'RATE' # Type of reaction
+                                                                    'RATE', # Type of reaction
+                                                                    getS(r[-1],ene,x,x+y)
+                                                                    
                                                         )
                                             )
             
@@ -214,7 +301,9 @@ class CRUM:
                                                             [XY2num(i,x) for i in r[1]], # Reactant with vib. level numbers
                                                             [XY2num(i,x) for i in r[2]], # Product with vib. level numbers
                                                             self.ratedata.get_coeff(database,vID), # Coefficients of the reaction
-                                                            'RATE' # Type of reaction
+                                                            'RATE', # Type of reaction
+                                                            getS(r[-1],ene,x)
+
                                                 )
                                     )
 
@@ -233,18 +322,30 @@ class CRUM:
                     name=data[subc].split()[2]  # What is the name of the reaction - second subcard entry
                     reactants,fragments=rf(data[subc+1])    # Get the reactants and fragments from the second line
 
+                    
+
                     # Identify the type of reaction we are working with
                     ''' v-dependent rate '''
                     if fit=='RATE':
+                        eng=dict()
                         if 'X' in name:
                             # TODO: what if not all vib. states have data?
                             for j in range(vmax+1): # Read data for each vibrational state up to vmax
+                                m=0
+                                engs=[]
+                                while data[m][0]!='v':
+                                    if data[m][0:2]=='S_':
+                                        engs.append(data[m].strip()) 
+                                    m+=1
+                                    
+
                                 reactions.append(REACTION(              XY2num(name,j), # Name
                                                                         database_use,   # Database
                                                                         XY2num(reactants,j).split(' + '), # Reactants w/ v-level number
                                                                         XY2num(fragments,j).split(' + '), # Products w/ v-level number
-                                                                        [float(x) for x in data[subc+3+j*2].split()], # Coefficients for v-level
-                                                                        'RATE'  # Type of reaction
+                                                                        [float(x) for x in data[subc+m+j*2].split()], # Coefficients for v-level
+                                                                        'RATE',  # Type of reaction
+                                                                        getS(engs,ene,j)
                                                                     )
                                                      )
                         # TODO: what if non-v dependent rate?
@@ -253,35 +354,59 @@ class CRUM:
                     elif fit=='COEFFICIENT':
                         if 'X' in name: # v-dependent rate
                             # TODO: what if not all vib. states have data?
+                            m=2
+                            engs=[]
+                            while data[subc+m][:2]=='S_':
+                                engs.append(data[subc+m].strip()) 
+                                m+=1
+
                             for j in range(vmax+1): # Read data for each vibrational state up to vmax
+                                    
+
+
+
                                 reactions.append(REACTION(          XY2num(name,j), # Name
                                                                     database_use,   # Database
                                                                     XY2num(reactants,j).split(' + '), # Reactants w/ v-level number
                                                                     XY2num(fragments,j).split(' + '), # Products w/ v-level number
-                                                                    float(data[subc+2+j].split()[1]), # Transition coefficient for v-level
-                                                                    'COEFFICIENT' # Type of reaction
+                                                                    float(data[subc+m+j].split()[1]), # Transition coefficient for v-level
+                                                                    'COEFFICIENT', # Type of reaction
+                                                                    getS(engs,ene,j)
                                                                    )
                                                      )
                         else: # Other transition
+                            m=2
+                            engs=[]
+                            while data[subc+m][:2]=='S_':
+                                engs.append(data[subc+m].strip()) 
+                                m+=1
+                                    
                             reactions.append(REACTION(              name,           # Name 
                                                                     database_use,   # Database
                                                                     reactants.split(' + '), # Reactants
                                                                     fragments.split(' + '), # Fragments
-                                                                    float(data[subc+2]),    # Transition coefficient
-                                                                    'COEFFICIENT'   # Type of reaction
+                                                                    float(data[subc+m]),    # Transition coefficient
+                                                                    'COEFFICIENT',   # Type of reaction
+                                                                    getS(engs,ene)
                                                                 )
                                                  )
 
                         ''' Cross-section '''
                     elif fit=='SIGMA':
+                        m=2
+                        engs=[]
+                        while data[subc+m][:2]=='S_':
+                            engs.append(data[subc+m].strip()) 
+                            m+=1
                         # TODO: extend definitions of cross-section
                         # Presently assumes SAWADA-like cross-section definition
                         reactions.append(REACTION(              name,           # Name
                                                                 database_use,   # Database
                                                                 reactants.split(' + '), # Reactants
                                                                 fragments.split(' + '), # Fragments
-                                                                [float(x) for x in data[subc+2].split()], # SAWADA cross-section parameters
-                                                                'SIGMA' # Type of reaction
+                                                                [float(x) for x in data[subc+m].split()], # SAWADA cross-section parameters
+                                                                'SIGMA', # Type of reaction
+                                                                getS(engs,ene)
                                                             )
                                              )
                     else:
@@ -313,6 +438,7 @@ class CRUM:
                                                                     [XY2num(i,x,y) for i in r[2]],  # Fragments
                                                                     self.ratedata.get_coeff(database,'{}-{}'.format(x,y)),  # Get transition coefficient
                                                                     fit,    # Reaction type
+                                                                    getS(r[-1],ene,x,y),
                                                                     Tarr    # Temperature array for interpolation
                                                                 )
                                                  )
@@ -325,19 +451,25 @@ class CRUM:
                                                         r[1],       # Reactants
                                                         r[2],       # Fragments
                                                         self.ratedata.get_coeff(database,ID),   # Get coefficients
-                                                        'UE'        # Reaction type
+                                                        'UE',        # Reaction type
+                                                        getS(r[-1],ene)
                                                    )
                                      )
                             
                     
                 ''' EIRENE rates '''
             elif database.upper() in ['HYDHEL','AMJUEL','H2VIBR']:
+
+
+
+
                 reactions.append(REACTION(              ID,         # Name
                                                         database,   # Database
                                                         r[1],       # Reactants
                                                         r[2],       # Fragments
                                                         self.ratedata.get_coeff(database,ID), # Get coefficients
-                                                        'RATE'      # Reaction type
+                                                        'RATE',      # Reaction type
+                                                        getS(r[-1],ene)
                                                     )
                                      )
             
@@ -349,9 +481,13 @@ class CRUM:
             ''' END LOOP OVER DEFINED REACTIONS '''
 
 
+        # Define reactions for UEDGE raditation
+        ionizrad=REACTION('IONIZRAD','UE','','',self.ratedata.get_coeff('UE','IONIZRAD'),'UE',[None,None,None,None])
+        recrad=REACTION('RECRAD','UE','','',self.ratedata.get_coeff('UE','RECRAD'),'UE',[None,None,None,None])
+
 
         # Setup the crm
-        self.crm=CRM(self.species,reactions,[verbose,self.Np,n0],self.path)
+        self.crm=CRM(self.species,reactions,[verbose,self.Np,n0],self.path,recrad=recrad,ionizrad=ionizrad)
         
 
     def totpart(self,arr,V=1):
@@ -465,6 +601,168 @@ class CRUM:
                         if (k+1)/6 in range(1,11):  # Split string into ten rows
                             out+='\n'
                     f.write(out+'\n')   # Write the data to file
+
+
+    def plot_Et(self,t,Te,ne,E=0.1,Ti=None,ni=None,Sext=True,Np=True,Nq=False,N=False,fig=None,n0=None,ax=0,figsize=(10,10/1.618033),linestyle='-',ylim=None,linewidth=2,labelapp='',qlabel=False,savename=None,title=None,pretitle='',figtype='png',color=None,ncol=3,nuclei=True,Tm=False,rad=True,gl=False):
+        ''' Plots the time-evolution of the full CRM or Greenland model on a plasma background 
+            plot_nt(t,Te,ne,*keys)
+
+            t   -   Maximum simulations time to be plotted [s]
+            Te  -   Background electron plasma temperature [eV]
+            ne  -   Background electron plasma density [cm**-3]
+            
+            Optional parameters
+            E (0.1)         -   Target particle energy [eV]
+            Ti (None)       -   Background ion plasma temperature, Ti=Te assumed if None [eV]
+            ni (None)       -   Background ion plasma density, ni=ne assumed if None [cm**-3]
+            Sext (True)     -   Switch whether to consider sources from the background plasma or not
+            gl (False)      -   Switch whether to plot the Greenland CRM (P-space only). 
+                                If false, full CRM is evaluated, and plotting is controlled by Np, Nq and N.
+            Np (True)       -   Switch whether to plot the P-space evolution if the full model is evaluated
+            Nq (False)      -   Switch whether to plot the Q-space evolution if the full model is evaluated
+            N (False)       -   Switch whether to plot all species if the full model is evaluated
+            fig (None)      -   Figure object on which to plot. Creates new figure if None or unviable
+            ax (0)          -   Which axis of fig to plot on, if fig is viable for plotting
+            figsize (10,16) -   Figure size, if created by script
+            linestyle ('-') -   Plot line style for the requested spaces
+            linewidth (2)   -   Line width of P-space and all lines if N-space; Q-space linewidth=0.5*linewidth
+            color (None)    -   User-defined list of colors for P-space plotting
+            title (None)    -   User-defined title, overrides auto-generated title
+            pretitle ('')   -   Prefix for auto-generated title (temperature and density of BG plasma)
+            labelapp ('')   -   String to append to labels in legend
+            qlabel (False)  -   Switch for displaying the Q-space labels on the legend
+            ncol (3)        -   Number of columns in the legend
+            ylim (None)     -   Requested y-limits: defaults to axis max if None
+            savename (None) -   Figure savename. Default location path/output/figs. Not saved if None
+            figtype ('png') -   Figure type if saved
+            nuclei (True)   -   The total number of nuclei is plotted if True (2*n_m), the number of particles if False
+            
+        
+        '''
+        from matplotlib.pyplot import figure
+        from numpy import log10,sum,matmul,zeros
+        from numpy.linalg import inv
+        from os import mkdir
+        
+        # Get axis handle or create figure
+        try:
+            ax=fig.get_axes()[0]
+        except:
+            fig=figure(figsize=figsize)
+        
+        ev=1.602e-19
+        # If no initial distribution is requested, use the one specified in the input
+        if n0 is None:
+            n0=self.crm.n0
+
+        # Check what model to use, Greenland or full
+        if gl is True: # Greenland
+            nt=self.n_gl(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
+        else: # Full model
+            nt=self.n_full(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
+
+        Sel_p,Sia_p,Sg_p,SV_p=zeros(nt.y.shape),zeros(nt.y.shape),zeros(nt.y.shape),zeros(nt.y.shape),
+
+        [Sel,Sia,Sg,SV]=self.crm.S_gl(Te,ne,Ti,ni,E,rad,Sext,self.crm.n0,Tm) # Set up Greenland model 
+
+
+        mat,ext=self.crm.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
+        # Create block matrix from M
+        MP=mat[:self.Np,:self.Np]
+        MQ=mat[self.Np:,self.Np:]
+        V=mat[self.Np:,:self.Np]
+        H=mat[:self.Np,self.Np:]
+        # Manually integrate
+        for dt in range(len(nt.t)-1):
+            # Calculate the new inital distribution
+            nP0p=nt.y[:self.Np,dt]-matmul(matmul(H,inv(MQ)),nt.y[self.Np:,dt])
+
+            # Now, for each time-step, calculate the 
+            Sel_p[:,dt]=(matmul(Sel[0],Sel[2])+Sel[1])*(nt.t[dt+1]-nt.t[dt])
+            Sia_p[:,dt]=(matmul(Sia[0],Sel[2])+Sia[1])*(nt.t[dt+1]-nt.t[dt])
+            Sg_p[:,dt]=(matmul(Sg[0],Sel[2])+Sg[1])*(nt.t[dt+1]-nt.t[dt])
+            SV_p[:,dt]=(matmul(SV[0],Sel[2])+SV[1])*(nt.t[dt+1]-nt.t[dt])
+                   
+        if color is None: # Define color sequence up to 10 unless specific sequence requested
+            color=[ 'b', 'r', 'm', 'c', 'darkgreen', 'gold', 'brown' ,'lime', 'grey', 'orange' ]
+
+
+        pl=[-Sel_p,Sia_p,Sg_p,SV_p,Sel_p+Sia_p+Sg_p+SV_p]
+        title=['Electron E loss', 'Ion/atom E source','Radiation','Binding energy','Power balance']
+        
+        for j in range(5):
+            if j!=4:
+                ax=fig.add_subplot(3,2,j+1)
+            else:
+                ax=fig.add_subplot(3,1,3)
+
+            # Plot P-space species if requested
+            if Np:
+               for i in range(self.Np):
+                    ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth,color=color[i],label=self.species[i]+labelapp,linestyle=linestyle)
+            # Plot Q-space species if requested
+            if Nq:
+                for i in range(self.Np+1,len(self.species)):
+                    if qlabel:
+                        ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth*(0.5)**Np,label=self.species[i]+labelapp,linestyle=linestyle)
+                    else:
+                        ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth*(0.5)**Np,linestyle=linestyle)
+            # Plot all species w/ automated colors if requested
+            if N:
+               for i in range(len(self.species)):
+                    if qlabel:
+                        ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth,label=self.species[i]+labelapp,linestyle=linestyle)
+                    else:
+                        ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth,linestyle=linestyle)
+        
+            ax.set_title(title[j])
+            ax.set_xlabel('Time [ms]') # Show x-label
+            ax.set_ylabel(r'Power [W]') # Show y-label
+            #ax.plot(nt.t[:-1]*1e3,self.totpart(pl[j])[:-1]*ev,'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+
+
+
+        # Unless title is requested, show automated title
+        if title is None: # Automated title
+            ex=int(log10(ne))
+            mu=ne/(10**ex)
+            ax.set_title(pretitle+r' $\rm{{T_e}}$={} eV, $\rm{{n_e}}$={}$\times10^{{{}}}$ $\rm{{cm^{{-3}}}}$'.format(Te,mu,ex))
+        else: # Requested title
+            ax.set_title(title)
+
+        ax.legend(ncol=ncol,loc='best') # Show legend
+        ax.set_xlim(0,t*1e3) # Set X-lim in ms
+        # If no ylim is requested set the ylim to the highest plotted line
+        '''
+        if ylim is None:
+            # Total particles in this plot
+            totmax=max(self.totpart(nt.y))
+            # Compare to previous max
+            if totmax>ax.get_ylim()[1]:
+                # If higher, update
+                ax.set_ylim((0,totmax))
+            else: # Set bottom to zero
+                ax.set_ylim(bottom=0)
+        else: # Use requested ylim
+            ax.set_ylim(ylim)
+        '''
+        
+        # Save to casepath/output/figs/figname.type if figname set
+        if savename is not None:
+            # Make sure that the direcory exists
+            try:
+                mkdir('{}/output/figs'.format(self.path))
+            except:
+                pass
+            # Save
+            fig.savefig('{}/output/figs/{}.{}'.format(self.path,savename,figtype),dpi=300,edgecolor=None,format=figtype,bbox_inches='tight')
+
+
+        fig.show() # Show fig
+        return fig # Return figure object
+            
+            
+
 
 
     def plot_nt(self,t,Te,ne,E=0.1,Ti=None,ni=None,Sext=True,Np=True,Nq=False,N=False,fig=None,n0=None,ax=0,figsize=(10,10/1.618033),linestyle='-',gl=False,ylim=None,linewidth=2,labelapp='',qlabel=False,savename=None,title=None,pretitle='',figtype='png',color=None,ncol=3,nuclei=True):

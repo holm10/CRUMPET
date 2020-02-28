@@ -7,7 +7,7 @@
 class REACTION:
 
 
-    def __init__(self, name, database, reactants, fragments, coeffs,typ,Tarr=0):
+    def __init__(self, name, database, reactants, fragments, coeffs,typ,S,Tarr=0):
         ''' Creates an reaction object
             __init__(name,database,reactants,fragments,*keys)
     
@@ -40,6 +40,13 @@ class REACTION:
         self.coeffs=array(coeffs)
         self.type=typ
         self.Tarr=array(Tarr)
+        for i in range(4):
+            if isinstance(S[i],str): S[i]=S[i][4:]
+
+        self.S_r=S[0]
+        self.S_g=S[1]
+        self.S_V=S[2]
+        self.S_e=S[3]
 
         # Setup multilplier arrays
         self.r_mult=ones((len(reactants),))
@@ -166,7 +173,10 @@ class REACTION:
             jt=max(0,min(10*(log10(Te)+1.2),60))
             jn=max(0,min(2*(log10(ne)-10),15))
             # Interpolate jt
-            return self.interpolation(jn,jt)[0]
+            
+            c=1
+            if self.name in ['RECRAD','IONIZRAD']: c=6.242e11
+            return self.interpolation(jn,jt)[0]*c
                     
         else:
             print('Unknown type "{}"'.format(self.type))

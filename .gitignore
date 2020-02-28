@@ -6,3 +6,6 @@ logs/*
 main.py
 *.swp
 .DS_Store
+__pycache__
+CRUM/__pycache__
+.DS_Store
