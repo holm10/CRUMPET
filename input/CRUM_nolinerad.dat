@@ -154,7 +154,7 @@ S_V=H2pdiss+Hn2-Hn1
 * AMJUEL_2.2.14
 e + H2+ > H(n=1) + 0.1*H(n=2) + 0.45*H(n=3) + 0.22*H(n=4) + 0.12*H(n=5) + 0.069*H(n=6) + 0.029*H(n=7) + 0.012*H(n=8)
 
-S_r=-Te
+S_r=0
 S_H2+=-Tm
 S_H(n=1)=0.5*(Tm+(Te-S_V))
 S_H(n=2)=0.1*0.5*(Tm+(Te-S_V))
@@ -171,7 +171,7 @@ S_V=H2pdiss+0.1*(Ry+Hn2)+0.45*(Ry+Hn3)+0.22*(Ry+Hn4)+0.12*(Ry+Hn5)+0.069*(Ry+Hn6
 * H2VIBR_2.Xl3
 e + H2(v=X) > H(n=1) + H-
 
-S_r=-Te
+S_r=-0
 S_H2(v=X)=-Tm
 S_H(n=1)=0.5*(Tm+Te-S_V+H2vX)
 S_H-=0.5*(Tm+Te-S_V+H2vX)
@@ -182,7 +182,7 @@ S_V=H2diss-Hmioniz-H2vX # Not sure if this is correct...
 * H2VIBR_2.Xl2
 p + H2(v=X) > H2+ + H(n=1)
 
-S_r=-Ti
+S_r=0
 S_H2(v=X)=-Tm
 S_H2+=Tm-0.5*S_V+0.5*H2vX
 S_H(n=1)=Ti-0.5*S_V+0.5*H2vX
@@ -193,10 +193,10 @@ S_V=H2ioniz-Ry-H2vX
 * HYDHEL_3.2.5
 p + H2(v=0) > p + H2+ + e
 
-S_r=-(H2ioniz+Te)
+S_r=-(H2ioniz+0)
 S_H2(v=0)=-Tm
 S_H2+=Tm
-S_e=Te
+S_e=0
 S_g=0
 S_V=H2ioniz
 
@@ -235,7 +235,7 @@ S_V=Hmioniz+Ry
 * HYDHEL_7.2.1
 p + H- > p + e + H(n=1)
 
-S_r=-(Hmioniz+Te)
+S_r=-(Hmioniz+0)
 S_H-=-Tmi
 S_H(n=1)=Tmi
 S_e=Te
@@ -246,7 +246,7 @@ S_V=Hmioniz
 * HYDHEL_7.2.2
 p + H- > H(n=2) + H(n=1)
 
-S_r=-Ti
+S_r=-0
 S_H-=-Tmi
 S_H(n=1)=0.5*(Ti+Tmi-S_V)
 S_H(n=2)=0.5*(Ti+Tmi-S_V)
@@ -257,7 +257,7 @@ S_V=Hmioniz+Ry+Hn2
 * HYDHEL_7.2.3
 p + H- > H(n=3) + H(n=1)
 
-S_r=-Ti
+S_r=-0
 S_H-=-Tmi
 S_H(n=1)=0.5*(Ti+Tmi-S_V)
 S_H(n=2)=0.5*(Ti+Tmi-S_V)
@@ -275,40 +275,11 @@ S_g=0
 S_V=H2vY-H2vX
 
 
-* UE_IONIZ
-e + H(n=1) > 2*e + p
-
-S_r=-Ry-erl1
-S_H(n=1)=-Ta
-S_p=Ta
-S_g=erl1
-S_V=Ry
-
-
-* UE_REC
-e + p > H(n=1)
-
-S_r=-Te-erl2+Ry
-S_p=-Ti
-S_H=Ti+Te
-S_g=erl2
-S_V=-Ry
-
-
-* ADAS_EXCITATION
-e + H(n=X) > e + H(n=Y)
-
-S_r=-(HnY-HnX)
-S_H(n=X)=-Ta
-S_H(n=Y)=Ti
-S_g=0
-S_V=HnY-HnX
-
 
 * ADAS_RELAXATION
 H(n=X) > H(n=Y)
 
-S_r=-Ta
+S_r=-0
 S_H(n=Y)=Ta
 S_g=HnX-HnY
 S_V=-(HnX-HnY)

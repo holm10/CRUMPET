@@ -4,7 +4,7 @@
 # 200205 - Separated from CRUM.py #holm10
 
 
-class CRUM:
+class CRUMPET:
     def __init__(self,fname='input/CRUM.dat',path='.',vmax=14,nmax=8,verbose=False,NP=2):
         from CRUM.ratedata import RATE_DATA
         from CRUM.reactions import REACTION
@@ -178,6 +178,7 @@ class CRUM:
                         for l in range(subcards[k]+2,subcards[k+1]): # Loop through the lines following the declaration looking for energy sinks/sources
                             energies.append(lines[l].strip())
 
+
                         reactionlist.append(    [   rname, *[x.split(' + ') for x in rf(lines[subcards[k]+1])], energies  ]   ) # Store name, reactants and framgents
                         
 
@@ -278,7 +279,8 @@ class CRUM:
                         if x+y in range(vmax+1): # Make sure we do not excite beyond vmax
                             vID=XY2num(ID,x,x+y) # Substitute initial and final state into temporary string
                             
-                    
+                            modE=getS(r[-1],ene,x,x+y)
+
 
                             # Create reaction object
                             reactions.append(REACTION(              vID, # Reaction name
@@ -541,7 +543,7 @@ class CRUM:
         '''
         return self.crm.full_nt(Te,ne,t,Ti,ni,E,n,Sext)
 
-    def create_UE_rates(self,fname='uerates',E=0.1,Sext=True,h0h2=['H(n=1)','H2(v=0)']):
+    def create_UE_rates(self,fname='ue',E=0.1,Sext=True,h0h2=['H(n=1)','H2(v=0)'],Tm=False,Ton=False,rad=False):
         ''' Script that writes UEDGE rates to self.path/fname.dat
             create_UE_rates(fname='uerates')
 
@@ -550,7 +552,7 @@ class CRUM:
             Sext (True) -   Include external source (from background plasma reactions into CRM species)
             h0h2 (['H(n=1)','H2(v=0)']) - List of the H0 and H2 at their electronic and vibrational ground state handles used in the input
             '''
-        from numpy import zeros
+        from numpy import zeros,sum,array
         from os import mkdir
 
         # Ensure that the CRM format coincides with the assumed format
@@ -564,13 +566,23 @@ class CRUM:
 
         # Create deinsty and temperature points in log-log space as in existing UEDGGE rate files
         ret=zeros((15,60,self.Np,self.Np))
+        retE=zeros((15,60,5,self.Np))
         ext=zeros((15,60,self.Np))
+        extE=zeros((15,60,5))
         # Calculate the Greenland (Np) space rates for the T-n space
         print('Creating UEDGE rate output')
         for i in range(15): # 15 density points in log-log space
             print('    Density step {}/15'.format(i+1))
             for j in range(60): # 60 temperature points in log-log space
-                ret[i,j,:,:],ext[i,j,:],_=self.crm.gl_crm(10**(-1.2 +j/10),10**(10+0.5*i),E=E,Sext=Sext) # Store to matrix
+                print('        Temperature step {}/60'.format(j+1))
+                Te,ne=10**(-1.2+j/10),10**(10+0.5*i)
+                ret[i,j,:,:],ext[i,j,:],_=self.crm.gl_crm(*self.crm.M(Te,ne,Te,ne,E,write=False),Sext=Sext) # Store to matrix
+                U=self.crm.Sgl(Te,ne,Te,ne,E,rad,Tm,write=False,Ton=Ton) # Don't include erl1/erl2 radiation in the rates as these are handled by UEDGE
+                # Include T-losses or not?
+                retE[i,j,:,:]=array([ sum(U[0][0],axis=0), sum(U[1][0],axis=0), sum(U[2][0],axis=0), sum(U[3][0],axis=0), sum(U[4][0],axis=0)])
+                #print(len(retE.shape))
+                extE[i,j,:]=array([ sum(U[0][1],axis=0), sum(U[1][1],axis=0), sum(U[2][1],axis=0), sum(U[3][1],axis=0), sum(U[4][1],axis=0) ])
+        
 
         # Ensure output directory exists 
         try:
@@ -579,15 +591,15 @@ class CRUM:
             pass
         
         # Write UEDGE data
-        print(' Writing UEDGE rates to {}'.format(fname))
-        with open('output/{}.dat'.format(fname),'w') as f:
+        print(' Writing UEDGE reaction rates to {}'.format(fname+'_nrates'))
+        with open('output/{}.dat'.format(fname+'_nrates'),'w') as f:
             # Headers and positions in Greenland matrices
-            setups= [   [' H0 depl. Rate(jt,jn) (cm**3 s**-1)  Te(jt) = 10**(-1.2 + (jt-1)/10) jt= 1,60\n', ret[:,:,0,0]    ],
-                        [' H2->H0 Rate(jt,jn) (cm**3 s**-1)\n', ret[:,:,0,1]                                                ],
-                        [' H2 depl. Rate(jt,jn) (cm**3 s**-1)\n', ret[:,:,1,1]                                              ],
-                        [' H2 creation Rate(jt,jn) (cm**3 s**-1)\n', ret[:,:,1,0]                                           ],
-                        [' H0 external source Rate(jt,jn) (cm**-3 s**-1)\n', ext[:,:,0]                                     ],
-                        [' H2 external source Rate(jt,jn) (cm**-3 s**-1)\n', ext[:,:,1]                                     ]
+            setups= [   [' H0 depl. Rate(jt,jn) (s**-1)  Te(jt) = 10**(-1.2 + (jt-1)/10) jt= 1,60\n', ret[:,:,0,0]    ],
+                        [' H2->H0 Rate(jt,jn) (s**-1)\n', ret[:,:,0,1]                                                ],
+                        [' H2 depl. Rate(jt,jn) (s**-1)\n', ret[:,:,1,1]                                              ],
+                        [' H2 creation Rate(jt,jn) (s**-1)\n', ret[:,:,1,0]                                           ],
+                        [' H0 external source Rate(jt,jn) (s**-1)\n', ext[:,:,0]                                     ],
+                        [' H2 external source Rate(jt,jn) (s**-1)\n', ext[:,:,1]                                     ]
                     ]
       
             for l in range(len(setups)): # Loop through all species contributions
@@ -603,7 +615,42 @@ class CRUM:
                     f.write(out+'\n')   # Write the data to file
 
 
-    def plot_Et(self,t,Te,ne,E=0.1,Ti=None,ni=None,Sext=True,Np=True,Nq=False,N=False,fig=None,n0=None,ax=0,figsize=(10,10/1.618033),linestyle='-',ylim=None,linewidth=2,labelapp='',qlabel=False,savename=None,title=None,pretitle='',figtype='png',color=None,ncol=3,nuclei=True,Tm=False,rad=True,gl=False):
+        print(' Writing UEDGE energy rates to {}'.format(fname+'_Erates'))
+        with open('output/{}.dat'.format(fname+'_Erates'),'w') as f:
+            # Headers and positions in Greenland matrices
+            setups= [   [' e-loss (H) (eV s**-1)  Te(jt) = 10**(-1.2 + (jt-1)/10) jt= 1,60\n', retE[:,:,0,0]    ],
+                        [' e-loss (H2) (eV s**-1)\n', retE[:,:,0,1]                                                ],
+                        [' ext. e-loss (eV s**-1)\n', extE[:,:,0]                                                ],
+                        [' ia source (H) (eV s**-1)\n', retE[:,:,1,0]                                                ],
+                        [' ia source (H2) (eV s**-1)\n', retE[:,:,1,1]                                                ],
+                        [' ext ia source (eV s**-1)\n', extE[:,:,1]                                                ],
+                        [' Epot source (H) (eV s**-1)\n', retE[:,:,2,0]                                                ],
+                        [' Epot source (H2) (eV s**-1)\n', retE[:,:,2,1]                                                ],
+                        [' ext Epot source (eV s**-1)\n', extE[:,:,2]                                                ],
+                        [' rad source,a (H) (eV s**-1)\n', retE[:,:,3,0]                                                ],
+                        [' rad source,a (H2) (eV s**-1)\n', retE[:,:,3,1]                                                ],
+                        [' ext rad source,a (eV s**-1)\n', extE[:,:,3]                                                ],
+                        [' rad source,m (H) (eV s**-1)\n', retE[:,:,4,0]                                                ],
+                        [' rad source,m (H2) (eV s**-1)\n', retE[:,:,4,1]                                                ],
+                        [' ext rad source,m (eV s**-1)\n', extE[:,:,4]                                                ],
+                    ]
+            for l in range(len(setups)): # Loop through all species contributions
+                print('    Writing rate {}/{}'.format(l+1,len(setups)))
+                f.write(setups[l][0])
+                for j in range(15): # Write each density block
+                    out=''
+                    f.write(' jn =   {}'.format(j+1)+(j==0)*(l==0)*'; jt = 1 -> 60 going by rows   ne(jn) = 10**(10 + 0.5*(jn-1)) jn=1,15'+'\n')
+                    for k in range(60): # Store temperature data to string  
+                        out+='{:1.5E}'.format(setups[l][1][j,k]).rjust(13,' ')
+                        if (k+1)/6 in range(1,11):  # Split string into ten rows
+                            out+='\n'
+                    f.write(out+'\n')   # Write the data to file
+
+
+
+
+
+    def plot_Et(self,t,Te,ne,E=0.1,Ti=None,ni=None,Sext=True,Np=True,Nq=False,N=False,fig=None,n0=None,ax=0,figsize=(7+7,7*1.618033),linestyle='-',ylim=None,linewidth=2,labelapp='',qlabel=False,savename=None,title=None,pretitle='',figtype='png',color=None,nuclei=True,Tm=False,rad=True,gl=False,n=None,suptitle=None,ylimE=None,Ton=True):
         ''' Plots the time-evolution of the full CRM or Greenland model on a plasma background 
             plot_nt(t,Te,ne,*keys)
 
@@ -640,10 +687,12 @@ class CRUM:
         
         '''
         from matplotlib.pyplot import figure
-        from numpy import log10,sum,matmul,zeros
+        from numpy import log10,sum,matmul,zeros,linspace,amax,where
         from numpy.linalg import inv
         from os import mkdir
-        
+       
+#        for r in self.crm.reactions: 
+#            print('Reaction {}: S_r={}, S_g={}, S_V={}, S_e={}'.format(r.name,r.S_r,r.S_g,r.S_V,r.S_e))
         # Get axis handle or create figure
         try:
             ax=fig.get_axes()[0]
@@ -655,97 +704,212 @@ class CRUM:
         if n0 is None:
             n0=self.crm.n0
 
-        # Check what model to use, Greenland or full
-        if gl is True: # Greenland
-            nt=self.n_gl(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
-        else: # Full model
-            nt=self.n_full(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
+        Neq=False
+        if gl is True:
+            Neq=Nq
+            Np,Nq,N=True,False,False
 
-        Sel_p,Sia_p,Sg_p,SV_p=zeros(nt.y.shape),zeros(nt.y.shape),zeros(nt.y.shape),zeros(nt.y.shape),
+        CRM=self.crm.dEdt(t,Te,ne,Ti,ni,E,Tm,rad,Sext,gl=gl,n=n,Qres=((Nq is True) or (N is True) or (Neq is True)),Ton=Ton) # Set up Greenland model 
 
-        [Sel,Sia,Sg,SV]=self.crm.S_gl(Te,ne,Ti,ni,E,rad,Sext,self.crm.n0,Tm) # Set up Greenland model 
-
-
-        mat,ext=self.crm.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
-        # Create block matrix from M
-        MP=mat[:self.Np,:self.Np]
-        MQ=mat[self.Np:,self.Np:]
-        V=mat[self.Np:,:self.Np]
-        H=mat[:self.Np,self.Np:]
-        # Manually integrate
-        for dt in range(len(nt.t)-1):
-            # Calculate the new inital distribution
-            nP0p=nt.y[:self.Np,dt]-matmul(matmul(H,inv(MQ)),nt.y[self.Np:,dt])
-
-            # Now, for each time-step, calculate the 
-            Sel_p[:,dt]=(matmul(Sel[0],Sel[2])+Sel[1])*(nt.t[dt+1]-nt.t[dt])
-            Sia_p[:,dt]=(matmul(Sia[0],Sel[2])+Sia[1])*(nt.t[dt+1]-nt.t[dt])
-            Sg_p[:,dt]=(matmul(Sg[0],Sel[2])+Sg[1])*(nt.t[dt+1]-nt.t[dt])
-            SV_p[:,dt]=(matmul(SV[0],Sel[2])+SV[1])*(nt.t[dt+1]-nt.t[dt])
-                   
         if color is None: # Define color sequence up to 10 unless specific sequence requested
             color=[ 'b', 'r', 'm', 'c', 'darkgreen', 'gold', 'brown' ,'lime', 'grey', 'orange' ]
 
 
-        pl=[-Sel_p,Sia_p,Sg_p,SV_p,Sel_p+Sia_p+Sg_p+SV_p]
-        title=['Electron E loss', 'Ion/atom E source','Radiation','Binding energy','Power balance']
-        
-        for j in range(5):
-            if j!=4:
-                ax=fig.add_subplot(3,2,j+1)
-            else:
-                ax=fig.add_subplot(3,1,3)
+        t=linspace(0,t,800)
+
+
+        if (Nq is False) and (N is False) and (Neq is False):
+            ''' Only plot P-species and contributions, don't resolve energy '''
+
+
+            ax=fig.add_subplot(311)
+
+            part=CRM.sol(t)[5:]
 
             # Plot P-space species if requested
             if Np:
                for i in range(self.Np):
-                    ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth,color=color[i],label=self.species[i]+labelapp,linestyle=linestyle)
+                    ax.plot(t*1e3,part[i,:],linewidth=linewidth,color=color[i],label=self.species[i]+labelapp,linestyle=linestyle)
+           # Plot total number of nuclei as function of time
+            if nuclei is True:
+                ax.plot(t*1e3,self.totpart(part),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+            else:
+                ax.plot(t*1e3,sum(part,axis=0),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+            # Plot initial number of nuclei
+            ax.axhline(self.totpart(n0),color='k',linewidth=0.5)
+            
+
+            ax.legend(ncol=self.crm.Np+1,loc='best') # Show legend
+            ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms
+            ax.set_ylabel(r'Density [$\rm{cm^{-3}}$]') # Show y-label
+            # If no ylim is requested set the ylim to the highest plotted line
+            if ylim is None:
+                # Total particles in this plot
+                totmax=max(self.totpart(CRM.sol(t)[5+len(self.crm.n0)*(gl==True):]))
+                # Compare to previous max
+                if totmax>ax.get_ylim()[1]:
+                    # If higher, update
+                    ax.set_ylim((0,totmax))
+                else: # Set bottom to zero
+                    ax.set_ylim(bottom=0)
+            else: # Use requested ylim
+                ax.set_ylim(ylim)
+
+
+            ax=fig.add_subplot(312)
+
+            E=[-CRM.sol(t)[0],CRM.sol(t)[1],CRM.sol(t)[3],CRM.sol(t)[4],CRM.sol(t)[2]]
+            Elabel=[r'$\mathrm{S_{e-loss}}$',r'$\mathrm{S_{ia}}$',r'$\mathrm{S_{rad,a}}$',r'$\mathrm{S_{rad,m}}$',r'$\mathrm{S_{pot}}$']
+
+            for j in range(5):
+                ax.plot(t*1e3,E[j]*ev,linewidth=linewidth,color=color[j],label=Elabel[j]+labelapp,linestyle=linestyle)
+
+            ax.set_ylabel(r'Power [W]') # Show y-label
+            ax.legend(ncol=4,loc='best') # Show legend
+            ax.axhline(y=0,color='k')
+            ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms       '''
+            if ylimE is not None:
+                ax.set_ylim(ylimE)
+
+            # Show balances
+            ax=fig.add_subplot(313)
+            exp=round(log10(max(abs(sum(CRM.sol(t)[0:5],axis=0))*ev)))
+            ax.plot(t*1e3,sum(CRM.sol(t)[0:5],axis=0)*ev*(10**(-exp)),linewidth=linewidth,color='r',label=r'$\mathrm{\Delta E}$'+r' [$10^{{{:d}}}$W]'.format(int(exp))+labelapp,linestyle=linestyle)
+            ax.set_xlabel('Time [ms]') # Show x-label
+            ax.set_ylabel(r'Conservation') # Show y-label
+            ax.legend(loc='best') # Show legend
+            ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms
+
+        else:
+            Nt=len(self.crm.species)
+
+            # Particle balance        
+            ax=fig.add_subplot(421)
+
+            part=CRM.sol(t)[-Nt:]
+            if Neq is True:
+                part=CRM.sol(t)[-self.crm.Np:]
+
+            # Plot P-space species 
+            for i in range(self.Np):
+                ax.plot(t*1e3,part[i,:],linewidth=linewidth,color=color[i],label=self.species[i]+labelapp,linestyle=linestyle)
             # Plot Q-space species if requested
             if Nq:
-                for i in range(self.Np+1,len(self.species)):
+                for i in range(self.Np,len(self.species)):
                     if qlabel:
-                        ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth*(0.5)**Np,label=self.species[i]+labelapp,linestyle=linestyle)
+                        ax.plot(t*1e3,part[i],linewidth=linewidth*(0.5)**Np,label=self.species[i]+labelapp,linestyle=linestyle)
                     else:
-                        ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth*(0.5)**Np,linestyle=linestyle)
+                        ax.plot(t*1e3,part[i],linewidth=linewidth*(0.5)**Np,linestyle=linestyle)
             # Plot all species w/ automated colors if requested
             if N:
                for i in range(len(self.species)):
                     if qlabel:
-                        ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth,label=self.species[i]+labelapp,linestyle=linestyle)
+                        ax.plot(t*1e3,CRM.sol(t)[i,:],linewidth=linewidth,label=self.species[i-4]+labelapp,linestyle=linestyle)
                     else:
-                        ax.plot(nt.t[:-1]*1e3,pl[j][i,:-1]*ev,linewidth=linewidth,linestyle=linestyle)
+                        ax.plot(t*1e3,CRM.sol(t)[i,:],linewidth=linewidth,linestyle=linestyle)
         
-            ax.set_title(title[j])
+            # Plot total number of nuclei as function of time
+            if nuclei is True:
+                ax.plot(t*1e3,self.totpart(part),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+            else:
+                ax.plot(t*1e3,sum(part,axis=0),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+            # Plot initial number of nuclei
+            ax.axhline(self.totpart(n0),color='k',linewidth=0.5)
+
+            ax.legend(loc='best') # Show legend
+            ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms
             ax.set_xlabel('Time [ms]') # Show x-label
-            ax.set_ylabel(r'Power [W]') # Show y-label
-            #ax.plot(nt.t[:-1]*1e3,self.totpart(pl[j])[:-1]*ev,'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+            ax.set_ylabel(r'Density [$\rm{cm^{-3}}$]') # Show y-label
+            ax.set_title('Species density')
+            # If no ylim is requested set the ylim to the highest plotted line
+            if ylim is None:
+                # Total particles in this plot
+                totmax=max(self.totpart(part))
+                # Compare to previous max
+                if totmax>ax.get_ylim()[1]:
+                    # If higher, update
+                    ax.set_ylim((0,totmax))
+                else: # Set bottom to zero
+                    ax.set_ylim(bottom=0)
+            else: # Use requested ylim
+                ax.set_ylim(ylim)
+
+
+
+            
+            # Energy 
+            Etitle=['Electron loss','Ion/atom source','Potential','Radiation,a','Radiation,m']
+
+            for e in range(5):
+                E=((-1)**(e==0))*CRM.sol(t)[Nt*e:Nt*(e+1)]*ev
+                
+                
+                ax=fig.add_subplot(4,2,2+e) 
+
+                # Plot P-space species if requested
+                if Np:
+                   for i in range(self.Np):
+                        if abs(E[i].max())!=0:
+                            ax.plot(t*1e3,E[i],linewidth=linewidth,color=color[i],label=self.species[i]+labelapp,linestyle=linestyle)
+                # Plot Q-space species if requested
+                if Nq or Neq:
+                    for i in range(self.Np,len(self.species)):
+                        if abs(E[i].max())!=0:
+                            ax.plot(t*1e3,E[i],linewidth=linewidth*(0.5)**Np,label=self.species[i]+labelapp,linestyle=linestyle)
+                # Plot all species w/ automated colors if requested
+                if N:
+                   for i in range(len(self.species)):
+                        if abs(E[i].max())!=0:
+                            ax.plot(t*1e3,E[i],linewidth=linewidth,label=self.species[i]+labelapp,linestyle=linestyle)
+                Etot=sum(E,axis=0)
+                ax.plot(t*1e3,Etot,'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+                ax.set_title(Etitle[e])
+                ax.set_ylabel(r'Power [W]') # Show y-label
+                ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms       '''
+                ax.set_xlabel('Time [ms]') # Show x-label
+                if e==0: 
+                    Emax=max(Etot)
+                    axmax=ax.get_ylim()[1]
+                if ylimE is not None:
+                    ax.set_ylim(ylimE)
+                else:
+                    if Emax>axmax:
+                        # If higher, update
+                        ax.set_ylim(top=Emax)
+
+                box = ax.get_position()
+                ax.set_position([box.x0, box.y0 - box.height * 0,box.width, box.height * 0.85])
+                if e==4:
+                    ax.legend(loc='lower center', bbox_to_anchor=(-0.1, -0.9),frameon=False, ncol=9)
+
+            # Show balances
+            ax=fig.add_subplot(414)
+        
+            exp=round(log10(max(abs(sum(CRM.sol(t)[:5*Nt],axis=0))*ev)))
+            ax.plot(t*1e3,sum(CRM.sol(t)[0:5*Nt],axis=0)*ev*(10**(-exp)),linewidth=linewidth,color='r',label=r'$\mathrm{\Delta E}$'+r' [$10^{{{:d}}}$W]'.format(int(exp))+labelapp,linestyle=linestyle)
+            ax.set_xlabel('Time [ms]') # Show x-label
+            ax.set_ylabel(r'Conservation') # Show y-label
+            ax.legend(loc='best') # Show legend
+            ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0 - box.height * 0.3,box.width, box.height * 0.7])
+
 
 
 
         # Unless title is requested, show automated title
-        if title is None: # Automated title
+        if suptitle is None: # Automated title
             ex=int(log10(ne))
             mu=ne/(10**ex)
-            ax.set_title(pretitle+r' $\rm{{T_e}}$={} eV, $\rm{{n_e}}$={}$\times10^{{{}}}$ $\rm{{cm^{{-3}}}}$'.format(Te,mu,ex))
+            fig.suptitle(pretitle+r' $\rm{{T_e}}$={} eV, $\rm{{n_e}}$={}$\times10^{{{}}}$ $\rm{{cm^{{-3}}}}$'.format(Te,mu,ex))
         else: # Requested title
-            ax.set_title(title)
+            fig.suptitle(title)
 
-        ax.legend(ncol=ncol,loc='best') # Show legend
-        ax.set_xlim(0,t*1e3) # Set X-lim in ms
-        # If no ylim is requested set the ylim to the highest plotted line
-        '''
-        if ylim is None:
-            # Total particles in this plot
-            totmax=max(self.totpart(nt.y))
-            # Compare to previous max
-            if totmax>ax.get_ylim()[1]:
-                # If higher, update
-                ax.set_ylim((0,totmax))
-            else: # Set bottom to zero
-                ax.set_ylim(bottom=0)
-        else: # Use requested ylim
-            ax.set_ylim(ylim)
-        '''
+
+
+
+
+
         
         # Save to casepath/output/figs/figname.type if figname set
         if savename is not None:
@@ -756,7 +920,6 @@ class CRUM:
                 pass
             # Save
             fig.savefig('{}/output/figs/{}.{}'.format(self.path,savename,figtype),dpi=300,edgecolor=None,format=figtype,bbox_inches='tight')
-
 
         fig.show() # Show fig
         return fig # Return figure object
@@ -897,7 +1060,7 @@ class CRUM:
 
 
 
-    def plot_uerate(self,ratefile,Te,ne,fig=None,ax=0,figsize=(10,10/1.618033),linestyle='-',ylim=(1e-1,1e7),linewidth=3,labelapp='',savename=None,title=None,pretitle='',figtype='png',color='k',plot='loglog',idx=0,xlim=None,ncol=3):
+    def plot_ue_nrate(self,ratefile,Te,ne,fig=None,ax=0,figsize=(10,10/1.618033),linestyle='-',ylim=(1e-1,1e7),linewidth=3,labelapp='',savename=None,title=None,pretitle='',figtype='png',color='k',plot='loglog',idx=0,xlim=None,ncol=3,fac=1):
         ''' Routine plotting the UEDGE rates read from file ratefile
             plot_uerate(ratefile,Te,ne,*keys)
         
@@ -939,7 +1102,7 @@ class CRUM:
         # Create custom reaction
         reactions={}
         for r in rates.keys():
-            reactions[r]=REACTION(r,'',[''],[''],rates[r],'UE')
+            reactions[r]=REACTION(r,'',[''],[''],rates[r],'UE',[0,0,0,0])
         
         typ,lab='',''
         if idx in [0,1,4]:
@@ -960,6 +1123,7 @@ class CRUM:
 
 
         # Setup plot type
+
         if isinstance(Te,list):
             x=Te
             y=array([reactions[datalist[idx]].rate(T,None,ne=ne) for T in Te])/(ne**(idx>3))
@@ -996,7 +1160,7 @@ class CRUM:
             print('Unrecognized plot "{}" requested! Aborting.'.format(plot))
 
 
-        pl(x,abs(y),linewidth=linewidth,color=color,label=lab+labelapp,linestyle=linestyle)
+        pl(x,fac*abs(y),linewidth=linewidth,color=color,label=lab+labelapp,linestyle=linestyle)
 
         if title is None:
             ax.set_title(autotitle)
@@ -1020,3 +1184,298 @@ class CRUM:
 
         fig.show()
         return fig
+
+
+
+
+    def plot_ue_Erate(self,ratefile,Te,ne,fig=None,ax=0,figsize=(12,13/1.618033),linestyle='-',ylim=(1e-17,1e-11),linewidth=2,labelapp='',savename=None,title=None,pretitle='',figtype='png',plot='loglog',xlim=None,ncol=3,colors=['darkcyan','b','m','r'],eion=5,ediss=10,origUE=False,idx=0):
+        ''' Routine plotting the UEDGE rates read from file ratefile
+            plot_uerate(ratefile,Te,ne,*keys)
+        
+            ratefile    -   File with rate data in UEDGE format
+            Te          -   Background electron plasma temperature [eV]
+            ne          -   Background electron plasma density [cm**-3]
+            
+            Optional parameters
+            plot ('loglgog')-   Plot type from options 'loglog', 'semilogy', 'semilogx', or 'plot'
+            idx (0)         -   The index of appearance of the data block in ratefile
+            fig (None)      -   Figure object on which to plot. Creates new figure if None or unviable
+            ax (0)          -   Which axis of fig to plot on, if fig is viable for plotting
+            figsize (10,16) -   Figure size, if created by script
+            linestyle ('-') -   Plot line style for the requested spaces
+            linewidth (2)   -   Line width of P-space and all lines if N-space; Q-space linewidth=0.5*linewidth
+            color ('k')     -   Line color
+            title (None)    -   User-defined title, overrides auto-generated title
+            pretitle ('')   -   Prefix for auto-generated title (temperature and density of BG plasma)
+            labelapp ('')   -   String to append to labels in legend
+            ncol (3)        -   Number of columns in the legend
+            ylim (1e-1,1e7) -   Requested y-limits
+            ylim (None)     -   Requested y-limits,defaults to standard if None
+            savename (None) -   Figure savename. Default location path/output/figs. Not saved if None
+            figtype ('png') -   Figure type if saved
+            
+            
+        '''
+        from matplotlib.pyplot import figure
+        from numpy import log10,array,zeros
+        from os import mkdir
+        from CRUM.reactions import REACTION
+
+        ev=1.602e-19
+
+        if origUE is True:
+
+            rates={}
+            # Read the data from ratefile into dict
+            datalist=['H0_depl','H0_create','H2_depl','H2_create','H0_ext','H2_ext']
+            self.ratedata.read_UE(ratefile,rates,datalist=datalist)
+            
+        else:
+            rates={}
+            # Read the data from ratefile into dict
+            datalist=['Hel','H2el','extel','Hia','H2ia','extia','HV','H2V','extV','Hga','H2ga','extga','Hgm','H2gm','extgm',]
+            self.ratedata.read_UE(ratefile,rates,datalist=datalist)
+
+        # Create custom reaction
+        reactions={}
+        for r in rates.keys():
+            reactions[r]=REACTION(r,'',[''],[''],rates[r],'UE',[0,0,0,0])
+
+        title=['Electron loss','Ion/atom source','Potential source','Radiation source']
+        lab=['H0','H2','ext','H2,a','H2,m']
+               
+        try:
+            ax=fig.get_axes()[0]
+            oldax=True
+        except:
+            fig=figure(figsize=figsize)
+            oldax=False
+
+
+
+        for i in range(4):
+            ax=fig.add_subplot(2,2,i+1)
+
+            if plot=='loglog':
+                pl=ax.loglog
+            elif plot=='semilogy':
+                pl=ax.semilogy
+            elif plot=='semilogx':
+                pl=ax.semilogx
+            elif plot=='plot':
+                pl=ax.plot
+            else:
+                print('Unrecognized plot "{}" requested! Aborting.'.format(plot))
+
+            if origUE:
+
+                fac=ev*( ediss*(i==0)+2*eion*(i==1)+(ediss-2*eion)*(i==3)*(ediss>2*eion)-(ediss-2*eion)*(i==2)*(ediss<2*eion))
+                # Setup plot type
+                if isinstance(Te,list):
+                    x=Te
+                    y=array([reactions['H2_depl'].rate(T,None,ne=ne)*fac for T in Te])
+                    xlabel=(r'Electron temperature [eV]')
+                    ex=int(log10(ne))
+                    mu=ne/(10**ex) 
+                    autotitle=title[i]
+                    suptitle=pretitle+r'$\rm{{n_e}}$={}$\times10^{{{}}}$ $\rm{{cm^{{-3}}}}$'.format(mu,ex)
+                elif isinstance(ne,list): 
+                    x=ne
+                    y=array([reactions['H2_depl'].rate(Te,None,ne=n)*fac for n in ne])
+                    if idx>3:
+                        y=y/ne
+                    xlabel=(r'Electron density [$\rm{cm^{-3}}$]')
+                    autotitle=title[i]
+                    supttitle=pretitle+r' {}, $\rm{{T_e}}$={} [eV]'.format(typ,Te)
+                else:
+                    print('Reaction rate for process "{}" at Te={} and ne={}'.format(datalist[idx],Te,ne))
+                    return reactions[datalist[idx]].rate(Te,None,ne)
+                   
+                pl(x,((-1)**(i<2))*y,linewidth=linewidth,color='k',label='Orig. UE'+labelapp,linestyle=linestyle)
+
+                ax.set_title(autotitle)
+            else:
+
+                if i!=3:
+                    ii=3
+                else:
+                    ii=6
+
+                for j in range(ii):
+                    if ii==6:
+                        if j>2:
+                            jj=3
+                        else:
+                            jj=j
+                    else:
+                        jj=j
+
+     
+                    # Setup plot type
+                    if isinstance(Te,list):
+                        x=Te
+                        y=array([reactions[datalist[i*3+j]].rate(T,None,ne=ne)*ev for T in Te])/(ne**(j==2))
+                        xlabel=(r'Electron temperature [eV]')
+                        ex=int(log10(ne))
+                        mu=ne/(10**ex) 
+                        autotitle=title[i]
+                        suptitle=pretitle+r'$\rm{{n_e}}$={}$\times10^{{{}}}$ $\rm{{cm^{{-3}}}}$'.format(mu,ex)
+                    elif isinstance(ne,list): 
+                        x=ne
+                        y=array([reactions[datalist[i*3+j]].rate(Te,None,ne=n)*ev for n in ne])
+                        if j==2:
+                            y=y/ne
+                        xlabel=(r'Electron density [$\rm{cm^{-3}}$]')
+                        autotitle=title[i]
+                        supttitle=pretitle+r' {}, $\rm{{T_e}}$={} [eV]'.format(typ,Te)
+                    else:
+                        print('Reaction rate for process "{}" at Te={} and ne={}'.format(datalist[idx],Te,ne))
+                        return reactions[datalist[idx]].rate(Te,None,ne)
+
+                    if j==0:
+                        tot=zeros((len(x),))
+                    tot=tot+y
+
+                    pl(x,((-1)**(i==0))*y,color=colors[jj],label=lab[jj]+labelapp,linewidth=linewidth,linestyle=linestyle)
+
+                    ax.set_title(autotitle)
+
+                if (plot not in ['semilogy','loglog']) and (origUE is False):
+                    pl(x,((-1)**(i==0))*tot,linewidth=linewidth,color='k',label='Total'+labelapp,linestyle=linestyle)
+
+            if oldax is False: 
+                box = ax.get_position()
+                ax.set_position([box.x0, box.y0 + box.height * 0.07,box.width, box.height * 0.95])
+            if i==3:
+                ax.legend(loc='lower center', bbox_to_anchor=(-0.1, -0.35),frameon=False, ncol=9)
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(r'$\rm{S_E}$ [$\rm{W/(n_e\cdot V\quad)}$]')
+            if xlim is not None:
+                ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+
+                    
+    
+                
+
+        fig.suptitle(suptitle)
+        
+        if savename is not None:
+            try:
+                mkdir('output/figs')
+            except:
+                pass
+            fig.savefig('output/figs/{}.{}'.format(savename,figtype),dpi=300,edgecolor=None,format=figtype,bbox_inches='tight')
+
+
+        fig.show()
+        return fig
+
+    def spectrum(self,Te,ne,E=0.1,Ti=None,ni=None,fig=None,units='l',norm=False,figsize=(10,10/1.618033),xlim=None,linewidth=1,split=False,write=False):
+        #,Sext=True,False,N=False,fig=None,n0=None,ax=0,figsize=(7+7,7*1.618033),linestyle='-',ylim=None,linewidth=2,labelapp='',qlabel=False,savename=None,title=None,pretitle='',figtype='png',color=None,nuclei=True,Tm=False,rad=True,gl=False,n=None,suptitle=None,ylimE=None,Ton=True):
+        ''' Plots atomic and molecular spectra '''
+        from matplotlib.pyplot import figure
+
+        try:
+            ax=fig.get_axes()[0]
+        except:
+            fig=figure(figsize=figsize)
+
+        if units=='ev':
+            xunit=r'E [eV]'
+            if xlim is None:
+                xlim=(6,13)
+        elif units=='v':
+            xunit=r'v [$\mathrm{cm^{-1}}}$]'
+            if xlim is None:
+                xlim=(4.5e4,1.05e5)
+        elif units=='f':
+            xunit='Frequency [THz]'
+            if xlim is None:
+                xlim=(1400,3200)
+        elif units=='l':
+            xunit=r'$\rm{\lambda}$ [nm]'
+            if xlim is None:
+                xlim=(80,260)
+        elif units=='Å':
+            xunit=r'$\rm{\lambda}$ [Å]'
+            if xlim is None:
+                xlim=(800,2600)
+            
+
+        if norm is True:
+            yunit='Normalized intensity []'
+        else:
+            yunit=r'Counts [$\rm{s^{-1}}]$'
+
+
+        data=self.crm.intensity(Te,ne,Ti=None,ni=None,E=E,units=units,norm=norm,write=write)
+
+        if split is True:
+            species=['atomic','molecular']
+            for i in range(2):
+                ax=fig.add_subplot(3,1,i+1)
+                for d in range(len(data[i][0,:])):
+                    if data[i][0,d]!=0:
+                        ax.plot([data[i][0,d],data[i][0,d]],[0,data[i][1,d]],'k',linewidth=linewidth)
+                ax.set_ylim(0,1.1*max(data[i][1,:]))
+                ax.set_xlim(xlim)
+                ax.set_xlabel(xunit)
+                ax.set_ylabel(yunit)
+                ax.set_title('Total radiation from {} processes'.format(species[i]))
+
+
+            ax=fig.add_subplot(313)
+
+        else:
+            ax=fig.add_subplot(111)
+
+        color=['b','r']
+        if norm is True:
+            data=self.crm.intensity(Te,ne,Ti=None,ni=None,E=E,units=units,norm=False,write=False)
+            n=sum(data[0][1,:])+sum(data[1][1,:])
+        else:
+            n=1
+
+        for i in range(2):
+            ax.plot([],[],'b-')
+            ax.plot([],[],'r-')
+            for d in range(len(data[i][0,:])):
+                if data[i][0,d]!=0:
+                    ax.plot([data[i][0,d],data[i][0,d]],[0,data[i][1,d]/n],linewidth=linewidth,color=color[i])
+            ax.set_ylim((0,1.1*max(max(data[0][1,:]),max(data[1][1,:]))/n))
+            ax.set_xlim(xlim)
+            ax.set_xlabel(xunit)
+            ax.set_ylabel(yunit)
+            ax.set_title('Total radiation from molecular processes')
+            ax.legend(['Atomic bands','Molceular bands'])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

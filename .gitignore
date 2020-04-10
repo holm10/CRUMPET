@@ -9,3 +9,12 @@ main.py
 __pycache__
 CRUM/__pycache__
 .DS_Store
+.DS_Store
+.DS_Store
+CRUM/.DS_Store
+rates/ehr5.dat
+rates/ehr3.dat
+logs/.DS_Store
+manual/.DS_Store
+output/.DS_Store
+'
