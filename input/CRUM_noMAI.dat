@@ -119,15 +119,6 @@ S_H(n=1)=0.5*Tm+0.25
 S_g=0
 S_V=H2diss+Ry
 
-* HYDHEL_2.2.11
-e + H2+ > 2*e + 2*p
-
-S_r=-(H2pdiss+Ry+2*0.4)
-S_H2+=-Tm
-S_p=2*(0.5*Tm+0.4)
-S_g=0
-S_V=H2pdiss+Ry
-
 
 * HYDHEL_2.2.12
 e + H2+ > e + p + H(n=1)
@@ -221,15 +212,6 @@ S_H(n=1)=Tmi
 S_g=0
 S_V=Hmioniz
 
-
-* HYDHEL_7.1.2
-e + H- > 3*e + p
-
-S_r=-(Hmioniz+Ry)
-S_H-=-Tmi
-S_p-=Tmi
-S_g=0
-S_V=Hmioniz+Ry
 
 
 * HYDHEL_7.2.1

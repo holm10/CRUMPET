@@ -26,25 +26,6 @@ S_g=0
 S_V=H2diss
 
 
-* UE_IONIZ
-e + H(n=1) > 2*e + p
-
-S_r=-Ry-erl1
-S_H(n=1)=-Ta
-S_p=Ta
-S_g=erl1
-S_V=Ry
-
-* UE_REC
-e + p > H(n=1)
-
-S_r=-Te-erl2+Ry
-S_p=-Ti
-S_H=Ti+Te
-S_g=erl2
-S_V=-Ry
-
-
 ** RATES
 # Define the files for the standard inputs
 AMJUEL  rates/amjuel.tex

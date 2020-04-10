@@ -5,11 +5,11 @@ SAWADA
 * RATE X-B
 e + H2(v=X) > e + H2(n=B)
 
-S_r=-(H2B-H2vX)
+S_r=0
 S_H2(v=X)=-Tm
 S_H2(n=B)=Tm
 S_g=0
-S_V=H2B-H2vX
+S_V=0
 
 #			b0				b1				b2				b3				b4				b5				b6				b7				b8
 v= 0
@@ -47,11 +47,11 @@ v= 14
 * RATE X-C
 e + H2(v=X) > e + H2(n=C)
 
-S_r=-(H2C-H2vX)
+S_r=0
 S_H2(v=X)=-Tm
 S_H2(n=C)=Tm
 S_g=0
-S_V=H2C-H2vX
+S_V=0
 
 #			b0				b1				b2				b3				b4				b5				b6				b7				b8
 v= 0
@@ -89,10 +89,10 @@ v= 14
 * COEFFICIENT EF-B
 H2(n=EF) > H2(n=B)
 
-S_r=-0
+S_r=0
 S_H2(n=B)=Tm
-S_g=H2EF-H2B
-S_V=-(H2EF-H2B)
+S_g=0
+S_V=0
 
 6.7E+06
 
@@ -101,10 +101,10 @@ S_V=-(H2EF-H2B)
 * COEFFICIENT a-diss
 H2(n=a) > 2*H(n=1)
 
-S_r=-0
+S_r=0
 S_H(n=1)=2*(0.5*Tm+H2a-H2diss)
 S_g=0
-S_V=H2diss-H2a
+S_V=0
 
 9.1E+07
 
@@ -112,10 +112,10 @@ S_V=H2diss-H2a
 * COEFFICIENT c-diss
 H2(n=c) > 2*H(n=1)
 
-S_r=-0
+S_r=0
 S_H(n=1)=2*(0.5*Tm+H2c-H2diss)
 S_g=0
-S_V=H2diss-H2c
+S_V=0
 
 1E+05
 
@@ -123,10 +123,10 @@ S_V=H2diss-H2c
 * COEFFICIENT B-X
 H2(n=B) > H2(v=X)
 
-S_r=-0
+S_r=0
 S_H(v=X)=Tm
-S_g=H2B-H2vX
-S_V=-(H2B-H2vX)
+S_g=0
+S_V=0
 
 # v 	coefficient
 0		8.2772736E+07
@@ -150,10 +150,10 @@ S_V=-(H2B-H2vX)
 * COEFFICIENT C-X
 H2(n=C) > H2(v=X)
 
-S_r=-0
+S_r=0
 S_H(v=X)=Tm
-S_g=H2C-H2vX
-S_V=-(H2C-H2vX)
+S_g=0
+S_V=0
 
 # v 	coefficient
 0		1.0298930E+08
@@ -176,10 +176,10 @@ S_V=-(H2C-H2vX)
 * COEFFICIENT B-diss
 H2(n=B) > 2*H(n=1)
 
-S_r=-0
+S_r=0
 S_H(n=1)=2*(0.5*Tm+H2B-H2diss)
 S_g=0
-S_V=H2diss-H2B
+S_V=0
 
 2.8110592E+08
 
@@ -187,10 +187,10 @@ S_V=H2diss-H2B
 * COEFFICIENT C-diss
 H2(n=C) > 2*H(n=1)
 
-S_r=-0
+S_r=0
 S_H(n=1)=2*(0.5*Tm+H2C-H2diss)
 S_g=0
-S_V=H2diss-H2C
+S_V=0
 
 1.0094800E+08
 
@@ -198,11 +198,11 @@ S_V=H2diss-H2C
 * SIGMA X-c
 e + H2(v=0) > e + H2(n=c)
 
-S_r=-(H2c-H2v0)
+S_r=0
 S_H2(v=0)=-Tm
 S_H2(n=C)=Tm
 S_g=0
-S_V=H2c-H2v0
+S_V=0
 
 
 # Eth		q0			A 		Omega	W 			gamma   nu

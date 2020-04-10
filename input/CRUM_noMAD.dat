@@ -129,27 +129,6 @@ S_g=0
 S_V=H2pdiss+Ry
 
 
-* HYDHEL_2.2.12
-e + H2+ > e + p + H(n=1)
-
-S_r=-(H2pdiss+2*4.3)
-S_H2+=-Tm
-S_p=0.5*Tm+4.3
-S_H(n=1)=0.5*Tm+4.3
-S_g=0
-S_V=H2pdiss
-
-
-* HYDHEL_2.2.13
-e + H2+ > e + p + H(n=2)
-
-S_r=-(H2pdiss+Hn2-Hn1+2*1.5)
-S_H2+=-Tm
-S_p=0.5*Tm+1.5
-S_H(n=2)=0.5*Tm+1.5
-S_g=0
-S_V=H2pdiss+Hn2-Hn1
-
 
 * AMJUEL_2.2.14
 e + H2+ > H(n=1) + 0.1*H(n=2) + 0.45*H(n=3) + 0.22*H(n=4) + 0.12*H(n=5) + 0.069*H(n=6) + 0.029*H(n=7) + 0.012*H(n=8)
@@ -199,17 +178,6 @@ S_H2+=Tm
 S_e=Te
 S_g=0
 S_V=H2ioniz
-
-
-* HYDHEL_3.2.6
-p + H2+ > 2*p + H(n=1)
-
-S_r=-(H2pdiss+2*4.5)
-S_H2+=-Tm
-S_p=0.5*Tm+4.5
-S_H(n=1)=0.5*Tm+4.5
-S_g=0
-S_V=H2pdiss
 
 
 * HYDHEL_7.1.1

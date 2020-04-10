@@ -7,7 +7,7 @@
 class REACTION:
 
 
-    def __init__(self, name, database, reactants, fragments, coeffs,typ,Tarr=0):
+    def __init__(self, name, database, reactants, fragments, coeffs,typ,S,Tarr=0):
         ''' Creates an reaction object
             __init__(name,database,reactants,fragments,*keys)
     
@@ -40,6 +40,13 @@ class REACTION:
         self.coeffs=array(coeffs)
         self.type=typ
         self.Tarr=array(Tarr)
+        for i in range(4):
+            if isinstance(S[i],str): S[i]=S[i][4:]
+
+        self.S_r=S[0]
+        self.S_g=S[1]
+        self.S_V=S[2]
+        self.S_e=S[3]
 
         # Setup multilplier arrays
         self.r_mult=ones((len(reactants),))
@@ -63,7 +70,7 @@ class REACTION:
             t=[i for i in range(self.coeffs.shape[0])]
             n=[i for i in range(self.coeffs.shape[1])]
 
-            self.interpolation=interp2d(n,t,self.coeffs) # Create 2D interpolation function
+            self.interpolation=interp2d(n,t,self.coeffs,kind='linear') # Create 2D interpolation function
 
         if self.type=='ADAS': # ADAS interpolator
             self.interpolation=interp1d(self.Tarr,self.coeffs,kind='slinear')   # Create 1D interpolation function
@@ -105,25 +112,37 @@ class REACTION:
         elif 'p' in self.reactants: T=Ti # Proton impact reaction, use Ti
         else: T=0   # Photoemission, T not used
 
+
+        # Extrapolate from minimum to zero
+
+
+
         # Get rate based on self.type
         if self.type=='RATE':
             ''' We have an EIRENE polynomial fit '''
             ret=0
+            if T<0.5:   
+                Tuse=0.5
+                coeff=T/Tuse
+            else:       
+                Tuse=T
+                coeff=1
+
             if len(self.coeffs.shape)==2:
                 ''' T,E fit '''
                 for i in range(9):
                     for j in range(9):
-                        ret+=self.coeffs[i,j]*(log(T)**i)*(log(E)**j)
+                        ret+=self.coeffs[i,j]*(log(Tuse)**i)*(log(E)**j)
 
             elif len(self.coeffs.shape)==1: 
                 ''' T fit '''
                 for i in range(9):
-                    ret+=self.coeffs[i]*(log(T)**i)
+                    ret+=self.coeffs[i]*(log(Tuse)**i)
                     
             else:
                 print('Unknown fit')
 
-            return exp(ret)
+            return coeff*exp(ret)
 
         elif self.type=='COEFFICIENT':
             ''' Coefficient '''
@@ -154,19 +173,29 @@ class REACTION:
 
         elif self.type=='ADAS':
             ''' ADAS fit '''
-            T=max(T,self.Tarr[-1])
+            if T<self.Tarr[0]:
+                Tuse=self.Tarr[0]
+                coeff=T/Tuse
+            else:
+                Tuse=T
+                coeff=1
+            Tuse=min(Tuse,self.Tarr[-1])
+#            T=max(T,self.Tarr[0])
             # TODO: How to deal with extrapolation?
             # TODO: figure out what is implied by the statistical weight omegaj - set =1 for now
             # Return the rate as calculated from the ADAS fit, per the ADAS manual
-            return 2.1716e-8*(1/omegaj)*sqrt(13.6048/T)*self.interpolation(T) 
+            return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse) 
         
         elif self.type=='UE':
             ''' UEDGE fit '''
             # Turn the temperature and density into log-log variables, bounded to the limits
-            jt=max(0,min(10*(log10(Te)+1.2),60))
+            jt=max(0,min(10*(log10(Te+1e-99)+1.2),60))
             jn=max(0,min(2*(log10(ne)-10),15))
             # Interpolate jt
-            return self.interpolation(jn,jt)[0]
+            
+            c=1
+            if self.name in ['RECRAD','IONIZRAD']: c=6.242e11
+            return self.interpolation(jn,jt)[0]*c
                     
         else:
             print('Unknown type "{}"'.format(self.type))

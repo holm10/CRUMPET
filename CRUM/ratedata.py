@@ -152,7 +152,7 @@ class RATE_DATA:
                 l=f.readline()
 
 
-    def read_UE(self,fname,reactions,path='.',datalist=['IONIZ','REC']):
+    def read_UE(self,fname,reactions,path='.',datalist=['IONIZ','REC','IONIZRAD','RECRAD']):
         ''' Reads the UEDGE rate file fname stores cofficients to reactions
             read_UE(fname,reactions,*keys)
     
