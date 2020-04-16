@@ -925,22 +925,21 @@ class CRM:
 
         return ret
         
-    def intensity(self,Te,ne,Ti=None,ni=None,E=0.1,units='v',norm=False,write=False,Sext=True,n=None):
+    def intensity(self,Te,ne,Ti=None,ni=None,E=0.1,units='v',norm=True,write=False,Sext=True,n=None):
         ''' Returns a list of 2x(NxN) vector with spectroscopic units/intensity of [Ia, Im]'''
-        from numpy import reshape,zeros,multiply,where,transpose,matmul,array,mean,seterr,all
-        seterr(invalid='ignore')
+        from numpy import reshape,zeros,multiply,where,transpose,matmul,array,mean,all,diag
+        from scipy.optimize import fsolve
+
+        def ss(n,mat):
+            return matmul(mat,n)
 
         if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
         NN=len(self.species)*len(self.species)
 
         mat,ext=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
-        # Solve and return
-        ndot=abs(matmul(mat,n)+ext*(Sext is True))
-
-        Mndot=zeros((len(ndot),len(ndot)))
-        for i in range(len(ndot)):
-            Mndot[i,:]=ndot
-
+        # Take 2 'time-steps' for initial guess
+        for i in range(2):
+            n=abs(matmul(mat,n)+ext*(Sext is True))
 
 
         x=self.E(Te,ne,Ti,Te,E,write=False)
@@ -948,17 +947,21 @@ class CRM:
    
 
         if write:
-            self.write_matrix(y[0][0],ndot,'Ia',Te,ne,Ti,ni,E,form='{:1.2E}')
-            self.write_matrix(y[1][0],ndot,'Im',Te,ne,Ti,ni,E,form='{:1.2E}')
+            self.write_matrix(y[0][0],n,'Ia',Te,ne,Ti,ni,E,form='{:1.2E}')
+            self.write_matrix(y[1][0],n,'Im',Te,ne,Ti,ni,E,form='{:1.2E}')
 
+        
         ret=[]
+        ss_sol=diag(abs(fsolve(ss,n,(mat))))
         for i in range(2):
             arr=zeros((NN,2))
 
-            Y=multiply(y[i][0],Mndot)
+            # Use the steady-state solution to find transitions 
+            Y=matmul(y[i][0],ss_sol)
             arr[:,0]=reshape(x[i][0],(1,NN))
             arr[:,1]=reshape(Y,(1,NN))
 
+            # Drop non-radiative entries
             arr=transpose(arr[~all(abs(arr)< 1e-8,axis = 1)])
         
             if units=='ev':
@@ -974,10 +977,11 @@ class CRM:
 
 
             if norm is True:
-                n=sum(arr[1,:])
+                nrm=sum(arr[1,:])
+
             else:
-                n=1
-            arr[1,:]=arr[1,:]/n
+                nrm=1
+            arr[1,:]=arr[1,:]/nrm
 
             ret.append(arr)
 

@@ -1384,23 +1384,23 @@ class CRUMPET:
         if units=='ev':
             xunit=r'E [eV]'
             if xlim is None:
-                xlim=(6,13)
+                xlim=(0,20)
         elif units=='v':
             xunit=r'v [$\mathrm{cm^{-1}}}$]'
             if xlim is None:
-                xlim=(4.5e4,1.05e5)
+                xlim=(1.4e4,1.05e5)
         elif units=='f':
             xunit='Frequency [THz]'
             if xlim is None:
-                xlim=(1400,3200)
+                xlim=(400,3500)
         elif units=='l':
             xunit=r'$\rm{\lambda}$ [nm]'
             if xlim is None:
-                xlim=(80,260)
+                xlim=(80,700)
         elif units=='Å':
             xunit=r'$\rm{\lambda}$ [Å]'
             if xlim is None:
-                xlim=(800,2600)
+                xlim=(800,7000)
             
 
         if norm is True:
