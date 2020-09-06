@@ -162,11 +162,16 @@ p + H- > H(n=3) + H(n=1)
 e + H2(v=X) > e + H2(v=Y)
 
 
-* APID_IONIZ
-e + H(n=X) > 2*e + p
-	K=Te
+* UE_IONIZ
+e + H(n=1) > 2*e + p
+	K=erl1
 
-* JOHNSON_RELAXATION
+* UE_REC
+e + p > H(n=1)
+	K=Te+erl2
+
+
+* ADAS_RELAXATION
 H(n=X) > H(n=Y)
 
 
@@ -181,6 +186,10 @@ HYDHEL  rates/hydhel.tex
 H2VIBR  rates/h2vibr.tex
 UE      rates/ehr2.dat
 ADAS    rates/ich0-1.dat
+
+** ENERGIES
+# Define the file with energies and handles to be used in energy calculation
+rates/energy_keys.dat
 
 
 ** SETTINGS

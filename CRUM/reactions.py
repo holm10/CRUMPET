@@ -7,7 +7,7 @@
 class REACTION:
 
 
-    def __init__(self, name, database, reactants, fragments, coeffs,typ,S,Tarr=0):
+    def __init__(self, name, database, coeffs,typ,S,Tarr=0):
         ''' Creates an reaction object
             __init__(name,database,reactants,fragments,*keys)
     
@@ -35,34 +35,37 @@ class REACTION:
         self.name=name
         self.coeffs=coeffs
         self.database=database
-        self.reactants=[r.strip() for r in reactants]
-        self.fragments=[f.strip() for f in fragments]
+        self.reactants=S[0]
+        self.r_mult=S[2]
+        self.fragments=S[1]
+        self.f_mult=S[3]
         self.coeffs=array(coeffs)
         self.type=typ
         self.Tarr=array(Tarr)
         for i in range(4):
             if isinstance(S[i],str): S[i]=S[i][4:]
 
-        self.S_r=S[0]
-        self.S_g=S[1]
-        self.S_V=S[2]
-        self.S_e=S[3]
+        self.S_r=S[4][0]
+        self.S_g=S[4][-2]
+        self.S_V=S[4][1]
+        self.S_e=S[4][-1]
+
 
         # Setup multilplier arrays
-        self.r_mult=ones((len(reactants),))
-        self.f_mult=ones((len(fragments),))
+        #self.r_mult=ones((len(reactants),))
+        #self.f_mult=ones((len(fragments),))
         
         # Separate coefficients from reactant species
-        for i in range(len(self.reactants)):    # Loop through reactants
-            if '*' in self.reactants[i]:    # If there is a multiplier, separate
-                self.f_mult[i]=float(reactants[i].split('*')[0])    # Update multiplier
-                self.reactants[i]=reactants[i].split('*')[1].strip()    # Remove mult from reactant string
+        #for i in range(len(self.reactants)):    # Loop through reactants
+        #    if '*' in self.reactants[i]:    # If there is a multiplier, separate
+        #        self.f_mult[i]=float(reactants[i].split('*')[0])    # Update multiplier
+        #        self.reactants[i]=reactants[i].split('*')[1].strip()    # Remove mult from reactant string
 
         # Separate coefficients from fragment species
-        for i in range(len(self.fragments)):    # Loop through fragments
-            if '*' in self.fragments[i]:    # If there is a multiplier, separate
-                self.f_mult[i]=float(fragments[i].split('*')[0])    # Update the multiplier
-                self.fragments[i]=fragments[i].split('*')[1].strip()    # Remove the multiplier from fragment string
+        #for i in range(len(self.fragments)):    # Loop through fragments
+         #   if '*' in self.fragments[i]:    # If there is a multiplier, separate
+         #       self.f_mult[i]=float(fragments[i].split('*')[0])    # Update the multiplier
+         #       self.fragments[i]=fragments[i].split('*')[1].strip()    # Remove the multiplier from fragment string
 
 
         ''' Make interpolation object if necessary '''
@@ -74,7 +77,6 @@ class REACTION:
 
         if self.type=='ADAS': # ADAS interpolator
             self.interpolation=interp1d(self.Tarr,self.coeffs,kind='slinear')   # Create 1D interpolation function
-
 
     
     def print_reaction(self):
@@ -104,8 +106,9 @@ class REACTION:
             ne (None)   -   Electron density, used for UEDGE rates [cm**3]
             omegaj (1)  -   Statistical weight of ADAS rates 
         '''
-        from numpy import log,exp,sqrt,pi,inf,array,log10
+        from numpy import log,exp,sqrt,pi,inf,array,log10,logspace,linspace
         from scipy.integrate import quad
+        from matplotlib.pyplot import figure
 
         # Find reactant species
         if 'e' in self.reactants:   T=Te # Electron-mediated reaction, use Te
@@ -193,9 +196,154 @@ class REACTION:
             jn=max(0,min(2*(log10(ne)-10),15))
             # Interpolate jt
             
+            # If the density is being extrapolated, scale accordingly!
             c=1
             if self.name in ['RECRAD','IONIZRAD']: c=6.242e11
             return self.interpolation(jn,jt)[0]*c
+
+        elif self.type=='APID':
+
+            def sigma(T,coeffs):
+                ''' The APID-4 rates are taken from Janev's 1993 IAEA paper, the analytic solutions from Stotler's svlib routine used in DEGAS2 '''
+                n=self.coeffs[0]
+                I=13.6/n**2
+
+                def expint(k,p):
+                    a=[-0.57721566,0.99999193,-0.24991055,0.05519968,-0.00976004,0.00107857]
+                    ap=[8.5733287401,18.0590169730,8.6347608925, 0.2677737343 ]
+                    b=[9.5733223454,25.6329561486,21.0996530827, 3.9584969228 ]
+
+                    def en(zn,z):
+                        return exp(-z)*( 1 + zn/(z+zn)**2 + zn*(zn-2*z)/(z+zn)**4 + zn*(6*z**2-8*zn*z+zn**2)/(z+zn)**6 )/(z+zn)
+
+                    if k==0: 
+                        if p<0:
+                            return None
+                        else:
+                            return exp(-p)/p
+
+                    if p<0: 
+                        return None
+                    elif p==0:
+                        if k==1:
+                            return None
+                        else:
+                            return 1/(k-1)
+
+                    elif p<8 or k==1:
+                        if p<1:
+                            ze1=a[5]
+                            for i in [4,3,2,1,0]:
+                                ze1=a[i]+ze1*p
+                            ze1-=log(p)
+
+                        else:
+                            znum=1
+                            zden=1
+                            for i in range(4):
+                                znum=ap[i]+znum*p
+                                zden=b[i]+zden*p
+                            ze1=exp(-p)*znum/(zden*p)
+
+                        if k==1:
+                            return ze1
+                        else:
+                            zek=ze1
+                            for i in range(2,k+1):
+                                zek=(exp(-p)-p*zek)/(i-1)
+                            return zek
+                    
+                    else:
+                        kp=int(p+0.5)
+                        if k<kp and k<=10:
+                            if kp>10: kp=10
+                            zek=en(kp,p)
+                            for i in range(kp-1,k-1,-1): zek=(exp(-p) -i*zek)/p
+                            return zek
+                    
+                        else: return en(k,p)
+                    return 'Fell througFell throughh'
+
+                    #return exp(-p)/(p**k)
+
+                # Use set constants to eval sigma
+                if n<=3: 
+                    A=self.coeffs[1]
+                    b=self.coeffs[2:7]
+                    zarg=I/T
+
+                    zeint=[]
+                    for i in range(1,7): 
+                        zeint.append(expint(i,zarg))
+
+                    zmul=[]
+                    zmul.append(b[0] + 2*b[1] + 3*b[2] + 4*b[3] + 5*b[4])
+                    zmul.append(-2*( b[1] + 3*b[2] + 6*b[3] + 10*b[4] ))
+                    zmul.append(3*( b[2] + 4*b[3] + 10*b[4] ))
+                    zmul.append(-4*( b[3] + 5*b[4] ))
+                    zmul.append(5*b[4])
+
+                    zi1=0
+                    for i in range(5): zi1+=zmul[i]*zeint[i+1]
+
+
+                    zi2=A*zeint[0]
+                    zi3=1e-13/(I*T)
+                    return 6.692e7*sqrt(T) *zi3*(zi1 + zi2)
+      
+
+                # Higher n, evaluate from formulae
+                else:
+
+                    zn=n
+                    pt=T
+                    pin=I
+                    zg0 = 0.9935 + 0.2328/zn - 0.1296/zn**2
+                    zg1 = -(0.6282 - 0.5598/zn + 0.5299/zn**2) / zn
+                    zg2 = -(0.3887 - 1.181/zn + 1.470/zn**2) / zn**2
+                    zmul = 32. / (3. * sqrt(3.) * pi)
+                    zan = zmul * zn * (zg0/3. + zg1/4. + zg2/5.)  
+                    zrn = 1.94 * zn**(-1.57)
+                    zb = (4.0 - 18.63/zn + 36.24/zn**2 - 28.09/zn**3) / zn
+                    zbn = 2. * zn**2 * (5. + zb) / 3
+                    zyn = pin / pt
+                    zzn = zrn + zyn
+                    ze1y = expint(1,zyn)
+                    ze1z = expint(1,zzn)
+                    zint1 = zan * (ze1y/zyn - ze1z/zzn) 
+                    zxiy = expint(0,zyn) - 2.*ze1y + expint(2,zyn)
+                    zxiz = expint(0,zzn) - 2.*ze1z + expint(2,zzn)
+                    zint2 = (zbn - zan * log(2.*zn**2)) * (zxiy - zxiz)
+                    zint3 = 1.76e-16 * zn**2 * zyn**2
+                    ret = 6.692e7 * sqrt(pt) * zint3 * (zint1 + zint2)
+
+
+
+                return ret
+                    
+            def R(x,T,coeffs):
+                # Integrand function as described in JUEL-3858
+                return x*sigma(x*T,self.coeffs)*exp(-x)
+
+            if self.name.split('_')[0].upper()=='IONIZ':
+                ''' APID ionization rate '''
+
+                '''
+                f=figure()
+                ax=f.add_subplot()
+                x=logspace(-2,4,500)
+                y=[]
+                for i in x:
+                    y.append(sigma(i,self.coeffs))
+                
+                ax.loglog(x,y)
+                ax.grid(which='both') 
+                ax.set_ylim((1e-10,1e-5))
+                '''
+                return sigma(T,self.coeffs)
+
+                    
+
                     
         else:
             print('Unknown type "{}"'.format(self.type))

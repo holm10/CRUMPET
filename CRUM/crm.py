@@ -4,7 +4,7 @@
 # 200205 - Separated from CRUM.py #holm10
 
 class CRM:
-    def __init__(self,species,reactions,settings,path='.',recrad=None,ionizrad=None):
+    def __init__(self,species,bg,reactions,settings,path='.',recrad=None,ionizrad=None):
         ''' Creates a CRM class, at the heart of CRUM
             __init__(species,reactions,settings)
 
@@ -25,10 +25,11 @@ class CRM:
 
         # Store class objects
         self.species=species
+        self.bg=bg
+        self.slist=list(self.species)
         self.reactions=reactions
         self.verbose=settings[0]
         self.Np=settings[1]
-        self.n0=settings[2]
         self.path=path
         self.ionizrad=ionizrad
         self.recrad=recrad
@@ -41,10 +42,10 @@ class CRM:
 
 
         # Write a log of the CRM setup path/logs
-        with open('logs/setup.log','w') as f:
+        with open('{}/logs/setup.log'.format(self.path),'w') as f:
             f.write('CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
             f.write('Defined species:\n')
-            for i in self.species:
+            for i in self.slist:
                 f.write('    {}\n'.format(i))
 
             f.write('Defined reactions:\n')
@@ -58,11 +59,26 @@ class CRM:
         # Do the same for a Diagnostic rate matrix displaying reaction correlations
         self.DIAGNOSTIC()
 
-    def get_reaction(self,name):
+    def n0(self):
+        from numpy import zeros
+        ret=zeros((len(self.species),))
+        for s in range(len(self.species)):
+            try:
+                ret[s]=self.species[self.slist[s]]['n'] 
+            except:
+                pass
+        return ret
+
+
+    def get_reaction(self,database,name):
         for r in self.reactions:
             if name==r.name:
-                return r        
+                if r.database==database:
+                    return r        
+        return None
 
+    def get_rate(self,database,name,T,n,E=0.1):
+        return self.get_reaction(database,name).rate(T,T,E,n)
 
     def getS(self,r,Te,Ti,Tm,E,ne,rad=True,Ton=True):
         ''' To output:
@@ -120,11 +136,12 @@ class CRM:
 
             ''' Check whether radiation is due to a molecule or atom '''
             if i==2: # Only check when trating radiation
-                if r.database in ['ADAS']: # TODO: catch-all for atomic radiation needed!
+                if r.database in ['ADAS','JOHNSON']: # TODO: catch-all for atomic radiation needed!
                     g=0
                 else: # Not atomic line rad
                     g=1
                 
+
 
              
             ret[i+offset+g,:]=array([S,ext])
@@ -220,13 +237,13 @@ class CRM:
                 for rea in range(len(r.reactants)):
                     # Find the column into which the fragments goes: if background mark external
                     try:
-                        j=self.species.index(r.reactants[rea])  # Get the product species index of the correct column
+                        j=self.slist.index(r.reactants[rea])  # Get the product species index of the correct column
                     except:
                         continue
             
                     multiplier=r.r_mult[rea] # Get the reaction multiplier for the density
 
-                    if self.species[i]==r.reactants[rea]:   # If the species (row index) is a reactant, r is a depletion process 
+                    if self.slist[i]==r.reactants[rea]:   # If the species (row index) is a reactant, r is a depletion process 
                         ''' DEPLETION '''
 
                         if mode=='diagnostic':
@@ -246,11 +263,11 @@ class CRM:
                     multiplier=r.f_mult[frag]   # Fragment multiplier
 
                     # Do nothing if background fragment
-                    if r.fragments[frag] not in self.species: 
+                    if r.fragments[frag] not in self.slist: 
                         continue
                     
                     # If fragment enters row, add in appropriate column as defined by reactant
-                    elif self.species.index(r.fragments[frag])==i:
+                    elif self.slist.index(r.fragments[frag])==i:
                             if j is None: # External flag triggered, store to external source
                                 ''' EXTERNAL SOURCE '''
 
@@ -328,7 +345,7 @@ class CRM:
 
         Slabels=['S_e','S_ia','S_V','S_g']
 
-        with open('logs/{}_matrix.log'.format(char),'w') as f:  # Create a file to write to according to char
+        with open('{}/logs/{}_matrix.log'.format(self.path,char),'w') as f:  # Create a file to write to according to char
             
             if char=='R': # Rate coefficient  matrix is being written
                 f.write('Diagnostic rate coefficient (density-independend) matrix for CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
@@ -342,14 +359,14 @@ class CRM:
             
             # Create header line
             out='{}-MAT|'.format(char.upper()).rjust(10) 
-            for s in self.species:
+            for s in self.slist:
                 out+=s.rjust(10,' ')
             f.write(out+'\n'+'_'*(1+len(self.species))*10+'\n')
 
             # Loop through the matrix
             for l in range(len(mat)):
                 if len(mat)==len(self.species):
-                    out=self.species[l]+'|' # Create a tabulated file with the row species displayed
+                    out=self.slist[l]+'|' # Create a tabulated file with the row species displayed
                 else:
                     out=Slabels[l]+'|' # Create a tabulated file with the row species displayed
                 out=out.rjust(10,' ')
@@ -377,22 +394,22 @@ class CRM:
         dia,ext=self.populate('diagnostic',0,'*[ne]',0,'*[ni]') # Get the 2D diagnostic list and external source list
 
         # Write the diagnostic matrix to the logs
-        with open('logs/reaction_matrix.log','w') as f:
+        with open('{}/logs/reaction_matrix.log'.format(self.path),'w') as f:
             # Write the header line
             f.write('Diagnostic reaction matrix for CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
             # Loop through each species
             for i in range(len(dia)):
                 # Write the species header
-                f.write('\n\n\n======== {} ========\n'.format(self.species[i]))
+                f.write('\n\n\n======== {} ========\n'.format(self.slist[i]))
                 # Start with the sinks
-                f.write('{} DEPLETION:\n                 {}\n'.format(self.species[i],dia[i][i]))
+                f.write('{} DEPLETION:\n                 {}\n'.format(self.slist[i],dia[i][i]))
                 # Then do the sources
                 for j in range(len(dia[i])):
                     if len(dia[i][j])>0:    # Don't write anything empty
                         if i!=j:    # Don't duplicate depletion
-                            f.write('From {}:\n                 {}\n'.format(self.species[j],dia[i][j]))
+                            f.write('From {}:\n                 {}\n'.format(self.slist[j],dia[i][j]))
                 if len(ext[i])>0:   # Write external source last, if applicable
-                    f.write('{} EXTERNAL SOURCE:\n                 {}\n'.format(self.species[i],ext[i]))
+                    f.write('{} EXTERNAL SOURCE:\n                 {}\n'.format(self.slist[i],ext[i]))
         # If verbose, output the log content
         if self.verbose:
             with open('logs/reaction_matrix.log','rt') as f:
@@ -604,7 +621,7 @@ class CRM:
         ret=[]
         if gl is True:
             if n is None:
-                n0=self.n0
+                n0=self.n0()
             else:
                 n0=n
             # Create block matrix from M
@@ -662,7 +679,7 @@ class CRM:
                                 [zeros((N,5*N)),        M]   ])
                 if n is None:
                     n=zeros((len(mat),))
-                    n[-N:]=self.n0
+                    n[-N:]=self.n0()
                 ext=block([U[0][1], U[1][1], U[2][1], U[3][1], U[4][1], G])
 
             else:
@@ -676,7 +693,7 @@ class CRM:
                                 [zeros((N,5)),    M]   ])
 
                 if n is None:
-                    n=block([   zeros((5,)), self.n0    ] )
+                    n=block([   zeros((5,)), self.n0()    ] )
 
                 n=n.reshape((N+5,))
 
@@ -715,7 +732,7 @@ class CRM:
         from numpy import matmul,diag,real
         from numpy.linalg import inv,eig
 
-        if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
+        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
         
 
         # Create block matric from M
@@ -723,20 +740,31 @@ class CRM:
         MQ=mat[self.Np:,self.Np:]
         V=mat[self.Np:,:self.Np]
         H=mat[:self.Np,self.Np:]
+
         # Calculate Meff
         Meff=(MP-matmul(matmul(H,inv(MQ)),V))
 
         # Diagonalize M
         eigs,T=eig(mat)
+
+        if matrices is True:
+            return mat,T,real(eigs)
         # Order the eigenvalues and vectors in increasing magnitude
-        eigind=abs(eigs).argsort()[::1] 
-        eigs=eigs[eigind]
-        T=T[:,eigind]
+        # TODO should this be done for all the eigenvectors or separately between the Q and P space??
+        # --> Does not seem to affect the solution
+        eigind=abs(eigs[self.Np:]).argsort()[::1] 
+        e1=eigs[self.Np:]
+        T1=T[:,self.Np:]
+        e1=e1[eigind]
+        T1=T1[:,eigind]
+
+        #eigs=eigs[eigind]
+        #T=T[:,eigind]
+        eigs[self.Np:]=e1
+        T[:,self.Np:]=T1
         # Only use real parts TODO is this OK??
         eigs=real(eigs)
         D=diag(eigs)
-        if matrices is True:
-            return mat,T,eigs
 
         # Create block matrix
         TQ=T[self.Np:,self.Np:]
@@ -787,7 +815,7 @@ class CRM:
         '''
         from scipy.integrate import solve_ivp 
 
-        if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
+        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
         
         Meff,GPp,nP0p=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),Sext,n) # Set up Greenland model 
         
@@ -807,7 +835,7 @@ class CRM:
         maxnorm=max([sum(abs(norm[:,i])) for i in range(norm.shape[1])])
         maxdelta=max([sum(abs(delta[:,i])) for i in range(delta.shape[1])])
         if printout is True:
-            print("Validity of CRM with Np={}".format(self.species[:self.Np]))
+            print("Validity of CRM with Np={}".format(self.slist[:self.Np]))
             print("    max(|delta|)={:.2E}".format(maxdelta))
             print("    max(|inv(T_Q)*delta|)={:.2E}".format(maxnorm))
             print("    min(tau_P)={:.2E}".format(tauPmin))
@@ -850,7 +878,7 @@ class CRM:
 
         di=range(len(Z))-Zind # Track change in index space
         sorted_D=D[Zind]
-        sorted_species=[self.species[i] for i in Zind]
+        sorted_species=[self.slist[i] for i in Zind]
         rej=[]
         for i in range(len(Z)):
             if Np[i]==True:
@@ -886,7 +914,7 @@ class CRM:
         '''
         from scipy.integrate import solve_ivp 
 
-        if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
+        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
 
         mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
         ext=(Sext is True)*ext  # Set source strength
@@ -917,29 +945,141 @@ class CRM:
             ret=zeros((arr.shape[1],))
             for j in range(arr.shape[1]):   # Loop through eac time-step
                 for i in range(len(arr)):   # Loop through each species in arr
-                    ret[j]+=(1+('H2' in self.species[i]))*arr[i,j]
+                    ret[j]+=(1+('H2' in self.slist[i]))*arr[i,j]
         except: # If vector
             ret=0
             for i in range(len(arr)): # Loop through each species in arr
-                ret+=(1+('H2' in self.species[i]))*arr[i]
+                ret+=(1+('H2' in self.slist[i]))*arr[i]
 
         return ret
+
+    def totmol(self,arr):
+        from numpy import zeros
+
         
-    def intensity(self,Te,ne,Ti=None,ni=None,E=0.1,units='v',norm=True,write=False,Sext=True,n=None):
+        try:    # If matrix 
+            ret=zeros((arr.shape[1],))
+            for j in range(arr.shape[1]):   # Loop through eac time-step
+                for i in range(len(arr)):   # Loop through each species in arr
+                    ret[j]+=(('H2' in self.slist[i]))*arr[i,j]
+        except: # If vector
+            ret=0
+            for i in range(len(arr)): # Loop through each species in arr
+                ret+=(('H2' in self.slist[i]))*arr[i]
+        return ret
+
+
+
+
+        
+    def intensity(self,Te,ne,Ti=None,ni=None,E=0.1,units='v',norm=True,write=False,Sext=True,n=None,reassociation=1e3):
         ''' Returns a list of 2x(NxN) vector with spectroscopic units/intensity of [Ia, Im]'''
         from numpy import reshape,zeros,multiply,where,transpose,matmul,array,mean,all,diag
-        from scipy.optimize import fsolve
+        from scipy.optimize import minimize
+        from scipy.integrate import solve_ivp
+        from matplotlib.pyplot import figure
 
-        def ss(n,mat):
-            return matmul(mat,n)
 
-        if n is None: n=self.n0 # Use input n0 as default unless explict n0 requested
+        '''
+        def dt(t,n,mat,ext):
+            m=matmul(mat,n)
+            ext[0]=-m[0]
+            return matmul(mat,n)+ext
+
+
+
+        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
         NN=len(self.species)*len(self.species)
 
-        mat,ext=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
+        mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
+       
+        # Supply molecules to achieve SS
+        ext[1]=sum(n)/2
+        # Simulate to SS
+        ss_sol=solve_ivp(lambda x,y: dt(x,y,mat,ext),(0,10),n,'LSODA',dense_output=True)
+
+        ss_sol=diag(ss_sol.y[:,-1])
+        '''
+
+        def dt(t,n,mat,ext,n0):
+            '''
+            ntot=self.totparticles(n)
+            dn=self.totparticles(n)-self.totparticles(n0)
+            ext[1]=-dn*fac
+            '''
+            #print(n[1],dn)
+            #fac=0*1e3#-1e-2
+            '''ext[0]=-(matmul(mat,n))[0]'''
+            
+            #ext[1]=-0.5*ext[0]
+            #ext[1]=-ext[0]*0.1
+            #ext[0]=-fac*n[0]
+            #ext[1]=-0.99*self.totpart(ext)
+            #print(self.totpart(ext))
+            #ext[1]=-0.5*ext[0]
+            #print(self.totpart(n),sum(ext))
+            return matmul(mat,n)+ext
+
+        def ss(t,Y):
+            global ss_n 
+            if norm(Y-ss_n)<7e5:
+                return 0
+            else:
+                return 1
+        ss.terminal=True
+
+        def findfac(fac,n,mat,ext,n0):
+            nend_sum=self.totparticles(solve_ivp(lambda x,y: dt(x,y,mat,ext,n,fac),(0,1),n,'LSODA',dense_output=True).y[:,-1])
+            
+            return abs(self.totparticles(n0)-nend_sum)
+            
+            
+
+
+        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
+        NN=len(self.species)*len(self.species)
+
+        mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
+       
+        ''' Assume re-association to achieve SS 
+        mat[0,0]=-reassociation
+        mat[1,0]=-mat[0,0]*0.5 # Conserve nucleii
+    
+        fac=minimize(findfac,5e4,(n,mat,ext,n))
+        '''
+
+        '''
+        psor=-4.119965e20 
+        psorgc=3.26090e20
+        n[0]=4.846e13
+        n[1]=2.925e13
+        ext[0]=psorgc*1e-6-8.552e14
+        ext[1]=6.33578e14   
+        mat[0,0]=(psor*1e-6)/ne
+        '''
+        # Supply molecules to achieve SS
+        '''ext[1]=sum(n)/0.2'''
+        # Simulate to SS
+        ss_sol=diag(solve_ivp(lambda x,y: dt(x,y,mat,ext,n),(0,1),n,'LSODA',dense_output=True).y[:,-1])
+        #print(dt(0,ss_n,mat,ext))
+        #return
+
+
+
+
+
+
+
+        #def ss(n,mat):
+        #    return matmul(mat,n)
+
+        #if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
+        #NN=len(self.species)*len(self.species)
+
+        #mat,ext=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
         # Take 2 'time-steps' for initial guess
-        for i in range(2):
-            n=abs(matmul(mat,n)+ext*(Sext is True))
+        #for i in range(2):
+        #    n=n+(matmul(mat,n)+ext*(Sext is True))*1e-9
 
 
         x=self.E(Te,ne,Ti,Te,E,write=False)
@@ -952,7 +1092,7 @@ class CRM:
 
         
         ret=[]
-        ss_sol=diag(abs(fsolve(ss,n,(mat))))
+        #ss_sol=diag((fsolve(ss,n,(mat))))
         for i in range(2):
             arr=zeros((NN,2))
 
@@ -987,6 +1127,20 @@ class CRM:
 
         return ret
             
+
+    def species_rate(self,key,Te,ne,Ti=None,ni=None,E=0.1):
+        if Ti is None: Ti=Te
+        if ni is None: ni=ne
+
+        ret=0
+        for r in self.reactions:
+            mult=1
+            if key in r.reactants:
+                if r.type=='COEFFICIENT':
+                    mult=1/ne
+                ret+=r.rate(Te,Ti,E,ne)*mult
+
+        return ret
 
 
 

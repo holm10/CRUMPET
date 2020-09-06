@@ -70,13 +70,13 @@
 	V 0
 * p
 	V 15.975
-	
+
 ** REACTIONS
 # The reactions to be considered from AMJUEL/HYDHEL/H2VIBR listed below.
 # The form of the data must be the following
 # DATABASE_REACTION#
 # Reactant1 + Reactant 2 > Fragment1 + Fragment 2 - multiple fragments are marked by multiplier N as N*Fragment
-# 
+
 
 * HYDHEL_2.2.4
 e + H2(v=0) > e + H2(n=EF)
@@ -131,16 +131,6 @@ e + H2+ > H(n=1) + 0.1*H(n=2) + 0.45*H(n=3) + 0.22*H(n=4) + 0.12*H(n=5) + 0.069*
 e + H2(v=X) > H(n=1) + H-
 	K=Te
 
-* H2VIBR_2.Xl2
-p + H2(v=X) > H2+ + H(n=1)
-
-* HYDHEL_3.2.5
-p + H2(v=0) > p + H2+ + e
-	K=Te
-
-* HYDHEL_3.2.6
-p + H2+ > 2*p + H(n=1)
-	K=2*4.5
 
 * HYDHEL_7.1.1
 e + H- > 2*e + H(n=1)
@@ -148,25 +138,11 @@ e + H- > 2*e + H(n=1)
 * HYDHEL_7.1.2
 e + H- > 3*e + p
 
-* HYDHEL_7.2.1
-p + H- > p + e + H(n=1)
-	K=Te
-
-* HYDHEL_7.2.2
-p + H- > H(n=2) + H(n=1)
-
-* HYDHEL_7.2.3
-p + H- > H(n=3) + H(n=1)
 
 * H2VIBR_2.XvY
 e + H2(v=X) > e + H2(v=Y)
 
-
-* APID_IONIZ
-e + H(n=X) > 2*e + p
-	K=Te
-
-* JOHNSON_RELAXATION
+* ADAS_RELAXATION
 H(n=X) > H(n=Y)
 
 
@@ -181,6 +157,10 @@ HYDHEL  rates/hydhel.tex
 H2VIBR  rates/h2vibr.tex
 UE      rates/ehr2.dat
 ADAS    rates/ich0-1.dat
+
+** ENERGIES
+# Define the file with energies and handles to be used in energy calculation
+rates/energy_keys.dat
 
 
 ** SETTINGS

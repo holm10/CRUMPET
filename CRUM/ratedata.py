@@ -31,8 +31,8 @@ class RATE_DATA:
         # For each data point, add the reactions to the appropriate dictionary
         for rate in ['AMJUEL','H2VIBR','HYDHEL']:
             self.read_EIRENE(self.reactions[rate]['path'],self.reactions[rate],self.reactions[rate]['settings'],path=path)
-        self.read_ADAS(ADAS,self.reactions['ADAS'])
-        self.read_UE(UE,self.reactions['UE'])
+        self.read_ADAS(ADAS,self.reactions['ADAS'],path=path)
+        self.read_UE(UE,self.reactions['UE'],path=path)
 
 
 

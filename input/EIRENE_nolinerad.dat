@@ -52,18 +52,6 @@
 	V 15.697
 * H(n=8)
 	V 15.763
-* H2(n=B)
-	V 11.36832
-* H2(n=C)
-	V 12.41104
-* H2(n=EF)
-	V 12.41663
-* H2(n=a)
-	V 11.89975
-* H2(n=c)
-	V 11.88862
-* H-
-	V -0.75
 
 ** BACKGROUND
 * e
@@ -78,48 +66,6 @@
 # Reactant1 + Reactant 2 > Fragment1 + Fragment 2 - multiple fragments are marked by multiplier N as N*Fragment
 # 
 
-* HYDHEL_2.2.4
-e + H2(v=0) > e + H2(n=EF)
-
-* HYDHEL_2.2.5
-e + H2(v=0) > e + H2(n=a)
-
-* HYDHEL_2.2.6
-e + H2(v=0) > e + H(n=1) + H(n=2)
-	K=2*0.3
-
-* H2VIBR_2.Xl1
-e + H2(v=X) > e + 2*H(n=1)
-	K=2*3
-
-* HYDHEL_2.2.7
-e + H2(v=0) > e + 2*H(n=2)
-	K=2*4.85
-
-* HYDHEL_2.2.8
-e + H2(v=0) > e + H(n=1) + H(n=3)
-	K=2*2.5
-
-* H2VIBR_2.Xl4
-e + H2(v=X) > 2*e + H2+
-
-* HYDHEL_2.2.10
-e + H2(v=0) > 2*e + p + H(n=1)
-	K=2*0.25 # T-dependent!
-
-* HYDHEL_2.2.11
-e + H2+ > 2*e + 2*p
-	K=2*0.4
-
-
-* HYDHEL_2.2.12
-e + H2+ > e + p + H(n=1)
-	K=2*4.3
-
-
-* HYDHEL_2.2.13
-e + H2+ > e + p + H(n=2)
-	K=2*1.5
 
 
 * AMJUEL_2.2.14
@@ -127,36 +73,33 @@ e + H2+ > H(n=1) + 0.1*H(n=2) + 0.45*H(n=3) + 0.22*H(n=4) + 0.12*H(n=5) + 0.069*
 	K=Te
 
 
-* H2VIBR_2.Xl3
-e + H2(v=X) > H(n=1) + H-
-	K=Te
+* HYDHEL_2.2.12
+e + H2+ > e + p + H(n=1)
+	K=2*4.3
+
+
+
+* HYDHEL_2.2.11
+e + H2+ > 2*e + 2*p
+	K=2*0.4
+
 
 * H2VIBR_2.Xl2
 p + H2(v=X) > H2+ + H(n=1)
 
-* HYDHEL_3.2.5
-p + H2(v=0) > p + H2+ + e
-	K=Te
 
-* HYDHEL_3.2.6
-p + H2+ > 2*p + H(n=1)
-	K=2*4.5
+* HYDHEL_2.2.10
+e + H2(v=0) > 2*e + p + H(n=1)
+	K=2*0.25 # T-dependent!
 
-* HYDHEL_7.1.1
-e + H- > 2*e + H(n=1)
 
-* HYDHEL_7.1.2
-e + H- > 3*e + p
+* H2VIBR_2.Xl1
+e + H2(v=X) > e + 2*H(n=1)
+	K=2*3
 
-* HYDHEL_7.2.1
-p + H- > p + e + H(n=1)
-	K=Te
+* H2VIBR_2.Xl4
+e + H2(v=X) > 2*e + H2+
 
-* HYDHEL_7.2.2
-p + H- > H(n=2) + H(n=1)
-
-* HYDHEL_7.2.3
-p + H- > H(n=3) + H(n=1)
 
 * H2VIBR_2.XvY
 e + H2(v=X) > e + H2(v=Y)
@@ -170,10 +113,6 @@ e + H(n=X) > 2*e + p
 H(n=X) > H(n=Y)
 
 
-* CUSTOM
-rates/sawada_greenland.dat # Use a custom databse for Sawada and Greenland data
-
-
 ** RATES
 # Define the files for the standard inputs
 AMJUEL  rates/amjuel.tex # Inline comments now work too!
@@ -181,6 +120,10 @@ HYDHEL  rates/hydhel.tex
 H2VIBR  rates/h2vibr.tex
 UE      rates/ehr2.dat
 ADAS    rates/ich0-1.dat
+
+** ENERGIES
+# Define the file with energies and handles to be used in energy calculation
+rates/energy_keys.dat
 
 
 ** SETTINGS
