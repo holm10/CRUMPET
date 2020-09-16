@@ -8,6 +8,7 @@ from CRUM.main import CRUMPET
 from CRUM.crm import CRM
 from CRUM.ratedata import RATE_DATA
 from CRUM.reactions import REACTION
+from CRUM.tools import TOOLS
 
 
 import CRUM.main as m

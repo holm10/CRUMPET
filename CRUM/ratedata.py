@@ -193,6 +193,7 @@ class RATE_DATA:
             database    -   Database in which to look for reaction (string)
             reaction    -   Reaction ID to retrieve from database (string)
         '''
+        
 
         return(self.reactions[database][reaction])
 

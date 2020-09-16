@@ -2,663 +2,244 @@
 # Separated from CRUM.py by holm10
 # Changelog
 # 200205 - Separated from CRUM.py #holm10
+from CRUM.crm import CRM
+from CRUM.ratedata import RATE_DATA
+from CRUM.tools import TOOLS
 
 
-class CRUMPET:
-    def __init__(self,fname='input/CRUM.dat',path='.',vmax=14,nmax=8,verbose=False,NP=2):
-        from CRUM.ratedata import RATE_DATA
-        from CRUM.reactions import REACTION
-        from CRUM.crm import CRM
+# TODO: Object for species?
+
+
+class CRUMPET(CRM,RATE_DATA,TOOLS):
+    '''CRUMPET container object for collsional-radiative models
+
+    This class is used to read and parse the input file, the parts
+    which are passed onto the CRM class that sets up the CRM itself.
+    
+    ...
+
+    Attributes:
+    -----------
+    ver : srt
+        a string defining the code version
+
+    Methods
+    -------
+    create_UE_rates
+    plot_depletionT
+    lifetimes
+    plot_Et
+    plot_nt
+    get_UE_reactions
+    plot_UE_nrate
+    calc_UE_Erate
+    plot_UE_Erate
+    spectrum
+    plotrate
+    steady_state
+    
+
+    
+    species : dict
+        Each entry is a dictionary containing information on the 
+        initial density and potential level of the CRM  species. The 
+        dictionary keys are used to identify the species
+    bg : dict
+        As for 'species', but for the plasma background
+    NP : int (default 2)
+        Number of P-species (time-dependently evaluated species) to be
+        considered in the sumulation. First NP species defined in the
+        input deck is considered.
+    vmax : int
+        Number of maxium vibrational states inculded in the CRM
+    nmax : int
+        Number of maximum atomic electronic states included in the CRM
+    verbose : bool
+        Switch whether to show verbose output in the terminal. The 
+        same information os written to the log
+    path :  str (default '.')
+        Path to the parent folder relative to which subsequent paths
+        are defined
+    '''
+
+
+    def __init__(self,  fname='input/CRUM.dat',path='.',vmax=14,nmax=8,
+                        verbose=False,NP=2):
+        '''
+        Parameters
+        ----------
+        fname : str, optional (default: 'input/CRUM.dat')
+            path to CRUM input file relative to parameter path
+        path : str, optional (default: '.')
+            path to which remaing paths are relative
+        vmax : int, optional (default: 14)
+            number of excited vibrational molecular states considered
+        nmax : int, optional (default: 8)
+            number of electronic excited states considered
+        verbose : boolean, optional (default: False)
+            displays progress to prompt (written to a log-file too)
+        NP : int, optional (default: 2)
+            P-space size, chosen as the first NP entries of the species
+            card
+        '''
         from numpy import zeros,pi
         from os import getcwd
-        ''' Generates the CRUM collisional-radiative model
-        CRUM(fname='input/CRUM.dat',path='.')
 
-        Looks for a CRUM input file in the location specified by path/fname
-        
-        Optional parameters
-        vmax (14)   -   Number of excited vibrational molecular states considered
-        nmax (8)    -   Number of atomic electronic levels considered
-        verbose (F) -   Display more output
-        Np (2)      -   P-space size, chosen as the first Np entries of the 'SPECIES' card
-        '''
-        self.path=path # Path to CRUM case
         self.ver='V0.2'
 
 
 
-
-        def file2list(path,fname):
-            ''' Returns a list of lines based on fname with comment and empty lines removed as well as the card and subcard locations in the list'''
-
-            ret=[]
-            # Parse out comments and empty lines and store data to memory
-            with open('{}/{}'.format(path,fname)) as f:  # Open the file
-                for l in f:
-                    if len(l.split())==0: # Ignores empty lines
-                        continue
-                    elif l.strip()[0]=='#': # Lines starting with hashes are considered comments and ignored
-                        continue
-                    elif '#' in l:
-                        ret.append(l.split('#')[0]) # Only store data appearing before a hash
-
-                    else:   # Data lines are appended to list
-                        ret.append(l)
-        
-            # Locate the cards in the list (separated by '**')
-            cards=[i for i,x in enumerate(ret) if x[0:2]=='**']
-            cards.append(len(ret))  # Append the end of the list for searching between entries
-            # Locate the subcards in the list (separated by '*')
-            subcards=[i for i,x in enumerate(ret) if x[0]=='*'] 
-            subcards.append(len(ret))  # Append the end of the list for searching between entries
-
-            return ret,cards,subcards # Return the list of lines, the lists of lines containing the starts of the cards and subcards
-
-
-
-
-        def XY2num(string,X=None,Y=None):
-            ''' Replaces 'X' or 'Y' with X and Y, respectively - or both, depending on which is defined '''
-
-            if (X is None) and (Y is None): # No changes requested, return input
-                return string
-            elif Y is None:   # If no Y-values, only replace X
-                    return string.replace('X',str(X))
-            elif X is None: # If no X-values, only replace y
-                    return string.replace('Y',str(Y))
-            else:   # Both X and Y are replaced
-                return string.replace('X',str(X)).replace('Y',str(Y))
-
-
-
-
-        def rf(string):
-            ''' Split reaction into reactants and fragments '''
-
-            return string.split(' > ')
-
-
-        def getS(r,p,K):
-            from numpy import ones
-            rm=ones((len(r),))
-            pm=ones((len(p),))
-            
-            for i in range(len(r)):
-                if '*' in r[i]:
-                    rm[i]=r[i].split('*')[0]
-                    r[i]=r[i].split('*')[1]
-            
-            for i in range(len(p)):
-                if '*' in p[i]:
-                    pm[i]=p[i].split('*')[0]
-                    p[i]=p[i].split('*')[1]
-
-            try:
-                K=str(eval(K))
-            except:
-                pass
-        
-            
-                
-
-            absorption=False    # Electron absorption
-            prode=False         # Electron production (not conserving Ee)
-            radrelax=False      # Radiative relaxation
-            decay=False         # Non-radiative decay: energy goes into K of prod
-            # Check if reaction is an electron absorption reaction
-            if 'e' in r:
-                try:
-                    for x in r:
-                        if x in list(self.bg): b=x
-                    if b not in p:
-                        absorption=True
-                        # Account for two-step processes where electron is absorbed
-                        # creating a non-stable particle that decays
-                        if len(pm)>len(rm): decay=True
-                except:
-                    pass
-            
-            # Do not consider e-impact ionization impact on e-balance:
-            #   all energy supplied to the created electron supplied by
-            #   the reactant electron
-
-            else:
-                # Proton-impact ionization
-                if 'e' in p:
-                    prode=True
-
-            # Radiative relaxation when one particle changes state
-            if sum(rm)==1 and sum(pm==1): radrelax=True
-            # Non-radiative decay when one particle becomes many
-            if sum(rm)==1 and sum(pm)>1:  decay=True
-    
-            # TODO: catches for UEDGE ionization and relaxation
-
-            
-            Vr,Vp,Dr,Dp=0,0,0,0
-            for i in range(len(r)):
-                try:
-                    Vr+=rm[i]*self.species[r[i]]['V']
-                except:
-                    Vr+=rm[i]*self.bg[r[i]]['V']
-            for i in range(len(p)):
-                try:
-                    Vp+=pm[i]*self.species[p[i]]['V']
-                except:
-                    Vp+=pm[i]*self.bg[p[i]]['V']
-
-
-            ret=['0','0','0','0']
-            # Reactant energy loss
-            if radrelax is False:
-                if decay is False:
-                    try:
-                        ret[0]=str(Vr-Vp-float(K))
-                    except:
-                        ret[0]=str(Vr-Vp)+'-('+K+')'
-                else:
-                    ret[0]='-('+K+')'
-                ret[1]=str(Vp-Vr)
-            else:
-                ret[1]=str(Vp-Vr)
-                ret[2]=str(Vr-Vp)
-            if prode is True:
-                ret[3]='Te'
-
-            if 'erl1' in K: ret[2]+='+erl1'
-            elif 'erl2' in K: ret[2]+='+erl2'
-
-            return [r,p,rm,pm,ret]
-
-
-
         # Read the input file into a list
-        lines,cards,subcards=file2list(path,fname)
-
-
+        lines,cards,subcards=self.file2list(path,fname)
 
                 
-        ''' LOOP THROUGH THE DEFINED CARDS '''
+        # %%%%%%%%%% LOOP THROUGH THE DEFINED CARDS %%%%%%%%%%%
         for i in range(len(cards)-1):
 
-            ''' Store species from species card to temporary list '''
+
+            # %%%% Store species from species card to temporary list %%%%
             if lines[cards[i]].split()[1].upper()=='SPECIES':
-                self.species={}
+                species={}
+
                 # Loop through each subcard
-                for j in range(subcards.index(cards[i])+1,subcards.index(cards[i+1])):
+                for j in range( subcards.index(cards[i])+1,
+                                subcards.index(cards[i+1])  ):
                     buff={}
                     ind=subcards[j]
-                    for l in range(subcards[j]+1,subcards[j+1]): # Loop through the lines following the declaration looking for energy sinks/sources
-                        buff[lines[l].split()[0].strip()]=float(lines[l].split()[1].strip())
-                    self.species[lines[ind].split()[1].strip()]=buff
+
                     
-                '''  Store the reactions requested to temporary reaction list '''
+                    # Loop through the lines following the  declaration 
+                    # looking for the potential energy
+                    for l in range(subcards[j]+1,subcards[j+1]): 
+                        buff[lines[l].split()[0].strip()] = float(
+                                                lines[l].split()[1].strip() )
+
+
+                    species[lines[ind].split()[1].strip()]=buff
+                    
+            # %%% Store the reactions requested to temporary reaction list %%%
             elif lines[cards[i]].split()[1].upper()=='REACTIONS':
                 reactionlist=[]
-#                for j in range(cards[i]+1,cards[i+1],2): # Look between this card and the next: two lines per reactions
-                for k in range(subcards.index(cards[i])+1,subcards.index(cards[i+1])):
 
-                    rname=lines[subcards[k]].split()[1]   # Name is the second entry on the first line: subcard first entry, discarded
+                # Look between this card and the next: two lines per reactions
+                for k in range( subcards.index(cards[i])+1,
+                                subcards.index(cards[i+1])  ):
 
-                    if rname.upper()=='CUSTOM': # If custom reactions deck, store the filepath, which is the only entry on subcard
-                        reactionlist.append(    [   rname, lines[subcards[k]+1].strip()   ]   ) # Store name and path
+                    # Store the reaction name, discard subcard marker
+                    rname=lines[subcards[k]].split()[1]   
 
-                    else: # If regular reaction, create two lists with reactants and fragments and unpack
-                        energies=[]
-                        if subcards[k]+2==subcards[k+1]: K='0'
-                        for l in range(subcards[k]+2,subcards[k+1]): # Loop through the lines following the declaration looking for energy sinks/sources
-                            K=lines[l].strip().split('=')[-1]
+                    # Check if custom reaction deck called
+                    if rname.upper()=='CUSTOM': 
+                        # Store name and path to custom file
+                        reactionlist.append( [  rname, 
+                                                lines[subcards[k]+1].strip()
+                                             ]   ) 
+
+                    
+                    # Regular reaction
+                    else:
+                        # Define energy sink/source
+                        if subcards[k]+2==subcards[k+1]: K='0' # No sink/source
+
+                        for l in range( subcards[k]+2,
+                                        subcards[k+1]   ): # Read sink/source
+
+                            K=lines[l].strip().split('=')[-1] 
+                        
+                        # Extract the reactants and fragments from the input
+                        reactant,fragment = [ x.strip().split(' + ') for x 
+                                        in lines[subcards[k]+1].split(' > ') ]
 
 
-                        reactionlist.append(    [   rname, *[x.strip().split(' + ') for x in rf(lines[subcards[k]+1])], K  ]   ) # Store name, reactants and framgents
+                        reactionlist.append( [  rname, reactant, fragment, K ])
                         
 
 
-                ''' Store the locations of the standard rate data files relative to CWD'''
+            # %%%%%% Set paths of the standard rate data files %%%%%
             elif lines[cards[i]].split()[1].upper()=='RATES':
                 for j in range(cards[i]+1,cards[i+1]): # Look between this card and the next
                     # Extract the database type and path
                     [db,nm]=lines[j].split()
                     db=db.upper()
-                    if db=='ADAS':
-                        ADAS=nm
-                    elif db=='UE':
-                        UE=nm
-                    elif db=='AMJUEL':
-                        amjuel=nm
-                    elif db=='HYDHEL':
-                        hydhel=nm
-                    elif db=='H2VIBR':
-                        h2vibr=nm
+                    if db=='ADAS':      ADAS=   nm
+                    elif db=='UE':      UE=     nm
+                    elif db=='AMJUEL':  amjuel= nm
+                    elif db=='HYDHEL':  hydhel= nm
+                    elif db=='H2VIBR':  h2vibr= nm
                     else:
-                        print('Unrecognized database type {}. Ignoring.'.format(db))
+                        print('''   Unrecognized database type {}. 
+                                    Ignoring.'''.format(db))
                         continue
+
                 # Create RATE_DATA class object based on the above files paths
-                self.ratedata=RATE_DATA(amjuel,hydhel,h2vibr,ADAS,UE,self.path)
+                RATE_DATA.__init__(self,amjuel,hydhel,h2vibr,ADAS,UE,path)
 
 
 
-                ''' Setup the CRM '''
+            # %%%% Define CRM settings %%%%
             elif lines[cards[i]].split()[1].upper()=='SETTINGS':
-                for j in range(cards[i]+1,cards[i+1]): # Look between this card and the next
+
+                # Search this card only
+                for j in range(cards[i]+1,cards[i+1]): 
                     # Create setting based on card type
                     try:
-                        [c,setting,value]=lines[j].split()
+                        [c,setting,value]=lines[j].upper().split()
                     except:
-                        [c,setting]=lines[j].split()
+                        [c,setting]=lines[j].upper().split()
 
-                    setting=setting.upper() # Uppercase for comparative purposes
-                    if c!='*':  # Ensure that we are reading subcards
-                        continue
-                    elif setting=='VMAX':
-                        vmax=int(value)
-                    elif setting=='NMAX':
-                        nmax=int(value)
-                    elif setting=='VERBOSE':
-                        verbose=bool(int(value))
-                    elif setting=='NP':
-                        self.Np=int(value)
+                    if c!='*': continue # Ensure that we are reading subcards
+                    elif setting=='VMAX':       vmax=int(value)
+                    elif setting=='NMAX':       nmax=int(value)
+                    elif setting=='VERBOSE':    verbose=bool(int(value))
+                    elif setting=='NP':         Np=int(value)
                     elif setting=='N0':
-                        for k in range(j+1,subcards[subcards.index(j)+1]): # Loop through all defined initial densities
-                            # Store the density in the location of n0 that corresponds to the species requested
-                            self.species[lines[k].split()[0]]['n']=float(lines[k].split()[1]) 
+                        # Loop through all defined initial densities
+                        for k in range( j+1, subcards[subcards.index(j)+1 ]): 
+
+                            # Store the density in the location of n0 that 
+                            # corresponds to the species requested
+                            species[lines[k].split()[0]]['n']=float(
+                                                        lines[k].split()[1]) 
 
                     else:
-                        print('Unrecognized setting {}. Ignoring.'.format(setting))
+                        print(   '''Unrecognized setting {}. 
+                                    Ignoring.'''.format(setting))
                         continue
 
-
-                ''' Store energies '''
-            elif lines[cards[i]].split()[1].upper()=='ENERGIES':
-                elst,_,_=file2list(path,lines[cards[i]+1].strip())
-                ene=dict() # Dictionary for energy handles
-                for el in elst: # Loop through each line
-                    ene[el.split('=')[0].strip()]=float(el.split('=')[1].strip()) 
-
-                # Make energy handles available within function
-                locals().update(ene) 
-
+            # %%%% Define the plasma background species %%%%
             elif lines[cards[i]].split()[1].upper()=='BACKGROUND':
-                self.bg={}
+                bg={}
                 # Loop through each subcard
-                for j in range(subcards.index(cards[i])+1,subcards.index(cards[i+1])):
+                for j in range( subcards.index(cards[i])+1,
+                                subcards.index(cards[i+1])  ):
                     buff={}
                     ind=subcards[j]
-                    for l in range(subcards[j]+1,subcards[j+1]): # Loop through the lines following the declaration looking for energy sinks/sources
-                        buff[lines[l].split()[0].strip()]=float(lines[l].split()[1].strip())
-                    self.bg[lines[ind].split()[1].strip()]=buff
 
-                ''' Unknown card, abort '''
+                    # Loop through the lines following the declaration 
+                    # looking for the background species potential
+                    for l in range( subcards[j]+1, subcards[j+1]): 
+                        buff[lines[l].split()[0].strip()]=float(
+                                            lines[l].split()[1].strip())
+
+
+                    bg[lines[ind].split()[1].strip()]=buff
+
+            # %%%%% Unknown card, abort %%%%%%
             else:
-                print('Unknown card "{}": aborting!'.format(lines[cards[i]].split()[1]))
+                print( '''Unknown card "{}": 
+                            aborting!'''.format(lines[cards[i]].split()[1]))
                 return
 
 
-         
 
-        ''' END CARDS LOOP '''
+        # %%%% Set up the CRM %%%%
+        CRM.__init__(self,species,bg,reactionlist,[verbose,Np],path,vmax,nmax,self.reactions)
+     
 
-        # Create list of reaction objects based on the previously read reaction list
-        reactions=[]
 
-        ''' LOOP OVER ALL THE DEFINED REACTIONS '''
-        for r in reactionlist:
 
 
 
-            # Split the definitions into names and databases
-            database=r[0].split('_')[0]
-            try:
-                ID=r[0].split('_')[1]
-            except:
-                pass
-
-            ''' Vibrational transitions in molecules '''
-            if 'XvY' in ID:
-                for x in range(vmax+1): # Loop over the requested excited vibrational states
-                    for y in [-1,1]: # Assume only ladder-like vibrational transitions (dv=+/-1)
-                        if x+y in range(vmax+1): # Make sure we do not excite beyond vmax
-                            vID=XY2num(ID,x,x+y) # Substitute initial and final state into temporary string
-                            
-
-                            rlist=[XY2num(i,x,x+y) for i in r[1]] # Reactant with vib. level numbers
-                            plist=[XY2num(i,x,x+y) for i in r[2]] # Product with vib. level numbers 
-
-
-                            # Create reaction object
-                            reactions.append(REACTION(              vID, # Reaction name
-                                                                    database, # Reaction database
-                                                                    self.ratedata.get_coeff(database,vID), # Coefficients of the reaction
-                                                                    'RATE', # Type of reaction
-                                                                    getS(rlist,plist,r[-1])
-                                                                    
-                                                        )
-                                            )
-            
-                ''' Vibrationally-dependent reaction '''
-            elif 'Xl' in ID:
-                for x in range(vmax+1): # Generate reactions for each vibrational level
-                    vID=XY2num(ID,x,x) # Substitute initial and final state into temporary string
-                    rlist=[XY2num(i,x) for i in r[1]] # Reactant with vib. level numbers
-                    plist=[XY2num(i,x) for i in r[2]] # Product with vib. level numbers
-
-                    
-                    reactions.append(REACTION(              vID, # Reaction name
-                                                            database, # Reaction database
-                                                            self.ratedata.get_coeff(database,vID), # Coefficients of the reaction
-                                                            'RATE', # Type of reaction
-                                                            getS(rlist,plist,r[-1])
-
-                                                )
-                                    )
-
-
-
-                ''' Custom reaction-rate '''
-            elif database.upper()=='CUSTOM':
-                # Open the custom data file and read lines into data and subcard locations into list
-                data,_,subcards=file2list(path,r[1].strip())
-                database_use=data[0].strip()    # Use the first line as database
-
-                # Loop through the cards
-                for i in range(len(subcards)-1):
-                    subc=subcards[i] # Helper index
-                    fit=data[subc].split()[1].upper()   # What kind of fit is being used - first subcard entry
-                    name=data[subc].split()[2]  # What is the name of the reaction - second subcard entry
-                    reactants,fragments=rf(data[subc+1])    # Get the reactants and fragments from the second line
-
-                    
-
-                    # Identify the type of reaction we are working with
-                    ''' v-dependent rate '''
-                    if fit=='RATE':
-                        if 'X' in name:
-                            # TODO: what if not all vib. states have data?
-                            for j in range(vmax+1): # Read data for each vibrational state up to vmax
-                                m=0
-                                eng='0'
-                                while data[m][0]!='v':
-                                    if data[m][0]=='K':
-                                        eng=data[m].strip().split('=')[-1]
-                                    m+=1
-
-                                rlist=XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
-                                plist=XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
-
-                                reactions.append(REACTION(              XY2num(name,j), # Name
-                                                                        database_use,   # Database
-                                                                        [float(x) for x in data[subc+m+j*2].split()], # Coefficients for v-level
-                                                                        'RATE',  # Type of reaction
-                                                                        getS(rlist,plist,eng)
-                                                                    )
-                                                     )
-                        # TODO: what if non-v dependent rate?
-
-                        ''' Transition coefficient '''
-                    elif fit=='COEFFICIENT':
-                        if 'X' in name: # v-dependent rate
-                            # TODO: what if not all vib. states have data?
-                            m=2
-                            eng='0'
-                            while data[subc+m][0]=='K':
-                                eng=data[subc+m].strip().split('=')[-1]
-                                m+=1
-
-                            for j in range(vmax+1): # Read data for each vibrational state up to vmax
-                                    
-
-                                rlist=XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
-                                plist=XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
-
-
-                                reactions.append(REACTION(          XY2num(name,j), # Name
-                                                                    database_use,   # Database
-                                                                    float(data[subc+m+j].split()[1]), # Transition coefficient for v-level
-                                                                    'COEFFICIENT', # Type of reaction
-                                                                    getS(rlist,plist,eng)
-                                                                   )
-                                                     )
-                        else: # Other transition
-                            m=2
-                            eng='0'
-                            while data[subc+m][0]=='K':
-                                eng=data[subc+m].strip().split('=')[-1]
-                                m+=1
-                                    
-                            rlist=reactants.strip().split(' + ') # Reactants
-                            plist=fragments.strip().split(' + ') # Fragments
-                            reactions.append(REACTION(              name,           # Name 
-                                                                    database_use,   # Database
-                                                                    float(data[subc+m]),    # Transition coefficient
-                                                                    'COEFFICIENT',   # Type of reaction
-                                                                    getS(rlist,plist,eng)
-                                                                )
-                                                 )
-
-                        ''' Cross-section '''
-                    elif fit=='SIGMA':
-                        m=2
-                        eng='0'
-                        while data[subc+m][0]=='K':
-                            eng=data[subc+m].strip().split('=')[-1]
-                            m+=1
-
-                        rlist=reactants.strip().split(' + ') # Reactants
-                        plist=fragments.strip().split(' + ') # Fragments
-                        # TODO: extend definitions of cross-section
-                        # Presently assumes SAWADA-like cross-section definition
-                        reactions.append(REACTION(              name,           # Name
-                                                                database_use,   # Database
-                                                                [float(x) for x in data[subc+m].split()], # SAWADA cross-section parameters
-                                                                'SIGMA', # Type of reaction
-                                                                getS(rlist,plist,eng)
-                                                            )
-                                             )
-                    else:
-                        print('Reaction type "{}" not recognized! Aborting.'.format(data[subcards[i]].split()[1]))
-                        return
-                    
-
-                ''' ADAS data '''
-            elif database.upper()=='ADAS':
-                for x in range(1,nmax+1): # Read the data for each electronic state up to nmax
-
-
-                    if ID.upper()=='EXCITATION': # Electron impact excitation
-                        rn=range(x+1,nmax+1) # Excitation only possible between current state and nmax
-                        fit='ADAS'          # ADAS-type fit
-                        Tarr=self.ratedata.get_coeff(database,'T')  # Temperature array for interpolation
-
-
-                    elif ID.upper()=='RELAXATION': # Radiative relaxation
-                        rn=range(1,x)   # Relaxation only possible to lower states
-                        fit='COEFFICIENT' # Coefficient-like decay
-                        Tarr=None   # Not T-dependent
-
-                    # Loop through each of the available final states
-                    for y in rn:
-
-                            
-                            rlist=[XY2num(i,x,y) for i in r[1]]  # Reactants 
-                            plist=[XY2num(i,x,y) for i in r[2]]  # Fragments
-                    
-                            try:
-                                reactions.append(REACTION(          '{}_{}-{}'.format(ID,x,y),  # Name w/ appended initial-final state
-                                                                    database,                   # Database
-                                                                    self.ratedata.get_coeff(database,'{}-{}'.format(x,y)),  # Get transition coefficient
-                                                                    fit,    # Reaction type
-                                                                    getS(rlist,plist,r[-1]),
-                                                                    Tarr    # Temperature array for interpolation
-                                                                )
-                                                    )
-                            except:
-                                pass
-
-
-                ''' UEDGE rates '''
-            elif database.upper()=='UE':
-                reactions.append(REACTION(              ID,         # Name
-                                                        database,   # Database
-                                                        self.ratedata.get_coeff(database,ID),   # Get coefficients
-                                                        'UE',        # Reaction type
-                                                        getS(r[1],r[2],r[-1])
-                                                   )
-                                     )
-                            
-                    
-                ''' EIRENE rates '''
-            elif database.upper() in ['HYDHEL','AMJUEL','H2VIBR']:
-
-
-
-
-                reactions.append(REACTION(              ID,         # Name
-                                                        database,   # Database
-                                                        self.ratedata.get_coeff(database,ID), # Get coefficients
-                                                        'RATE',      # Reaction type
-                                                        getS(r[1],r[2],r[-1])
-                                                    )
-                                     )
-                ''' APID rates '''
-            elif database.upper()=='APID':
-                for x in range(2,nmax+1):
-                    if ID.upper()=='IONIZ':
-                        rlist=[XY2num(i,x,y) for i in r[1]]  # Reactants 
-                        plist=[XY2num(i,x,y) for i in r[2]]  # Fragments
-
-                        if x==2:
-                            coeffs=[x, 0.14784,  0.0080871, -0.06227, 1.9414, -2.198, 0.95894,0,0,0]
-                        elif x==3:
-                            coeffs=[x, 0.058463, -0.051272, 0.85310, -0.57014, 0.76684, 0,0,0]
-                        elif x>3:
-                            coeffs=[x, 0,  0,  0,  0,  0,  0, 1.133, -0.4059, 0.0714]
-
-
-
-                        
-                        reactions.append(REACTION(          '{}_{}'.format(ID,x),  # Name w/ appended initial-final state
-                                                                    database,                   # Database
-                                                                    coeffs,
-                                                                    'APID',    # Reaction type
-                                                                    getS(rlist,plist,r[-1])
-                                                                )
-                                                    )
-                
-                ''' Johnson's approximation of Einstein coefficients '''
-            elif database.upper()=='JOHNSON':
-                def g(i,f):
-                    g=[ 1.133*(f==1) + 1.0785*(f==2) + (0.9935 + 0.2328/f - 0.1296/f**2)*(f>2),
-                        -0.4059*(f==1) -0.2319*(f==2) - ((0.6282 - 0.5598/f + 0.5299/f**2)/f)*(f>2),
-                        0.07014*(f==1) + 0.02947*(f==2) + ((0.3887 - 1.181/f + 1.470/f**2)/f**2)*(f>2) ]
-                    x=1-(f/i)**2
-                    return g[0] + g[1]/x + g[2]/x**2
-
-                h=1.054571596e-27
-                c=2.99792458e10
-                me=9.10938188e-28
-                e=4.80274e-10
-                I=(me * e**4) / (2 * h**2)
-
-
-                '''
-                e=1.602e-19
-                I=13.6
-                m=9.109384e-31
-                c=299792458
-                h=6.62607e-34
-                '''
-
-                for i in range(1,nmax+1): # Read the data for each electronic state up to nmax
-                    for f in range(1,i):
-                        res= (2**6 *e**2 * I**2) / (3**1.5 * pi * me *c**3 * h**2)
-                        freq=(1/f**2 - 1/i**2)
-                        Afac=(res*g(i,f))/(freq*(i**5)*(f**3))
-
-                        rlist=[XY2num(a,i,f) for a in r[1]]  # Reactants 
-                        plist=[XY2num(a,i,f) for a in r[2]]  # Fragments
-
-                        reactions.append(REACTION(          '{}_{}-{}'.format(ID,i,f),  # Name w/ appended initial-final state
-                                                            database,                   # Database
-                                                            Afac,  # Get transition coefficient
-                                                            'COEFFICIENT',    # Reaction type
-                                                            getS(rlist,plist,r[-1]),
-                                                        )
-                                            )
-                    
-                
-                
-            
-            else:
-                print('Database "{}" not recognized! Aborting.'.format(database))
-                return
- 
-
-            ''' END LOOP OVER DEFINED REACTIONS '''
-
-
-        # Define reactions for UEDGE raditation
-        ionizrad=REACTION('IONIZRAD','UE',self.ratedata.get_coeff('UE','IONIZRAD'),'UE',['','',None,None,[0,0,0,0]])
-        recrad=REACTION('RECRAD','UE',self.ratedata.get_coeff('UE','RECRAD'),'UE',['','',None,None,[0,0,0,0]])
-
-
-        # Setup the crm
-        self.crm=CRM(self.species,self.bg,reactions,[verbose,self.Np],self.path,recrad=recrad,ionizrad=ionizrad)
-        
-
-    def totpart(self,arr,V=1):
-        ''' Calculates the total particles in the array arr
-            totpart(arr)
-
-            Optional parameters
-            V (1)   -   Volume of the assumed domain in cm**3
-
-            Uses the CRM function totparticles
-        '''
-        return self.crm.totparticles(arr,V)
-
-    def totmol(self,arr):
-        return self.crm.totmol(arr)
-        
-
-
-    def n_gl(self,Te,ne,t,Ti=None,ni=None,E=0.1,n=None,Sext=True):
-        ''' Calculates the Greenland (P-space) density evolution in a 1cm**3 box up to t
-            n_gl(Te,ne,t)
-            Te  -   electron background temperature in box [eV]
-            ne  -   electron background density in box [cm**-3]
-            t   -   final time of evolution [s]
-
-            Optional parameters
-            Ti (None)   -   ion background temperature in box (=Te if None) [eV]
-            ni (None)   -   ion background density in box (=ne if None) [cm**-1]
-            E (0.1)     -   target particle energy [eV]
-            n (None)    -   initial species distribution (=n0 specified in input if None)
-                            Array of same length as species, order according to 'SPECIES' card
-            Sext (True) -   Include external source (from background plasma reactions into CRM species)
-            
-            Uses the CRM function gl_nt
-        '''
-        return self.crm.gl_nt(Te,ne,t,Ti,ni,E,n,Sext)
-
-    
-    def n_full(self,Te,ne,t,Ti=None,ni=None,E=0.1,n=None,Sext=True):
-        ''' Calculates the full CRM density evolution in a 1cm**3 box up to t
-            n_gl(Te,ne,t)
-            Te  -   electron background temperature in box [eV]
-            ne  -   electron background density in box [cm**-3]
-            t   -   final time of evolution [s]
-
-            Optional parameters
-            Ti (None)   -   ion background temperature in box (=Te if None) [eV]
-            ni (None)   -   ion background density in box (=ne if None) [cm**-1]
-            E (0.1)     -   target particle energy [eV]
-            n (None)    -   initial species distribution (=n0 specified in input if None)
-                            Array of same length as species, order according to 'SPECIES' card
-            Sext (True) -   Include external source (from background plasma reactions into CRM species)
-            
-            Uses the CRM function full_nt
-        '''
-        return self.crm.full_nt(Te,ne,t,Ti,ni,E,n,Sext)
 
     def create_UE_rates(self,fname='ue',E=0.1,Sext=True,h0h2=['H(n=1)','H2(v=0)'],Tm=False,Ton=False,rad=False):
         ''' Script that writes UEDGE rates to self.path/fname.dat
@@ -695,8 +276,8 @@ class CRUMPET:
             for j in range(60): # 60 temperature points in log-log space
                 print('        Temperature step {}/60'.format(j+1))
                 Te,ne=10**(-1.2+j/10),10**(10+0.5*i)
-                ret[i,j,:,:],ext[i,j,:],_=self.crm.gl_crm(*self.crm.M(Te,ne,Te,ne,E,write=False),Sext=Sext) # Store to matrix
-                U=self.crm.Sgl(Te,ne,Te,ne,E,rad,Tm,write=False,Ton=Ton) # Don't include erl1/erl2 radiation in the rates as these are handled by UEDGE
+                ret[i,j,:,:],ext[i,j,:],_=self.gl_crm(*self.M(Te,ne,Te,ne,E,write=False),Sext=Sext) # Store to matrix
+                U=self.Sgl(Te,ne,Te,ne,E,rad,Tm,write=False,Ton=Ton) # Don't include erl1/erl2 radiation in the rates as these are handled by UEDGE
                 # Include T-losses or not?
                 retE[i,j,:,:]=array([ sum(U[0][0],axis=0), sum(U[1][0],axis=0), sum(U[2][0],axis=0), sum(U[3][0],axis=0), sum(U[4][0],axis=0)])
                 #print(len(retE.shape))
@@ -790,7 +371,7 @@ class CRUMPET:
         for n in range(len(nl)):
             y=[]
             for i in range(len(Te)):
-                y.append(self.crm.species_rate(key,Te[i],nl[n],Ti[i],n,E))
+                y.append(self.species_rate(key,Te[i],nl[n],Ti[i],n,E))
             ax.loglog(Te,y,color=color,linestyle=style[n])
                 
 
@@ -904,13 +485,13 @@ class CRUMPET:
         # TODO: Check that volumes go right: CM to CM
         # TODO: Implement approximation of pumping 
 
-        if n is None: n=self.crm.n0() # Use input n0 as default unless explict n0 requested
+        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
         #NN=len(self.species)*len(self.species)
         n[0]=1e-6*na
         n[1]=1e-6*nm
 
        
-        mat,ext=self.crm.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
+        mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
 
         # TODO: use Greenland CRM to assess the SS - the same assumptions
         ''' Assume re-association to achieve SS '''
@@ -921,9 +502,9 @@ class CRUMPET:
         mat[0,0]=(psor/ne)
 
 
-        M,T,D=self.crm.gl_crm(mat,ext,matrices=True) # Get matrices and eigenvalues/-vectors
+        M,T,D=self.gl_crm(mat,ext,matrices=True) # Get matrices and eigenvalues/-vectors
 
-        Meff,extp,n0p=self.crm.gl_crm(mat,ext,n=n) # Get matrices and eigenvalues/-vectors
+        Meff,extp,n0p=self.gl_crm(mat,ext,n=n) # Get matrices and eigenvalues/-vectors
         #print(matmul(mat[:,1:],n[1:])[0],mat[1,1],Meff[1,1],n)
         for i in D:
             print('{:.3E}'.format(-1/i))
@@ -938,11 +519,11 @@ class CRUMPET:
         ax=f.add_subplot(111)
         for i in range(len(n)):
             line='--'
-            if 'H2' in self.crm.slist[i]: line='-'
+            if 'H2' in self.slist[i]: line='-'
 
-            ax.semilogx(ss_sol.t,ss_sol.y[i,:],line,label=self.crm.slist[i]) 
+            ax.semilogx(ss_sol.t,ss_sol.y[i,:],line,label=self.slist[i]) 
             if i==0:
-                ax.semilogx(ss_sol.t,ss_sol.y[i,:],'k.',label=self.crm.slist[i]) 
+                ax.semilogx(ss_sol.t,ss_sol.y[i,:],'k.',label=self.slist[i]) 
         ax.legend(ncol=3)
         ax.set_xlabel('Time [s]')
         ax.set_ylabel('Density [cm**-3]')
@@ -962,22 +543,22 @@ class CRUMPET:
                 pert[i]=1e6
                 sol=solve_ivp(lambda x,y: dt(x,y,mat,ext,n),(0,1e-3),ss_n+pert,'LSODA',dense_output=True,events=ss)
                 a,b=polyfit(sol.t,log(sol.y[i,]),1)
-                print('tau({})'.format(self.crm.slist[i]).ljust(20,' ')+'= {:.3E}'.format(-1/a))
+                print('tau({})'.format(self.slist[i]).ljust(20,' ')+'= {:.3E}'.format(-1/a))
             except: 
                 pert=zeros((len(n),))
                 pert[i]=1e6
                 sol=solve_ivp(lambda x,y: dt(x,y,mat,ext,n),(0,1e-3),ss_n+pert,'LSODA',dense_output=True,events=ss)
                 a,b=polyfit(sol.t,log(sol.y[i,]),1)
-                print('tau({})'.format(self.crm.slist[i]).ljust(20,' ')+'= {:.3E}'.format(-1/a))
+                print('tau({})'.format(self.slist[i]).ljust(20,' ')+'= {:.3E}'.format(-1/a))
 
             ret.append(-1/a)
                 #sol=solve_ivp(lambda x,y: dt(x,y,mat,ext),(0,1e-3),ss_n+pert,'LSODA',dense_output=True)
                 #for i in range(len(n)):
-                #    ax.plot(sol.t,sol.y[i,:],label=self.crm.slist[i]) 
+                #    ax.plot(sol.t,sol.y[i,:],label=self.slist[i]) 
         #f=figure(figsize=(7,7))
         #ax=f.add_subplot(111)
         #for i in range(len(n)):
-        #    ax.plot(sol.t,sol.y[i,:],label=self.crm.slist[i]) 
+        #    ax.plot(sol.t,sol.y[i,:],label=self.slist[i]) 
         #ax.plot(sol.t,sol.y[1,0]*exp(sol.t*a),'k-')
         #ax.plot(sol.t,sol.y[1,:],'.-')     
         #ax.plot(sol.t,(sol.t*a+b),'k-')
@@ -986,14 +567,9 @@ class CRUMPET:
         print('====')
 
         for i in range(1,len(n)):
-            print('tau({})'.format(self.crm.slist[i]).ljust(20,' ')+'= {:.3E}'.format(-1/mat[i,i]))
+            print('tau({})'.format(self.slist[i]).ljust(20,' ')+'= {:.3E}'.format(-1/mat[i,i]))
 
         return ret 
-
-    def plot_lifetimes():
-        ''' Plots a T-dependent plot of lifetimes at n '''
-        return
-
 
 
     def plot_Et(self,t,Te,ne,E=0.1,Ti=None,ni=None,Sext=True,Np=True,Nq=False,N=False,fig=None,n0=None,ax=0,figsize=(7+7,7*1.618033),linestyle='-',ylim=None,linewidth=2,labelapp='',qlabel=False,savename=None,title=None,pretitle='',figtype='png',color=None,nuclei=True,Tm=False,rad=True,gl=False,n=None,suptitle=None,ylimE=None,Ton=True):
@@ -1037,7 +613,7 @@ class CRUMPET:
         from numpy.linalg import inv
         from os import mkdir
        
-#        for r in self.crm.reactions: 
+#        for r in self.reactions: 
 #            print('Reaction {}: S_r={}, S_g={}, S_V={}, S_e={}'.format(r.name,r.S_r,r.S_g,r.S_V,r.S_e))
         # Get axis handle or create figure
         try:
@@ -1048,14 +624,14 @@ class CRUMPET:
         ev=1.602e-19
         # If no initial distribution is requested, use the one specified in the input
         if n0 is None:
-            n0=self.crm.n0()
+            n0=self.n0()
 
         Neq=False
         if gl is True:
             Neq=Nq
             Np,Nq,N=True,False,False
 
-        CRM=self.crm.dEdt(t,Te,ne,Ti,ni,E,Tm,rad,Sext,gl=gl,n=n,Qres=((Nq is True) or (N is True) or (Neq is True)),Ton=Ton) # Set up Greenland model 
+        CRM=self.dEdt(t,Te,ne,Ti,ni,E,Tm,rad,Sext,gl=gl,n=n,Qres=((Nq is True) or (N is True) or (Neq is True)),Ton=Ton) # Set up Greenland model 
 
         if color is None: # Define color sequence up to 10 unless specific sequence requested
             color=[ 'b', 'r', 'm', 'c', 'darkgreen', 'gold', 'brown' ,'lime', 'grey', 'orange' ]
@@ -1078,20 +654,20 @@ class CRUMPET:
                     ax.plot(t*1e3,part[i,:],linewidth=linewidth,color=color[i],label=list(self.species)[i]+labelapp,linestyle=linestyle)
            # Plot total number of nuclei as function of time
             if nuclei is True:
-                ax.plot(t*1e3,self.totpart(part),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+                ax.plot(t*1e3,self.totparticles(part),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
             else:
                 ax.plot(t*1e3,sum(part,axis=0),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
             # Plot initial number of nuclei
-            ax.axhline(self.totpart(n0),color='k',linewidth=0.5)
+            ax.axhline(self.totparticles(n0),color='k',linewidth=0.5)
             
 
-            ax.legend(ncol=self.crm.Np+1,loc='best') # Show legend
+            ax.legend(ncol=self.Np+1,loc='best') # Show legend
             ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms
             ax.set_ylabel(r'Density [$\rm{cm^{-3}}$]') # Show y-label
             # If no ylim is requested set the ylim to the highest plotted line
             if ylim is None:
                 # Total particles in this plot
-                totmax=max(self.totpart(CRM.sol(t)[5+len(self.crm.n0())*(gl==True):]))
+                totmax=max(self.totparticles(CRM.sol(t)[5+len(self.n0())*(gl==True):]))
                 # Compare to previous max
                 if totmax>ax.get_ylim()[1]:
                     # If higher, update
@@ -1127,14 +703,14 @@ class CRUMPET:
             ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms
 
         else:
-            Nt=len(self.crm.species)
+            Nt=len(self.species)
 
             # Particle balance        
             ax=fig.add_subplot(421)
 
             part=CRM.sol(t)[-Nt:]
             if Neq is True:
-                part=CRM.sol(t)[-self.crm.Np:]
+                part=CRM.sol(t)[-self.Np:]
 
             # Plot P-space species 
             for i in range(self.Np):
@@ -1156,11 +732,11 @@ class CRUMPET:
         
             # Plot total number of nuclei as function of time
             if nuclei is True:
-                ax.plot(t*1e3,self.totpart(part),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+                ax.plot(t*1e3,self.totparticles(part),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
             else:
                 ax.plot(t*1e3,sum(part,axis=0),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
             # Plot initial number of nuclei
-            ax.axhline(self.totpart(n0),color='k',linewidth=0.5)
+            ax.axhline(self.totparticles(n0),color='k',linewidth=0.5)
 
             ax.legend(loc='best') # Show legend
             ax.set_xlim(0,t[-1]*1e3) # Set X-lim in ms
@@ -1170,7 +746,7 @@ class CRUMPET:
             # If no ylim is requested set the ylim to the highest plotted line
             if ylim is None:
                 # Total particles in this plot
-                totmax=max(self.totpart(part))
+                totmax=max(self.totparticles(part))
                 # Compare to previous max
                 if totmax>ax.get_ylim()[1]:
                     # If higher, update
@@ -1323,14 +899,14 @@ class CRUMPET:
         
         # If no initial distribution is requested, use the one specified in the input
         if n0 is None:
-            n0=self.crm.n0()
+            n0=self.n0()
 
         # Check what model to use, Greenland or full
         if gl is True: # Greenland
-            nt=self.n_gl(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
+            nt=self.gl_nt(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
             Np,Nq,N=True,False,False # Np only option
         else: # Full model
-            nt=self.n_full(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
+            nt=self.full_nt(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
 
         if color is None: # Define color sequence up to 10 unless specific sequence requested
             color=[ 'b', 'r', 'm', 'c', 'darkgreen', 'gold', 'brown' ,'lime', 'grey', 'orange' ]
@@ -1356,11 +932,11 @@ class CRUMPET:
     
         # Plot total number of nuclei as function of time
         if nuclei is True:
-            ax.plot(nt.t*1e3,self.totpart(nt.y),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
+            ax.plot(nt.t*1e3,self.totparticles(nt.y),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
         else:
             ax.plot(nt.t*1e3,sum(nt.y,axis=0),'k',linewidth=linewidth,label='Total'+labelapp,linestyle=linestyle)
         # Plot initial number of nuclei
-        ax.axhline(self.totpart(n0),color='k',linewidth=0.5)
+        ax.axhline(self.totparticles(n0),color='k',linewidth=0.5)
         
         # Unless title is requested, show automated title
         if title is None: # Automated title
@@ -1377,7 +953,7 @@ class CRUMPET:
         # If no ylim is requested set the ylim to the highest plotted line
         if ylim is None:
             # Total particles in this plot
-            totmax=max(self.totpart(nt.y))
+            totmax=max(self.totparticles(nt.y))
             # Compare to previous max
             if totmax>ax.get_ylim()[1]:
                 # If higher, update
@@ -1408,7 +984,7 @@ class CRUMPET:
         rates,reactions={},{}
         # Read the data from ratefile into dict
         datalist=['H0_depl','H0_create','H2_depl','H2_create','H0_ext','H2_ext']
-        self.ratedata.read_UE(nratefile,rates,datalist=datalist,path=self.path)
+        self.read_UE(nratefile,rates,datalist=datalist,path=self.path)
         # Create custom reaction
         reactions={}
         for r in rates.keys():
@@ -1417,7 +993,7 @@ class CRUMPET:
         # Read the data from ratefile into dict
         datalist=['Hel','H2el','extel','Hia','H2ia','extia','HV','H2V','extV','Hga','H2ga','extga','Hgm','H2gm','extgm',]
         try:
-            self.ratedata.read_UE(eratefile,rates,datalist=datalist,path=self.path)
+            self.read_UE(eratefile,rates,datalist=datalist,path=self.path)
 
             # Create custom reaction
             for r in rates.keys():
@@ -1432,7 +1008,7 @@ class CRUMPET:
 
 
 
-    def plot_ue_nrate(self,ratefile,Te,ne,fig=None,ax=0,figsize=(10,10/1.618033),linestyle='-',ylim=(1e-1,1e7),linewidth=3,labelapp='',savename=None,title=None,pretitle='',figtype='png',color='k',plot='loglog',idx=0,xlim=None,ncol=3,fac=1,E=0.1,Ton=False,rad=True,Tm=False):
+    def plot_UE_nrate(self,ratefile,Te,ne,fig=None,ax=0,figsize=(10,10/1.618033),linestyle='-',ylim=(1e-1,1e7),linewidth=3,labelapp='',savename=None,title=None,pretitle='',figtype='png',color='k',plot='loglog',idx=0,xlim=None,ncol=3,fac=1,E=0.1,Ton=False,rad=True,Tm=False):
         ''' Routine plotting the UEDGE rates read from file ratefile
             plot_uerate(ratefile,Te,ne,*keys)
         
@@ -1470,13 +1046,13 @@ class CRUMPET:
             rates={}
             # Read the data from ratefile into dict
             datalist=['H0_depl','H0_create','H2_depl','H2_create','H0_ext','H2_ext']
-            self.ratedata.read_UE(ratefile,rates,datalist=datalist)
+            self.read_UE(ratefile,rates,datalist=datalist)
             # Create custom reaction
             reactions={}
             for r in rates.keys():
                 reactions[r]=REACTION(r,'',rates[r],'UE',['',0,'',0,[0,0,0,0]])
         except:
-            reactions=self.calc_ue_nrate(Te,ne,E,Ton,rad,Tm)
+            reactions=self.calc_UE_nrate(Te,ne,E,Ton,rad,Tm)
         
         
         typ,lab='',''
@@ -1563,14 +1139,14 @@ class CRUMPET:
         fig.show()
         return fig
 
-    def calc_ue_nrate(self,Te,ne,E,Ton,rad,Tm):
+    def calc_UE_nrate(self,Te,ne,E,Ton,rad,Tm):
         from numpy import zeros,sum,array
         datalist=['H0_depl','H0_create','H2_depl','H2_create','H0_ext','H2_ext']
         ret=zeros((len(Te),self.Np,self.Np))
         ext=zeros((len(Te),self.Np))
         for i in range(len(Te)):
             T=Te[i]
-            ret[i,:,:],ext[i,:],_=self.crm.gl_crm(*self.crm.M(T,ne,T,ne,E,write=False),Sext=True) # Store to matrix
+            ret[i,:,:],ext[i,:],_=self.gl_crm(*self.M(T,ne,T,ne,E,write=False),Sext=True) # Store to matrix
 
         setups= [   ['H0_depl', ret[:,0,0]    ],
                     ['H0_create', ret[:,0,1]                                                ],
@@ -1584,14 +1160,14 @@ class CRUMPET:
             reactions[l[0]]=l[1]
         return reactions
 
-    def calc_ue_Erate(self,Te,ne,E,Ton,rad,Tm):
+    def calc_UE_Erate(self,Te,ne,E,Ton,rad,Tm):
         from numpy import zeros,sum,array
         datalist=['Hel','H2el','extel','Hia','H2ia','extia','HV','H2V','extV','Hga','H2ga','extga','Hgm','H2gm','extgm',]
         retE=zeros((len(Te),5,self.Np))
         extE=zeros((len(Te),5))
         for i in range(len(Te)):
             T=Te[i]
-            U=self.crm.Sgl(T,ne,T,ne,E,rad,Tm,write=False,Ton=Ton) # Don't include erl1/erl2 radiation in the rates as these are handled by UEDGE
+            U=self.Sgl(T,ne,T,ne,E,rad,Tm,write=False,Ton=Ton) # Don't include erl1/erl2 radiation in the rates as these are handled by UEDGE
             # Include T-losses or not?
             retE[i,:,:]=array([ sum(U[0][0],axis=0), sum(U[1][0],axis=0), sum(U[2][0],axis=0), sum(U[3][0],axis=0), sum(U[4][0],axis=0)])
             #print(len(retE.shape))
@@ -1620,7 +1196,7 @@ class CRUMPET:
         return reactions
 
 
-    def plot_ue_Erate(self,ratefile,Te,ne,fig=None,ax=0,figsize=(12,13/1.618033),linestyle='-',ylim=(1e-17,1e-11),linewidth=2,labelapp='',savename=None,title=None,pretitle='',figtype='png',plot='loglog',xlim=None,ncol=3,colors=['darkcyan','b','m','r'],eion=5,ediss=10,origUE=False,idx=0,E=0.1,Ton=False,rad=True,Tm=False):
+    def plot_UE_Erate(self,ratefile,Te,ne,fig=None,ax=0,figsize=(12,13/1.618033),linestyle='-',ylim=(1e-17,1e-11),linewidth=2,labelapp='',savename=None,title=None,pretitle='',figtype='png',plot='loglog',xlim=None,ncol=3,colors=['darkcyan','b','m','r'],eion=5,ediss=10,origUE=False,idx=0,E=0.1,Ton=False,rad=True,Tm=False):
         ''' Routine plotting the UEDGE rates read from file ratefile
             plot_uerate(ratefile,Te,ne,*keys)
         
@@ -1663,19 +1239,19 @@ class CRUMPET:
             if origUE is True:
                 # Read the data from ratefile into dict
                 datalist=['H0_depl','H0_create','H2_depl','H2_create','H0_ext','H2_ext']
-                self.ratedata.read_UE(ratefile,rates,datalist=datalist)
+                self.read_UE(ratefile,rates,datalist=datalist)
                 
             else:
                 # Read the data from ratefile into dict
                 datalist=['Hel','H2el','extel','Hia','H2ia','extia','HV','H2V','extV','Hga','H2ga','extga','Hgm','H2gm','extgm',]
-                self.ratedata.read_UE(ratefile,rates,datalist=datalist)
+                self.read_UE(ratefile,rates,datalist=datalist)
             # Create custom reaction
             reactions={}
             for r in rates.keys():
                 reactions[r]=REACTION(r,'',rates[r],'UE',['',0,'',0,[0,0,0,0]])
 
         except:
-            reactions=self.calc_ue_Erate(Te,ne,E,Ton,rad,Tm)
+            reactions=self.calc_UE_Erate(Te,ne,E,Ton,rad,Tm)
 
             '''
             datalist=['Hel','H2el','extel','Hia','H2ia','extia','HV','H2V','extV','Hga','H2ga','extga','Hgm','H2gm','extgm',]
@@ -1889,7 +1465,7 @@ class CRUMPET:
             yunit=r'Counts [$\rm{s^{-1}}]$'
 
 
-        data=self.crm.intensity(Te,ne,Ti=None,ni=None,E=E,units=units,norm=norm,write=write)
+        data=self.intensity(Te,ne,Ti=None,ni=None,E=E,units=units,norm=norm,write=write)
 
         if split is True:
             species=['atomic','molecular']
@@ -1912,7 +1488,7 @@ class CRUMPET:
 
         color=['b','r']
         if norm is True:
-            data=self.crm.intensity(Te,ne,Ti=None,ni=None,E=E,units=units,norm=False,write=False)
+            data=self.intensity(Te,ne,Ti=None,ni=None,E=E,units=units,norm=False,write=False)
             n=sum(data[0][1,:])+sum(data[1][1,:])
         else:
             n=1
@@ -1946,12 +1522,12 @@ class CRUMPET:
 
             try:
                 x=logspace(log10(T[0]),log10(T[1]))
-                y=[self.crm.get_rate(database,name,i,n,E) for i in x]
+                y=[self.get_rate(database,name,i,n,E) for i in x]
                 xlabel='Temperature [eV]'.format(T)
                 titapp=', '*(len(title)>0)+r'n={:.2E} $\rm{{cm^{{-3}}}}$'.format(n)
             except:
                 x=logspace(log10(T[0]),log10(T[1]))
-                y=[self.crm.get_rate(database,name,T,i,E) for i in x]
+                y=[self.get_rate(database,name,T,i,E) for i in x]
                 xlabel=r'Density [$\rm{cm^{-3}}$]'
                 titapp=', '*(title!='')+r'T={} eV'.format(T)
             if logy is True:
@@ -1960,12 +1536,12 @@ class CRUMPET:
             pf=ax.plot
             try:
                 x=linspace(T[0],T[1],res)
-                y=[self.crm.get_rate(database,name,i,n,E) for i in x]
+                y=[self.get_rate(database,name,i,n,E) for i in x]
                 xlabel='Temperature [eV]'.format(T)
                 titapp=', '*(len(title)>0)+r'n={:.2E} $\rm{{cm^{{-3}}}}$'.format(n)
             except:
                 x=linspace(T[0],T[1],res)
-                y=[self.crm.get_rate(database,name,T,i,E) for i in x]
+                y=[self.get_rate(database,name,T,i,E) for i in x]
                 xlabel=r'Density [$\rm{cm^{-3}}$]'
                 titapp=', '*(title!='')+r'T={} eV'.format(T)
             if logy is True:
@@ -2031,14 +1607,14 @@ class CRUMPET:
         vol*=1e6
 
         # Set initial density in [1/cm**3]
-        n=zeros((len(self.crm.n0()),))
+        n=zeros((len(self.n0()),))
         n[0]=1e-6*na
         n[1]=1e-6*nm
 
         # Get the rate matrices 
-        mat,ext=self.crm.M(Te,ne,Ti,ni,E,write=True) # Get the full rate matrix
+        mat,ext=self.M(Te,ne,Ti,ni,E,write=True) # Get the full rate matrix
         if gl is True:
-            mat,ext,n=self.crm.gl_crm(mat,ext,n=n) # Get matrices and eigenvalues/-vectors
+            mat,ext,n=self.gl_crm(mat,ext,n=n) # Get matrices and eigenvalues/-vectors
 
 
         # Set external sources to be [1/cm**3/s]
@@ -2057,11 +1633,11 @@ class CRUMPET:
             ax=f.add_subplot(111)
             for i in range(len(n)):
                 line='--'
-                if 'H2' in self.crm.slist[i]: line='-'
+                if 'H2' in self.slist[i]: line='-'
 
-                ax.semilogx(ss_sol.t,ss_sol.y[i,:],line,label=self.crm.slist[i]) 
+                ax.semilogx(ss_sol.t,ss_sol.y[i,:],line,label=self.slist[i]) 
                 if i==0:
-                    ax.semilogx(ss_sol.t,ss_sol.y[i,:],'k.',label=self.crm.slist[i]) 
+                    ax.semilogx(ss_sol.t,ss_sol.y[i,:],'k.',label=self.slist[i]) 
             ax.legend(ncol=3)
             ax.set_xlabel('Time [s]')
             ax.set_ylabel('Density [cm**-3]')
