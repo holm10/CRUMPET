@@ -4,6 +4,7 @@
 # 200205 - Separated from CRUM.py #holm10
 from CRUM.tools import TOOLS
 
+
 class CRM(TOOLS):
     def __init__(self,species,bg,reactionlist,settings,path='.',vmax=14,nmax=8,rdata=None):
         ''' Creates a CRM class, at the heart of CRUM
@@ -41,11 +42,15 @@ class CRM(TOOLS):
         ''' LOOP OVER ALL THE DEFINED REACTIONS '''
         for r in reactionlist:
             # Split the definitions into names and databases
-            _database=r[0].split('_')[0]
+            database=r[0].split('_')[0]
             try:
                 ID=r[0].split('_')[1]
             except:
                 pass
+
+
+            
+
 
             ''' Vibrational transitions in molecules '''
             if 'XvY' in ID:
@@ -58,24 +63,14 @@ class CRM(TOOLS):
                             rlist=[self.XY2num(i,x,x+y) for i in r[1]] # Reactant with vib. level numbers
                             plist=[self.XY2num(i,x,x+y) for i in r[2]] # Product with vib. level numbers 
 
-                            '''
-                            name=vID
-                            database=_database
-                            ratecoeff=rdata[_database][vID], # Coefficients of the reaction
-                            rtype='RATE'
-                            rlist=[rlist,plist,r[-1]]
-
-                            '''
-                            # Create reaction object
-                            self.reactions.append(REACTION(              vID, # Reaction name
-                                                                    _database, # Reaction database
-                                                                    rdata[_database][vID], # Coefficients of the reaction
-                                                                    'RATE', # Type of reaction
-                                                                    [rlist,plist,r[-1]],bg,species
-                                                                    
-                                                        )
-                                            )
+                            _name=vID
+                            _database=database
+                            _ratecoeff=rdata[database][vID] # Coefficients of the reaction
+                            _rtype='RATE'
+                            _rlist=[rlist,plist,r[-1]]
+                            self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
             
+
                 ''' Vibrationally-dependent reaction '''
             elif 'Xl' in ID:
                 for x in range(vmax+1): # Generate reactions for each vibrational level
@@ -84,27 +79,17 @@ class CRM(TOOLS):
                     plist=[self.XY2num(i,x) for i in r[2]] # Product with vib. level numbers
 
                     
-                    '''
-                    name=vID
-                    database=_database
-                    ratecoeff=rdata[_database][vID], # Coefficients of the reaction
-                    rtype='RATE'
-                    rlist=[rlist,plist,r[-1]]
-
-                    '''
-                    self.reactions.append(REACTION(              vID, # Reaction name
-                                                            _database, # Reaction database
-                                                            rdata[_database][vID], # Coefficients of the reaction
-                                                            'RATE', # Type of reaction
-                                                            [rlist,plist,r[-1]],bg,species
-
-                                                )
-                                    )
+                    _name=vID
+                    _database=database
+                    _ratecoeff=rdata[database][vID] # Coefficients of the reaction
+                    _rtype='RATE'
+                    _rlist=[rlist,plist,r[-1]]
+                    self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
 
 
 
                 ''' Custom reaction-rate '''
-            elif _database.upper()=='CUSTOM':
+            elif database.upper()=='CUSTOM':
                 # Open the custom data file and read lines into data and subcard locations into list
                 data,_,subcards=self.file2list(path,r[1].strip())
                 database_use=data[0].strip()    # Use the first line as database
@@ -134,21 +119,14 @@ class CRM(TOOLS):
                                 rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
                                 plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
 
-                                '''
-                                name=self.XY2num(name,j)
-                                database=database_use
-                                ratecoeff=[float(x) for x in data[subc+m+j*2].split()], # Coefficients for v-level
-                                rtype='RATE'
-                                rlist=[rlist,plist,eng]
+                                _name=self.XY2num(name,j)
+                                _database=database_use
+                                _ratecoeff=[float(x) for x in data[subc+m+j*2].split()] # Coefficients for v-level
+                                _rtype='RATE'
+                                _rlist=[rlist,plist,eng]
+                                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
 
-                                '''
-                                self.reactions.append(REACTION(              self.XY2num(name,j), # Name
-                                                                        database_use,   # Database
-                                                                        [float(x) for x in data[subc+m+j*2].split()], # Coefficients for v-level
-                                                                        'RATE',  # Type of reaction
-                                                                        [rlist,plist,eng],bg,species
-                                                                    )
-                                                     )
+                                
                         # TODO: what if non-v dependent rate?
 
                         ''' Transition coefficient '''
@@ -167,21 +145,13 @@ class CRM(TOOLS):
                                 rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
                                 plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
 
-                                '''
-                                name=self.XY2num(name,j)
-                                database=database_use
-                                ratecoeff=float(data[subc+m+j].split()[1])
-                                rtype='COEFFICIENT'
-                                rlist=[rlist,plist,eng]
-                                
-                                '''
-                                self.reactions.append(REACTION(          self.XY2num(name,j), # Name
-                                                                    database_use,   # Database
-                                                                    float(data[subc+m+j].split()[1]), # Transition coefficient for v-level
-                                                                    'COEFFICIENT', # Type of reaction
-                                                                    [rlist,plist,eng],bg,species
-                                                                   )
-                                                     )
+                                _name=self.XY2num(name,j)
+                                _database=database_use
+                                _ratecoeff=float(data[subc+m+j].split()[1])
+                                _rtype='COEFFICIENT'
+                                _rlist=[rlist,plist,eng]
+                                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
+                               
                         else: # Other transition
                             m=2
                             eng='0'
@@ -192,21 +162,15 @@ class CRM(TOOLS):
                             rlist=reactants.strip().split(' + ') # Reactants
                             plist=fragments.strip().split(' + ') # Fragments
 
-                            '''
-                            ratecoeff=float(data[subc+m])
-                            database=_database
-                            rtype='COEFFICIENT'
-                            rlist=[rlist,plist,eng]
 
+                            _name=name
+                            _ratecoeff=float(data[subc+m])
+                            _database=database
+                            _rtype='COEFFICIENT'
+                            _rlist=[rlist,plist,eng]
+                            self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
 
-                            '''
-                            self.reactions.append(REACTION(              name,           # Name 
-                                                                    database_use,   # Database
-                                                                    float(data[subc+m]),    # Transition coefficient
-                                                                    'COEFFICIENT',   # Type of reaction
-                                                                    [rlist,plist,eng],bg,species
-                                                                )
-                                                 )
+                            
 
                         ''' Cross-section '''
                     elif fit=='SIGMA':
@@ -220,24 +184,17 @@ class CRM(TOOLS):
                         plist=fragments.strip().split(' + ') # Fragments
 
 
-                        '''
-                        #name=name
-                        ratecoeff=[float(x) for x in data[subc+m].split()], # SAWADA cross-section parameters
-                        database=_database
-                        rtype='SIGMA'
-                        rlist=[rlist,plist,r[-1]]
+                        _name=name
+                        _ratecoeff=[float(x) for x in data[subc+m].split()] # SAWADA cross-section parameters
+                        _database=database_use
+                        _rtype='SIGMA'
+                        _rlist=[rlist,plist,eng]
+                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
 
 
                         # TODO: extend definitions of cross-section
                         # Presently assumes SAWADA-like cross-section definition
-                        '''
-                        self.reactions.append(REACTION(              name,           # Name
-                                                                database_use,   # Database
-                                                                [float(x) for x in data[subc+m].split()], # SAWADA cross-section parameters
-                                                                'SIGMA', # Type of reaction
-                                                                [rlist,plist,eng],bg,species
-                                                            )
-                                             )
+                    
                     else:
                         print('Reaction type "{}" not recognized! Aborting.'.format(data[subcards[i]].split()[1]))
                         return
@@ -246,14 +203,14 @@ class CRM(TOOLS):
                     
 
                 ''' ADAS data '''
-            elif _database.upper()=='ADAS':
+            elif database.upper()=='ADAS':
                 for x in range(1,nmax+1): # Read the data for each electronic state up to nmax
 
 
                     if ID.upper()=='EXCITATION': # Electron impact excitation
                         rn=range(x+1,nmax+1) # Excitation only possible between current state and nmax
                         fit='ADAS'          # ADAS-type fit
-                        Tarr=rdata[_database]['T']  # Temperature array for interpolation
+                        Tarr=rdata[database]['T']  # Temperature array for interpolation
 
 
                     elif ID.upper()=='RELAXATION': # Radiative relaxation
@@ -269,70 +226,50 @@ class CRM(TOOLS):
                             plist=[self.XY2num(i,x,y) for i in r[2]]  # Fragments
                     
                             try:
-                                '''
-                                name='{}_{}-{}'.format(ID,x,y)
-                                ratecoeff=rdata[_database]['{}-{}'.format(x,y)], # Get coefficients
-                                database=_database
-                                rtype=fit
-                                rlist=[rlist,plist,r[-1]]
-                                Tarr=Tarr
+                                _name='{}_{}-{}'.format(ID,x,y)
+                                _ratecoeff=rdata[database]['{}-{}'.format(x,y)] # Get coefficients
+                                _database=database
+                                _rtype=fit
+                                _rlist=[rlist,plist,r[-1]]
+                                _Tarr=Tarr
+                                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species,_Tarr))
 
-                                '''
-                                self.reactions.append(REACTION(          '{}_{}-{}'.format(ID,x,y),  # Name w/ appended initial-final state
-                                                                    _database,                   # Database
-                                                                    rdata[_database]['{}-{}'.format(x,y)],  # Get transition coefficient
-                                                                    fit,    # Reaction type
-                                                                    [rlist,plist,r[-1]],bg,species,
-                                                                    Tarr    # Temperature array for interpolation
-                                                                )
-                                                    )
+                                
                             except:
                                 pass
 
 
                 ''' UEDGE rates '''
-            elif _database.upper()=='UE':
+            elif database.upper()=='UE':
 
 
-                '''
-                name=ID
-                ratecoeff=rdata[_database][ID], # Get coefficients
-                database=_database
-                rtype='UE'
-                rlist=[r[1],r[2],r[-1]]
+                _name=ID
+                _ratecoeff=rdata[database][ID] # Get coefficients
+                _database=database
+                _rtype='UE'
+                _rlist=[r[1],r[2],r[-1]]
+                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
 
-                '''
-                self.reactions.append(REACTION(              ID,         # Name
-                                                        _database,   # Database
-                                                        rdata[_database][ID],   # Get coefficients
-                                                        'UE',        # Reaction type
-                                                        [r[1],r[2],r[-1]],bg,species
-                                                   )
-                                     )
+                
                             
                     
                 ''' EIRENE rates '''
-            elif _database.upper() in ['HYDHEL','AMJUEL','H2VIBR']:
+            elif database.upper() in ['HYDHEL','AMJUEL','H2VIBR']:
 
 
 
-                '''
-                name=ID
-                ratecoeff=rdata[_database][ID], # Get coefficients
-                database=_database
-                rtype='RATE'
-                rlist=[r[1],r[2],r[-1]]
-        
-                '''
-                self.reactions.append(REACTION(              ID,         # Name
-                                                        _database,   # Database
-                                                        rdata[_database][ID], # Get coefficients
-                                                        'RATE',      # Reaction type
-                                                        [r[1],r[2],r[-1]],bg,species
-                                                    )
-                                     )
+
+                _name=ID
+                _ratecoeff=rdata[database][ID] # Get coefficients
+                _database=database
+                _rtype='RATE'
+                _rlist=[r[1],r[2],r[-1]]
+                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
+
+                
+
                 ''' APID rates '''
-            elif _database.upper()=='APID':
+            elif database.upper()=='APID':
                 for x in range(2,nmax+1):
                     if ID.upper()=='IONIZ':
                         rlist=[self.XY2num(i,x,y) for i in r[1]]  # Reactants 
@@ -346,25 +283,18 @@ class CRM(TOOLS):
                             coeffs=[x, 0,  0,  0,  0,  0,  0, 1.133, -0.4059, 0.0714]
 
 
-                            '''
-                        name='{}_{}'.format(ID,x)
-                        ratecoeff=coeffs
-                        database=_database
-                        rtype='APID'
-                        rlist=[rlist,plist,r[-1]]
+                        _name='{}_{}'.format(ID,x)
+                        _ratecoeff=coeffs
+                        _database=database
+                        _rtype='APID'
+                        _rlist=[rlist,plist,r[-1]]
+                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
 
                         
-                        '''
-                        self.reactions.append(REACTION(          '{}_{}'.format(ID,x),  # Name w/ appended initial-final state
-                                                                    _database,                   # Database
-                                                                    coeffs,
-                                                                    'APID',    # Reaction type
-                                                                    [rlist,plist,r[-1]],bg,species
-                                                                )
-                                                    )
+                        
                 
                 ''' Johnson's approximation of Einstein coefficients '''
-            elif _database.upper()=='JOHNSON':
+            elif database.upper()=='JOHNSON':
                 def g(i,f):
                     g=[ 1.133*(f==1) + 1.0785*(f==2) + (0.9935 + 0.2328/f - 0.1296/f**2)*(f>2),
                         -0.4059*(f==1) -0.2319*(f==2) - ((0.6282 - 0.5598/f + 0.5299/f**2)/f)*(f>2),
@@ -389,30 +319,22 @@ class CRM(TOOLS):
                         rlist=[self.XY2num(a,i,f) for a in r[1]]  # Reactants 
                         plist=[self.XY2num(a,i,f) for a in r[2]]  # Fragments
 
-                        '''
-                        name='{}_{}-{}'.format(ID,i,f)
-                        ratecoeff=Afac
-                        database=_database
-                        rtype='COEFFICIENT'
-                        rlist=[rlist,plist,r[-1]]
 
-                        '''
-                        self.reactions.append(REACTION(          '{}_{}-{}'.format(ID,i,f),  # Name w/ appended initial-final state
-                                                            _database,                   # Database
-                                                            Afac,  # Get transition coefficient
-                                                            'COEFFICIENT',    # Reaction type
-                                                            [rlist,plist,r[-1]],bg,species
-                                                        )
-                                            )
+                        _name='{}_{}-{}'.format(ID,i,f)
+                        _ratecoeff=Afac
+                        _database=database
+                        _rtype='COEFFICIENT'
+                        _rlist=[rlist,plist,r[-1]]
+                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
+
+                        
                     
                 
                 
             
             else:
-                print('Database "{}" not recognized! Aborting.'.format(_database))
+                print('Database "{}" not recognized! Aborting.'.format(database))
                 return
- 
-            #self.reactions.append(REACTION(name,_database,ratecoeff,rtype,rlist,bg,species))
 
             ''' END LOOP OVER DEFINED REACTIONS '''
 
@@ -560,6 +482,7 @@ class CRM(TOOLS):
         from numpy import zeros,array
 
 
+
         Sl=[r.S_r,r.S_V,r.S_g]
         ret=zeros((8,2))
         offset=0
@@ -677,6 +600,8 @@ class CRM(TOOLS):
 
                 if mode=='Sgl':
                     S=self.getS(r,Te,Ti,Tm,E,ne,rad,Ton)
+
+
                     Sgl=    array(  [   [S[0]+S[4]],
                                         [-sum(S,axis=0)],
                                         [S[1]+S[5]],
@@ -1564,16 +1489,11 @@ class CRM(TOOLS):
             # Drop non-radiative entries
             arr=transpose(arr[~all(abs(arr)< 1e-8,axis = 1)])
         
-            if units=='ev':
-                arr[0,:]=1*arr[0,:]
-            elif units=='v':
-                arr[0,:]=1e7/(1239.84193/arr[0,:])
-            elif units=='f':
-                arr[0,:]=241.798*arr[0,:]
-            elif units=='l':
-                arr[0,:]=1239.84193/arr[0,:]
-            elif units=='Å':
-                arr[0,:]=12398.4193/arr[0,:]
+            if units=='ev':     arr[0,:]=1*arr[0,:]
+            elif units=='v':    arr[0,:]=1e7/(1239.84193/arr[0,:])
+            elif units=='f':    arr[0,:]=241.798*arr[0,:]
+            elif units=='l':    arr[0,:]=1239.84193/arr[0,:]
+            elif units=='Å':    arr[0,:]=12398.4193/arr[0,:]
 
 
             if norm is True:

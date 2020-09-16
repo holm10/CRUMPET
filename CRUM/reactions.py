@@ -30,111 +30,8 @@ class REACTION:
         '''
         from numpy import ones,array,pi
         from scipy.interpolate import interp2d,interp1d
-        
-        def getS(r,p,K,bg):
-            '''Parses Returns list of energies
-
-            Assigns and calculates the energy change of the different comonents
-            for a reaction. 
-
-            Parameters
-            ----------
-            r : 
-
-            '''
-
-            from numpy import ones
-            rm=ones((len(r),))
-            pm=ones((len(p),))
-            
-            for i in range(len(r)):
-                if '*' in r[i]:
-                    rm[i]=r[i].split('*')[0]
-                    r[i]=r[i].split('*')[1]
-            
-            for i in range(len(p)):
-                if '*' in p[i]:
-                    pm[i]=p[i].split('*')[0]
-                    p[i]=p[i].split('*')[1]
-
-            try:
-                K=str(eval(K))
-            except:
-                pass
-        
-            
-                
-
-            absorption=False    # Electron absorption
-            prode=False         # Electron production (not conserving Ee)
-            radrelax=False      # Radiative relaxation
-            decay=False         # Non-radiative decay: energy goes into K of prod
-            # Check if reaction is an electron absorption reaction
-            if 'e' in r:
-                try:
-                    for x in r:
-                        if x in list(bg): b=x
-                    if b not in p:
-                        absorption=True
-                        # Account for two-step processes where electron is absorbed
-                        # creating a non-stable particle that decays
-                        if len(pm)>len(rm): decay=True
-                except:
-                    pass
-            
-            # Do not consider e-impact ionization impact on e-balance:
-            #   all energy supplied to the created electron supplied by
-            #   the reactant electron
-
-            else:
-                # Proton-impact ionization
-                if 'e' in p:
-                    prode=True
-
-            # Radiative relaxation when one particle changes state
-            if sum(rm)==1 and sum(pm==1): radrelax=True
-            # Non-radiative decay when one particle becomes many
-            if sum(rm)==1 and sum(pm)>1:  decay=True
-    
-            # TODO: catches for UEDGE ionization and relaxation
-
-            
-            Vr,Vp,Dr,Dp=0,0,0,0
-            for i in range(len(r)):
-                try:
-                    Vr+=rm[i]*species[r[i]]['V']
-                except:
-                    Vr+=rm[i]*bg[r[i]]['V']
-            for i in range(len(p)):
-                try:
-                    Vp+=pm[i]*species[p[i]]['V']
-                except:
-                    Vp+=pm[i]*bg[p[i]]['V']
-
-
-            ret=['0','0','0','0']
-            # Reactant energy loss
-            if radrelax is False:
-                if decay is False:
-                    try:
-                        ret[0]=str(Vr-Vp-float(K))
-                    except:
-                        ret[0]=str(Vr-Vp)+'-('+K+')'
-                else:
-                    ret[0]='-('+K+')'
-                ret[1]=str(Vp-Vr)
-            else:
-                ret[1]=str(Vp-Vr)
-                ret[2]=str(Vr-Vp)
-            if prode is True:
-                ret[3]='Te'
-
-            if 'erl1' in K: ret[2]+='+erl1'
-            elif 'erl2' in K: ret[2]+='+erl2'
-
-            return [r,p,rm,pm,ret]
-
-        S=getS(*S,bg)
+       
+        S=self.getS(*S,bg,species)
 
 
         # Store the data required to generate the reaction rates
@@ -183,6 +80,120 @@ class REACTION:
 
         if self.type=='ADAS': # ADAS interpolator
             self.interpolation=interp1d(self.Tarr,self.coeffs,kind='slinear')   # Create 1D interpolation function
+
+
+    def getS(self,r,p,K,bg,species):
+        '''Parses Returns list of energies
+
+        Assigns and calculates the energy change of the different comonents
+        for a reaction. 
+
+        Parameters
+        ----------
+        r : 
+
+        '''
+
+        from numpy import ones
+        rm=ones((len(r),))
+        pm=ones((len(p),))
+        
+        for i in range(len(r)):
+            if '*' in r[i]:
+                rm[i]=r[i].split('*')[0]
+                r[i]=r[i].split('*')[1]
+        
+        for i in range(len(p)):
+            if '*' in p[i]:
+                pm[i]=p[i].split('*')[0]
+                p[i]=p[i].split('*')[1]
+
+        try:
+            K=str(eval(K))
+        except:
+            pass
+    
+        
+            
+
+        absorption=False    # Electron absorption
+        prode=False         # Electron production (not conserving Ee)
+        radrelax=False      # Radiative relaxation
+        decay=False         # Non-radiative decay: energy goes into K of prod
+        # Check if reaction is an electron absorption reaction
+        if 'e' in r:
+            try:
+                for x in r:
+                    if x in list(bg): b=x
+                if b not in p:
+                    absorption=True
+                    # Account for two-step processes where electron is absorbed
+                    # creating a non-stable particle that decays
+                    if len(pm)>len(rm): decay=True
+            except:
+                pass
+        
+        # Do not consider e-impact ionization impact on e-balance:
+        #   all energy supplied to the created electron supplied by
+        #   the reactant electron
+
+        else:
+            # Proton-impact ionization
+            if 'e' in p:
+                prode=True
+
+        # Radiative relaxation when one particle changes state
+        if sum(rm)==1 and sum(pm==1): radrelax=True
+        # Non-radiative decay when one particle becomes many
+        if sum(rm)==1 and sum(pm)>1:  decay=True
+
+        # TODO: catches for UEDGE ionization and relaxation
+
+        
+        Vr,Vp,Dr,Dp=0,0,0,0
+        for i in range(len(r)):
+            try:
+                Vr+=rm[i]*species[r[i]]['V']
+            except:
+                Vr+=rm[i]*bg[r[i]]['V']
+        for i in range(len(p)):
+            try:
+                Vp+=pm[i]*species[p[i]]['V']
+            except:
+                Vp+=pm[i]*bg[p[i]]['V']
+
+
+        ret=['0','0','0','0']
+        # Reactant energy loss
+        if radrelax is False:
+            if decay is False:
+                try:
+                    ret[0]=str(Vr-Vp-float(K))
+                except:
+                    ret[0]=str(Vr-Vp)+'-('+K+')'
+            else:
+                ret[0]='-('+K+')'
+            ret[1]=str(Vp-Vr)
+        else:
+            ret[1]=str(Vp-Vr)
+            ret[2]=str(Vr-Vp)
+        if prode is True:
+            ret[3]='Te'
+
+        if 'erl1' in K: ret[2]+='+erl1'
+        elif 'erl2' in K: ret[2]+='+erl2'
+
+        self.r=r
+        self.p=p
+        self.rm=rm
+        self.pm=pm
+        self.ret=ret
+
+        #print(ret,K)
+
+        return [r,p,rm,pm,ret]
+
+
 
     
     def print_reaction(self):
@@ -250,7 +261,6 @@ class REACTION:
                     
             else:
                 print('Unknown fit: {}, {}, {}'.format(self.database,self.name,self.type))
-                print(self.coeffs)
 
             return coeff*exp(ret)
 
