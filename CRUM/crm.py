@@ -88,23 +88,14 @@ class CRM(TOOLS):
                 pass
 
             #%%% Vibrationally dependent reactions %%%
-            if any(x in ID for x in ['XvY','Xl']):
+            if '$' in ID:
                 # Check all vibrational states up to vmax 
                 for x in range(self.vmax+1):
                     # Assume ladder-like vibrational transitions (+/-1) only
                     for y in [-1,1]: 
-
-                        #%%%% Vibrationally dependent reactions %%%%
-                        if 'Xl' in ID:
-                            vID=self.XY2num(ID,x,x) # Substitute initial and
-                                            # final state into temporary string
-                            rlist=[self.XY2num(i,x) for i in r[1]] # Reactant
-                                            # with vib. level numbers
-                            plist=[self.XY2num(i,x) for i in r[2]] # Product
-                                            # with vib. level numbers
-                            
+  
                         #%%%% Vibrational transitions %%%%
-                        else:
+                        if '&' in ID:
                             # Make sure we do not excite beyond vmax
                             if x+y in range(self.vmax+1): 
                                 vID=self.XY2num(ID,x,x+y) # Substitute initial
@@ -115,12 +106,21 @@ class CRM(TOOLS):
                                             # Product with vib. level numbers 
 
 
+                        #%%%% Vibrationally dependent reactions %%%%
+                        else:
+                            vID=self.XY2num(ID,x,x) # Substitute initial and
+                                            # final state into temporary string
+                            rlist=[self.XY2num(i,x) for i in r[1]] # Reactant
+                                            # with vib. level numbers
+                            plist=[self.XY2num(i,x) for i in r[2]] # Product
+                                            # with vib. level numbers
+                          
                         _name=vID
                         _database=database
                         _ratecoeff=rdata[database][vID] 
                         _rtype='RATE'
                         _rlist=[rlist,plist,r[-1]]
-                        if 'Xl' in ID:
+                        if '&' not in ID:
                             if y==1:
                                 self.reactions.append(REACTION( 
                                             _name,_database,_ratecoeff,_rtype,
@@ -138,7 +138,7 @@ class CRM(TOOLS):
             
             #%%%%% Read custom rates %%%%%
             elif database.upper()=='CUSTOM':
-                self.setup_custom_new(r[1].strip(),database)
+                self.setup_custom(r[1].strip(),database)
                     
 
                 ''' ADAS data '''
@@ -265,120 +265,7 @@ class CRM(TOOLS):
                 print('Database "{}" not recognized! Aborting.'.format(database))
                 return
 
-            
-
     def setup_custom(self,fname,database):
-        from CRUM.reactions import REACTION
-        from numpy import zeros,pi
-        
-        # Parse the custom data file into a list
-        data,_,subcards=self.file2list(self.path,fname)
-        database_use=data[0].strip() # Database is defined at fist line
-
-        # Loop through the cards
-        for i in range(len(subcards)-1):
-            subc=subcards[i] # Helper index
-            fit=data[subc].split()[1].upper()   # What kind of fit is being used - first subcard entry
-            name=data[subc].split()[2]  # What is the name of the reaction - second subcard entry
-            reactants,fragments=data[subc+1].split(' > ')    # Get the reactants and fragments from the second line
-
-            eng='0'
-
-            # Identify the type of reaction we are working with
-            ''' v-dependent rate '''
-
-            if fit=='RATE': 
-                m=0
-            else: 
-                m=2
-                while data[subc+m][0]=='K':
-                    eng=data[subc+m].strip().split('=')[-1]
-                    m+=1
-
-
-            if fit=='RATE':
-                if 'X' in name:
-                    # TODO: what if not all vib. states have data?
-                    for j in range(self.vmax+1): # Read data for each vibrational state up to vmax
-                        while data[m][0]!='v':
-                            if data[m][0]=='K':
-                                eng=data[m].strip().split('=')[-1]
-                            m+=1
-
-                        rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
-                        plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
-
-                        _name=self.XY2num(name,j)
-                        _database=database_use
-                        _ratecoeff=[float(x) for x in data[subc+m+j*2].split()] # Coefficients for v-level
-                        _rtype='RATE'
-                        _rlist=[rlist,plist,eng]
-                        print(_name,_database,_ratecoeff,fit,rlist,plist,eng)
-                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
-
-                        
-                # TODO: what if non-v dependent rate?
-
-                ''' Transition coefficient '''
-            elif fit=='COEFFICIENT':
-                if 'X' in name: # v-dependent rate
-                    # TODO: what if not all vib. states have data?
-
-                    for j in range(self.vmax+1): # Read data for each vibrational state up to vmax
-                            
-
-                        rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
-                        plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
-
-                        _name=self.XY2num(name,j)
-                        _database=database_use
-                        _ratecoeff=float(data[subc+m+j].split()[1])
-                        _rtype='COEFFICIENT'
-                        _rlist=[rlist,plist,eng]
-                        print(_name,_database,_ratecoeff,fit,rlist,plist,eng)
-                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
-                       
-                else: # Other transition
-                            
-                    rlist=reactants.strip().split(' + ') # Reactants
-                    plist=fragments.strip().split(' + ') # Fragments
-
-
-                    _name=name
-                    _ratecoeff=float(data[subc+m])
-                    _database=database
-                    _rtype='COEFFICIENT'
-                    _rlist=[rlist,plist,eng]
-                    print(_name,_database,_ratecoeff,fit,rlist,plist,eng)
-                    self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
-
-                    
-
-                ''' Cross-section '''
-            elif fit=='SIGMA':
-
-                rlist=reactants.strip().split(' + ') # Reactants
-                plist=fragments.strip().split(' + ') # Fragments
-
-
-                _name=name
-                _ratecoeff=[float(x) for x in data[subc+m].split()] # SAWADA cross-section parameters
-                _database=database_use
-                _rtype='SIGMA'
-                _rlist=[rlist,plist,eng]
-                print(_name,_database,_ratecoeff,fit,rlist,plist,eng)
-                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
-
-
-                # TODO: extend definitions of cross-section
-                # Presently assumes SAWADA-like cross-section definition
-            
-            else:
-                print('Reaction type "{}" not recognized! Aborting.'.format(data[subc].split()[1]))
-                return
-
-
-    def setup_custom_new(self,fname,database):
         from CRUM.reactions import REACTION
         from numpy import zeros,pi
         
@@ -396,41 +283,48 @@ class CRM(TOOLS):
             eng='0'
 
             # Execute if no vib dependence, loop if vibr. dep. process
-            for j in range(1+
-                    (fit in ['RATE','COEFFICIENT'])*('X' in name)*self.vmax
-                                                                        ):
-                #%% Read change in kinetic energy associated with reaction %%
+            for j in range(1+('$' in name)*self.vmax):
 
-                # Vibr. dep. rates. have different structure
-                if (fit=='RATE') and ('X' in name): # Vib. dep. rates 
-                    m=0
-                    while data[m][0]!='v':
-                        if data[m][0]=='K':
-                            eng=data[m].strip().split('=')[-1]
-                        m+=1
-                # Non-vib. dep. rates use standard structure
-                else: 
-                    m=2
-                    while data[subc+m][0]=='K':
-                        eng=data[subc+m].strip().split('=')[-1]
-                        m+=1
+                # %%% Vibrationally dependent process %%%
+                if '$' in name:
 
-                if ('X' in name) and (fit in ['RATE','COEFFICIENT']):
+                    # Read kinetic energy for each process
+                    for k in range(0,100):
+                        if data[k][0]=='K': 
+                            eng=data[k].strip().split('=')[-1]
+                        elif data[k][0]=='v':
+                            m=k
+                            break
+
+                    # Write data
                     _name=self.XY2num(name,j)
                     rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
                     plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
-                    if fit=='RATE': _ratecoeff=[float(x) for x in data[subc+m+j*2].split()] # Coefficients for v-level
-                    else: _ratecoeff=float(data[subc+m+j].split()[1])
+                    _ratecoeff=[float(x) for x in data[subc+m+j*2].split()] # Coefficients for v-level
+
+                # %%% Specified rate %%%
                 else:
-                    if fit=='COEFFICIENT': 
-                        _ratecoeff=float(data[subc+m])
-                        #_database=database
-                    else: _ratecoeff=[float(x) for x in data[subc+m].split()] # SAWADA cross-section parameters
+                    
+                    # Read the kinetic energy of the process
+                    for k in range(2,100):
+                        if data[subc+k][0]=='K': 
+                            eng=data[subc+m].strip().split('=')[-1]
+                        else:
+                            m=k
+                            break
+        
+                    # Cross-section as defined in SAWADA 95 has special form
+                    if fit=='SIGMA': 
+                        _ratecoeff=[float(x) for x in data[subc+m].split()] 
+                    # Other processes have pre-defined form
+                    else: _ratecoeff=float(data[subc+m])
+                    
+                    # Writee data
                     _name=name
                     rlist=reactants.strip().split(' + ') # Reactants
                     plist=fragments.strip().split(' + ') # Fragments
 
-                
+                # Store reaction
                 self.reactions.append(REACTION(_name,_database,_ratecoeff,fit,[rlist,plist,eng],self.bg,self.species))
 
 

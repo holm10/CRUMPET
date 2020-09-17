@@ -88,8 +88,8 @@ e + H2(v=0) > e + H2(n=a)
 e + H2(v=0) > e + H(n=1) + H(n=2)
 	K=2*0.3
 
-* H2VIBR_2.Xl1
-e + H2(v=X) > e + 2*H(n=1)
+* H2VIBR_2.$l1
+e + H2(v=$) > e + 2*H(n=1)
 	K=2*3
 
 * HYDHEL_2.2.7
@@ -100,8 +100,8 @@ e + H2(v=0) > e + 2*H(n=2)
 e + H2(v=0) > e + H(n=1) + H(n=3)
 	K=2*2.5
 
-* H2VIBR_2.Xl4
-e + H2(v=X) > 2*e + H2+
+* H2VIBR_2.$l4
+e + H2(v=$) > 2*e + H2+
 
 * HYDHEL_2.2.10
 e + H2(v=0) > 2*e + p + H(n=1)
@@ -127,12 +127,12 @@ e + H2+ > H(n=1) + 0.1*H(n=2) + 0.45*H(n=3) + 0.22*H(n=4) + 0.12*H(n=5) + 0.069*
 	K=Te
 
 
-* H2VIBR_2.Xl3
-e + H2(v=X) > H(n=1) + H-
+* H2VIBR_2.$l3
+e + H2(v=$) > H(n=1) + H-
 	K=Te
 
-* H2VIBR_2.Xl2
-p + H2(v=X) > H2+ + H(n=1)
+* H2VIBR_2.$l2
+p + H2(v=$) > H2+ + H(n=1)
 
 * HYDHEL_3.2.5
 p + H2(v=0) > p + H2+ + e
@@ -158,16 +158,16 @@ p + H- > H(n=2) + H(n=1)
 * HYDHEL_7.2.3
 p + H- > H(n=3) + H(n=1)
 
-* H2VIBR_2.XvY
-e + H2(v=X) > e + H2(v=Y)
+* H2VIBR_2.$v&
+e + H2(v=$) > e + H2(v=&)
 
 
 * APID_IONIZ
-e + H(n=X) > 2*e + p
+e + H(n=$) > 2*e + p
 	K=Te
 
 * JOHNSON_RELAXATION
-H(n=X) > H(n=Y)
+H(n=$) > H(n=&)
 
 
 * CUSTOM

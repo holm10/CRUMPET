@@ -28,11 +28,11 @@ class TOOLS:
                                         # input
             return string
         elif Y is None:   # If no Y-values, only replace X
-                return string.replace('X',str(X))
+                return string.replace('$',str(X))
         elif X is None: # If no X-values, only replace y
-                return string.replace('Y',str(Y))
+                return string.replace('&',str(Y))
         else:   # Both X and Y are replaced
-            return string.replace('X',str(X)).replace('Y',str(Y))
+            return string.replace('$',str(X)).replace('&',str(Y))
 
 
     def file2list(self,path,fname):
