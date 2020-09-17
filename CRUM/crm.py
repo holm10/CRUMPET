@@ -6,7 +6,7 @@ from CRUM.tools import TOOLS
 
 
 class CRM(TOOLS):
-    def __init__(self,species,bg,reactionlist,settings,path='.',vmax=14,nmax=8,rdata=None):
+    def __init__(self,species,bg,reactionlist,verbose,NP,path='.',vmax=14,nmax=8,rdata=None):
         ''' Creates a CRM class, at the heart of CRUM
             __init__(species,reactions,settings)
 
@@ -24,348 +24,24 @@ class CRM(TOOLS):
         '''
         from os import mkdir,getcwd
         from datetime import datetime
-        from CRUM.reactions import REACTION
-        from numpy import zeros,pi
 
         # Store class objects
         self.species=species
         self.bg=bg
         self.slist=list(self.species)
-        self.verbose=settings[0]
-        self.Np=settings[1]
+        self.verbose=verbose
+        self.Np=NP
         self.path=path
-
-
-        # Create list of reaction objects based on the previously read reaction list
         self.reactions=[]
+        self.vmax=vmax
+        self.nmax=nmax
 
-        ''' LOOP OVER ALL THE DEFINED REACTIONS '''
-        for r in reactionlist:
-            # Split the definitions into names and databases
-            database=r[0].split('_')[0]
-            try:
-                ID=r[0].split('_')[1]
-            except:
-                pass
 
+        self.setup_reactions(reactionlist,rdata)
 
-            
-
-
-            ''' Vibrational transitions in molecules '''
-            if 'XvY' in ID:
-                for x in range(vmax+1): # Loop over the requested excited vibrational states
-                    for y in [-1,1]: # Assume only ladder-like vibrational transitions (dv=+/-1)
-                        if x+y in range(vmax+1): # Make sure we do not excite beyond vmax
-                            vID=self.XY2num(ID,x,x+y) # Substitute initial and final state into temporary string
-                            
-
-                            rlist=[self.XY2num(i,x,x+y) for i in r[1]] # Reactant with vib. level numbers
-                            plist=[self.XY2num(i,x,x+y) for i in r[2]] # Product with vib. level numbers 
-
-                            _name=vID
-                            _database=database
-                            _ratecoeff=rdata[database][vID] # Coefficients of the reaction
-                            _rtype='RATE'
-                            _rlist=[rlist,plist,r[-1]]
-                            self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-            
-
-                ''' Vibrationally-dependent reaction '''
-            elif 'Xl' in ID:
-                for x in range(vmax+1): # Generate reactions for each vibrational level
-                    vID=self.XY2num(ID,x,x) # Substitute initial and final state into temporary string
-                    rlist=[self.XY2num(i,x) for i in r[1]] # Reactant with vib. level numbers
-                    plist=[self.XY2num(i,x) for i in r[2]] # Product with vib. level numbers
-
-                    
-                    _name=vID
-                    _database=database
-                    _ratecoeff=rdata[database][vID] # Coefficients of the reaction
-                    _rtype='RATE'
-                    _rlist=[rlist,plist,r[-1]]
-                    self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-
-
-                ''' Custom reaction-rate '''
-            elif database.upper()=='CUSTOM':
-                # Open the custom data file and read lines into data and subcard locations into list
-                data,_,subcards=self.file2list(path,r[1].strip())
-                database_use=data[0].strip()    # Use the first line as database
-
-                # Loop through the cards
-                for i in range(len(subcards)-1):
-                    subc=subcards[i] # Helper index
-                    fit=data[subc].split()[1].upper()   # What kind of fit is being used - first subcard entry
-                    name=data[subc].split()[2]  # What is the name of the reaction - second subcard entry
-                    reactants,fragments=data[subc+1].split(' > ')    # Get the reactants and fragments from the second line
-
-                    
-
-                    # Identify the type of reaction we are working with
-                    ''' v-dependent rate '''
-                    if fit=='RATE':
-                        if 'X' in name:
-                            # TODO: what if not all vib. states have data?
-                            for j in range(vmax+1): # Read data for each vibrational state up to vmax
-                                m=0
-                                eng='0'
-                                while data[m][0]!='v':
-                                    if data[m][0]=='K':
-                                        eng=data[m].strip().split('=')[-1]
-                                    m+=1
-
-                                rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
-                                plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
-
-                                _name=self.XY2num(name,j)
-                                _database=database_use
-                                _ratecoeff=[float(x) for x in data[subc+m+j*2].split()] # Coefficients for v-level
-                                _rtype='RATE'
-                                _rlist=[rlist,plist,eng]
-                                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-                                
-                        # TODO: what if non-v dependent rate?
-
-                        ''' Transition coefficient '''
-                    elif fit=='COEFFICIENT':
-                        if 'X' in name: # v-dependent rate
-                            # TODO: what if not all vib. states have data?
-                            m=2
-                            eng='0'
-                            while data[subc+m][0]=='K':
-                                eng=data[subc+m].strip().split('=')[-1]
-                                m+=1
-
-                            for j in range(vmax+1): # Read data for each vibrational state up to vmax
-                                    
-
-                                rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
-                                plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
-
-                                _name=self.XY2num(name,j)
-                                _database=database_use
-                                _ratecoeff=float(data[subc+m+j].split()[1])
-                                _rtype='COEFFICIENT'
-                                _rlist=[rlist,plist,eng]
-                                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-                               
-                        else: # Other transition
-                            m=2
-                            eng='0'
-                            while data[subc+m][0]=='K':
-                                eng=data[subc+m].strip().split('=')[-1]
-                                m+=1
-                                    
-                            rlist=reactants.strip().split(' + ') # Reactants
-                            plist=fragments.strip().split(' + ') # Fragments
-
-
-                            _name=name
-                            _ratecoeff=float(data[subc+m])
-                            _database=database
-                            _rtype='COEFFICIENT'
-                            _rlist=[rlist,plist,eng]
-                            self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-                            
-
-                        ''' Cross-section '''
-                    elif fit=='SIGMA':
-                        m=2
-                        eng='0'
-                        while data[subc+m][0]=='K':
-                            eng=data[subc+m].strip().split('=')[-1]
-                            m+=1
-
-                        rlist=reactants.strip().split(' + ') # Reactants
-                        plist=fragments.strip().split(' + ') # Fragments
-
-
-                        _name=name
-                        _ratecoeff=[float(x) for x in data[subc+m].split()] # SAWADA cross-section parameters
-                        _database=database_use
-                        _rtype='SIGMA'
-                        _rlist=[rlist,plist,eng]
-                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-
-                        # TODO: extend definitions of cross-section
-                        # Presently assumes SAWADA-like cross-section definition
-                    
-                    else:
-                        print('Reaction type "{}" not recognized! Aborting.'.format(data[subcards[i]].split()[1]))
-                        return
-
-
-                    
-
-                ''' ADAS data '''
-            elif database.upper()=='ADAS':
-                for x in range(1,nmax+1): # Read the data for each electronic state up to nmax
-
-
-                    if ID.upper()=='EXCITATION': # Electron impact excitation
-                        rn=range(x+1,nmax+1) # Excitation only possible between current state and nmax
-                        fit='ADAS'          # ADAS-type fit
-                        Tarr=rdata[database]['T']  # Temperature array for interpolation
-
-
-                    elif ID.upper()=='RELAXATION': # Radiative relaxation
-                        rn=range(1,x)   # Relaxation only possible to lower states
-                        fit='COEFFICIENT' # Coefficient-like decay
-                        Tarr=None   # Not T-dependent
-
-                    # Loop through each of the available final states
-                    for y in rn:
-
-                            
-                            rlist=[self.XY2num(i,x,y) for i in r[1]]  # Reactants 
-                            plist=[self.XY2num(i,x,y) for i in r[2]]  # Fragments
-                    
-                            try:
-                                _name='{}_{}-{}'.format(ID,x,y)
-                                _ratecoeff=rdata[database]['{}-{}'.format(x,y)] # Get coefficients
-                                _database=database
-                                _rtype=fit
-                                _rlist=[rlist,plist,r[-1]]
-                                _Tarr=Tarr
-                                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species,_Tarr))
-
-                                
-                            except:
-                                pass
-
-
-                ''' UEDGE rates '''
-            elif database.upper()=='UE':
-
-
-                _name=ID
-                _ratecoeff=rdata[database][ID] # Get coefficients
-                _database=database
-                _rtype='UE'
-                _rlist=[r[1],r[2],r[-1]]
-                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-                
-                            
-                    
-                ''' EIRENE rates '''
-            elif database.upper() in ['HYDHEL','AMJUEL','H2VIBR']:
-
-
-
-
-                _name=ID
-                _ratecoeff=rdata[database][ID] # Get coefficients
-                _database=database
-                _rtype='RATE'
-                _rlist=[r[1],r[2],r[-1]]
-                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-                
-
-                ''' APID rates '''
-            elif database.upper()=='APID':
-                for x in range(2,nmax+1):
-                    if ID.upper()=='IONIZ':
-                        rlist=[self.XY2num(i,x,y) for i in r[1]]  # Reactants 
-                        plist=[self.XY2num(i,x,y) for i in r[2]]  # Fragments
-
-                        if x==2:
-                            coeffs=[x, 0.14784,  0.0080871, -0.06227, 1.9414, -2.198, 0.95894,0,0,0]
-                        elif x==3:
-                            coeffs=[x, 0.058463, -0.051272, 0.85310, -0.57014, 0.76684, 0,0,0]
-                        elif x>3:
-                            coeffs=[x, 0,  0,  0,  0,  0,  0, 1.133, -0.4059, 0.0714]
-
-
-                        _name='{}_{}'.format(ID,x)
-                        _ratecoeff=coeffs
-                        _database=database
-                        _rtype='APID'
-                        _rlist=[rlist,plist,r[-1]]
-                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-                        
-                        
-                
-                ''' Johnson's approximation of Einstein coefficients '''
-            elif database.upper()=='JOHNSON':
-                def g(i,f):
-                    g=[ 1.133*(f==1) + 1.0785*(f==2) + (0.9935 + 0.2328/f - 0.1296/f**2)*(f>2),
-                        -0.4059*(f==1) -0.2319*(f==2) - ((0.6282 - 0.5598/f + 0.5299/f**2)/f)*(f>2),
-                        0.07014*(f==1) + 0.02947*(f==2) + ((0.3887 - 1.181/f + 1.470/f**2)/f**2)*(f>2) ]
-                    x=1-(f/i)**2
-                    return g[0] + g[1]/x + g[2]/x**2
-
-                h=1.054571596e-27
-                c=2.99792458e10
-                me=9.10938188e-28
-                e=4.80274e-10
-                I=(me * e**4) / (2 * h**2)
-
-
-
-                for i in range(1,nmax+1): # Read the data for each electronic state up to nmax
-                    for f in range(1,i):
-                        res= (2**6 *e**2 * I**2) / (3**1.5 * pi * me *c**3 * h**2)
-                        freq=(1/f**2 - 1/i**2)
-                        Afac=(res*g(i,f))/(freq*(i**5)*(f**3))
-
-                        rlist=[self.XY2num(a,i,f) for a in r[1]]  # Reactants 
-                        plist=[self.XY2num(a,i,f) for a in r[2]]  # Fragments
-
-
-                        _name='{}_{}-{}'.format(ID,i,f)
-                        _ratecoeff=Afac
-                        _database=database
-                        _rtype='COEFFICIENT'
-                        _rlist=[rlist,plist,r[-1]]
-                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-                        
-                    
-                
-                
-            
-            else:
-                print('Database "{}" not recognized! Aborting.'.format(database))
-                return
-
-            ''' END LOOP OVER DEFINED REACTIONS '''
-
-
-
-
-        ''' END CARDS LOOP '''
         # Define reactions for UEDGE raditation
         #self.ionizrad=REACTION('IONIZRAD','UE',self.get_coeff('UE','IONIZRAD'),'UE',['','',''],bg,species,['','',None,None,[0,0,0,0]])
         #self.recrad=REACTION('RECRAD','UE',self.get_coeff('UE','RECRAD'),'UE',['','',''],bg,species,['','',None,None,[0,0,0,0]])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -398,13 +74,390 @@ class CRM(TOOLS):
 
 
 
+    def setup_reactions(self,reactionlist,rdata):
+        from CRUM.reactions import REACTION
+        from numpy import zeros,pi
+        
+        ''' LOOP OVER ALL THE DEFINED REACTIONS '''
+        for r in reactionlist:
+            # Split the definitions into names and databases
+            database=r[0].split('_')[0]
+            try:
+                ID=r[0].split('_')[1]
+            except:
+                pass
+
+            #%%% Vibrationally dependent reactions %%%
+            if any(x in ID for x in ['XvY','Xl']):
+                # Check all vibrational states up to vmax 
+                for x in range(self.vmax+1):
+                    # Assume ladder-like vibrational transitions (+/-1) only
+                    for y in [-1,1]: 
+
+                        #%%%% Vibrationally dependent reactions %%%%
+                        if 'Xl' in ID:
+                            vID=self.XY2num(ID,x,x) # Substitute initial and
+                                            # final state into temporary string
+                            rlist=[self.XY2num(i,x) for i in r[1]] # Reactant
+                                            # with vib. level numbers
+                            plist=[self.XY2num(i,x) for i in r[2]] # Product
+                                            # with vib. level numbers
+                            
+                        #%%%% Vibrational transitions %%%%
+                        else:
+                            # Make sure we do not excite beyond vmax
+                            if x+y in range(self.vmax+1): 
+                                vID=self.XY2num(ID,x,x+y) # Substitute initial
+                                        # and final state into temporary string
+                                rlist=[self.XY2num(i,x,x+y) for i in r[1]] 
+                                            # Reactant with vib. level numbers
+                                plist=[self.XY2num(i,x,x+y) for i in r[2]] 
+                                            # Product with vib. level numbers 
+
+
+                        _name=vID
+                        _database=database
+                        _ratecoeff=rdata[database][vID] 
+                        _rtype='RATE'
+                        _rlist=[rlist,plist,r[-1]]
+                        if 'Xl' in ID:
+                            if y==1:
+                                self.reactions.append(REACTION( 
+                                            _name,_database,_ratecoeff,_rtype,
+                                            _rlist,self.bg,self.species)      )
+
+                        elif x+y in range(self.vmax+1):
+                            self.reactions.append(REACTION(
+                                            _name,_database,_ratecoeff,_rtype,
+                                            _rlist,self.bg,self.species)      )
+                    
+
+
+
+
+            
+            #%%%%% Read custom rates %%%%%
+            elif database.upper()=='CUSTOM':
+                self.setup_custom_new(r[1].strip(),database)
+                    
+
+                ''' ADAS data '''
+            elif database.upper()=='ADAS':
+                for x in range(1,self.nmax+1): # Read the data for each electronic state up to nmax
+                    if ID.upper()=='EXCITATION': # Electron impact excitation
+                        rn=range(x+1,self.nmax+1) # Excitation only possible between current state and nmax
+                        fit='ADAS'          # ADAS-type fit
+                        Tarr=rdata[database]['T']  # Temperature array for interpolation
+
+
+                    elif ID.upper()=='RELAXATION': # Radiative relaxation
+                        rn=range(1,x)   # Relaxation only possible to lower states
+                        fit='COEFFICIENT' # Coefficient-like decay
+                        Tarr=None   # Not T-dependent
+
+                    # Loop through each of the available final states
+                    for y in rn:
+                            rlist=[self.XY2num(i,x,y) for i in r[1]]  # Reactants 
+                            plist=[self.XY2num(i,x,y) for i in r[2]]  # Fragments
+                    
+                            try:
+                                _name='{}_{}-{}'.format(ID,x,y)
+                                _ratecoeff=rdata[database]['{}-{}'.format(x,y)] # Get coefficients
+                                _database=database
+                                _rtype=fit
+                                _rlist=[rlist,plist,r[-1]]
+                                _Tarr=Tarr
+                                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species,_Tarr))
+
+                                
+                            except:
+                                pass
+
+
+                ''' UEDGE rates '''
+            elif database.upper()=='UE':
+                _name=ID
+                _ratecoeff=rdata[database][ID] # Get coefficients
+                _database=database
+                _rtype='UE'
+                _rlist=[r[1],r[2],r[-1]]
+                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
+
+                
+                            
+                    
+                ''' EIRENE rates '''
+            elif database.upper() in ['HYDHEL','AMJUEL','H2VIBR']:
+                _name=ID
+                _ratecoeff=rdata[database][ID] # Get coefficients
+                _database=database
+                _rtype='RATE'
+                _rlist=[r[1],r[2],r[-1]]
+                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
+
+                
+
+                ''' APID rates '''
+            elif database.upper()=='APID':
+                for x in range(2,self.nmax+1):
+                    if ID.upper()=='IONIZ':
+                        rlist=[self.XY2num(i,x,y) for i in r[1]]  # Reactants 
+                        plist=[self.XY2num(i,x,y) for i in r[2]]  # Fragments
+
+                        if x==2:
+                            coeffs=[x, 0.14784,  0.0080871, -0.06227, 1.9414, -2.198, 0.95894,0,0,0]
+                        elif x==3:
+                            coeffs=[x, 0.058463, -0.051272, 0.85310, -0.57014, 0.76684, 0,0,0]
+                        elif x>3:
+                            coeffs=[x, 0,  0,  0,  0,  0,  0, 1.133, -0.4059, 0.0714]
+
+
+                        _name='{}_{}'.format(ID,x)
+                        _ratecoeff=coeffs
+                        _database=database
+                        _rtype='APID'
+                        _rlist=[rlist,plist,r[-1]]
+                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
+
+                        
+                        
+                
+                ''' Johnson's approximation of Einstein coefficients '''
+            elif database.upper()=='JOHNSON':
+                def g(i,f):
+                    g=[ 1.133*(f==1) + 1.0785*(f==2) + (0.9935 + 0.2328/f - 0.1296/f**2)*(f>2),
+                        -0.4059*(f==1) -0.2319*(f==2) - ((0.6282 - 0.5598/f + 0.5299/f**2)/f)*(f>2),
+                        0.07014*(f==1) + 0.02947*(f==2) + ((0.3887 - 1.181/f + 1.470/f**2)/f**2)*(f>2) ]
+                    x=1-(f/i)**2
+                    return g[0] + g[1]/x + g[2]/x**2
+
+                h=1.054571596e-27
+                c=2.99792458e10
+                me=9.10938188e-28
+                e=4.80274e-10
+                I=(me * e**4) / (2 * h**2)
+
+
+
+                for i in range(1,self.nmax+1): # Read the data for each electronic state up to nmax
+                    for f in range(1,i):
+                        res= (2**6 *e**2 * I**2) / (3**1.5 * pi * me *c**3 * h**2)
+                        freq=(1/f**2 - 1/i**2)
+                        Afac=(res*g(i,f))/(freq*(i**5)*(f**3))
+
+                        rlist=[self.XY2num(a,i,f) for a in r[1]]  # Reactants 
+                        plist=[self.XY2num(a,i,f) for a in r[2]]  # Fragments
+
+
+                        _name='{}_{}-{}'.format(ID,i,f)
+                        _ratecoeff=Afac
+                        _database=database
+                        _rtype='COEFFICIENT'
+                        _rlist=[rlist,plist,r[-1]]
+                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
+
+                        
+                    
+                
+                
+            
+            else:
+                print('Database "{}" not recognized! Aborting.'.format(database))
+                return
+
+            
+
+    def setup_custom(self,fname,database):
+        from CRUM.reactions import REACTION
+        from numpy import zeros,pi
+        
+        # Parse the custom data file into a list
+        data,_,subcards=self.file2list(self.path,fname)
+        database_use=data[0].strip() # Database is defined at fist line
+
+        # Loop through the cards
+        for i in range(len(subcards)-1):
+            subc=subcards[i] # Helper index
+            fit=data[subc].split()[1].upper()   # What kind of fit is being used - first subcard entry
+            name=data[subc].split()[2]  # What is the name of the reaction - second subcard entry
+            reactants,fragments=data[subc+1].split(' > ')    # Get the reactants and fragments from the second line
+
+            eng='0'
+
+            # Identify the type of reaction we are working with
+            ''' v-dependent rate '''
+
+            if fit=='RATE': 
+                m=0
+            else: 
+                m=2
+                while data[subc+m][0]=='K':
+                    eng=data[subc+m].strip().split('=')[-1]
+                    m+=1
+
+
+            if fit=='RATE':
+                if 'X' in name:
+                    # TODO: what if not all vib. states have data?
+                    for j in range(self.vmax+1): # Read data for each vibrational state up to vmax
+                        while data[m][0]!='v':
+                            if data[m][0]=='K':
+                                eng=data[m].strip().split('=')[-1]
+                            m+=1
+
+                        rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
+                        plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
+
+                        _name=self.XY2num(name,j)
+                        _database=database_use
+                        _ratecoeff=[float(x) for x in data[subc+m+j*2].split()] # Coefficients for v-level
+                        _rtype='RATE'
+                        _rlist=[rlist,plist,eng]
+                        print(_name,_database,_ratecoeff,fit,rlist,plist,eng)
+                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
+
+                        
+                # TODO: what if non-v dependent rate?
+
+                ''' Transition coefficient '''
+            elif fit=='COEFFICIENT':
+                if 'X' in name: # v-dependent rate
+                    # TODO: what if not all vib. states have data?
+
+                    for j in range(self.vmax+1): # Read data for each vibrational state up to vmax
+                            
+
+                        rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
+                        plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
+
+                        _name=self.XY2num(name,j)
+                        _database=database_use
+                        _ratecoeff=float(data[subc+m+j].split()[1])
+                        _rtype='COEFFICIENT'
+                        _rlist=[rlist,plist,eng]
+                        print(_name,_database,_ratecoeff,fit,rlist,plist,eng)
+                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
+                       
+                else: # Other transition
+                            
+                    rlist=reactants.strip().split(' + ') # Reactants
+                    plist=fragments.strip().split(' + ') # Fragments
+
+
+                    _name=name
+                    _ratecoeff=float(data[subc+m])
+                    _database=database
+                    _rtype='COEFFICIENT'
+                    _rlist=[rlist,plist,eng]
+                    print(_name,_database,_ratecoeff,fit,rlist,plist,eng)
+                    self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
+
+                    
+
+                ''' Cross-section '''
+            elif fit=='SIGMA':
+
+                rlist=reactants.strip().split(' + ') # Reactants
+                plist=fragments.strip().split(' + ') # Fragments
+
+
+                _name=name
+                _ratecoeff=[float(x) for x in data[subc+m].split()] # SAWADA cross-section parameters
+                _database=database_use
+                _rtype='SIGMA'
+                _rlist=[rlist,plist,eng]
+                print(_name,_database,_ratecoeff,fit,rlist,plist,eng)
+                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
+
+
+                # TODO: extend definitions of cross-section
+                # Presently assumes SAWADA-like cross-section definition
+            
+            else:
+                print('Reaction type "{}" not recognized! Aborting.'.format(data[subc].split()[1]))
+                return
+
+
+    def setup_custom_new(self,fname,database):
+        from CRUM.reactions import REACTION
+        from numpy import zeros,pi
+        
+        # Parse the custom data file into a list
+        data,_,subcards=self.file2list(self.path,fname)
+        _database=data[0].strip() # Database is defined at fist line
+
+        # Loop through the cards
+        for i in range(len(subcards)-1):
+            subc=subcards[i] # Helper index
+            fit=data[subc].split()[1].upper()   # What kind of fit is being used - first subcard entry
+            name=data[subc].split()[2]  # What is the name of the reaction - second subcard entry
+            reactants,fragments=data[subc+1].split(' > ')    # Get the reactants and fragments from the second line
+
+            eng='0'
+
+            # Execute if no vib dependence, loop if vibr. dep. process
+            for j in range(1+
+                    (fit in ['RATE','COEFFICIENT'])*('X' in name)*self.vmax
+                                                                        ):
+                #%% Read change in kinetic energy associated with reaction %%
+
+                # Vibr. dep. rates. have different structure
+                if (fit=='RATE') and ('X' in name): # Vib. dep. rates 
+                    m=0
+                    while data[m][0]!='v':
+                        if data[m][0]=='K':
+                            eng=data[m].strip().split('=')[-1]
+                        m+=1
+                # Non-vib. dep. rates use standard structure
+                else: 
+                    m=2
+                    while data[subc+m][0]=='K':
+                        eng=data[subc+m].strip().split('=')[-1]
+                        m+=1
+
+                if ('X' in name) and (fit in ['RATE','COEFFICIENT']):
+                    _name=self.XY2num(name,j)
+                    rlist=self.XY2num(reactants,j).strip().split(' + ') # Reactants w/ v-level number
+                    plist=self.XY2num(fragments,j).strip().split(' + ') # Products w/ v-level number
+                    if fit=='RATE': _ratecoeff=[float(x) for x in data[subc+m+j*2].split()] # Coefficients for v-level
+                    else: _ratecoeff=float(data[subc+m+j].split()[1])
+                else:
+                    if fit=='COEFFICIENT': 
+                        _ratecoeff=float(data[subc+m])
+                        #_database=database
+                    else: _ratecoeff=[float(x) for x in data[subc+m].split()] # SAWADA cross-section parameters
+                    _name=name
+                    rlist=reactants.strip().split(' + ') # Reactants
+                    plist=fragments.strip().split(' + ') # Fragments
+
+                
+                self.reactions.append(REACTION(_name,_database,_ratecoeff,fit,[rlist,plist,eng],self.bg,self.species))
 
 
 
 
 
-    """
-    def gl_nt(self,Te,ne,t,Ti=None,ni=None,E=0.1,n=None,Sext=True):
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        """
+        def gl_nt(self,Te,ne,t,Ti=None,ni=None,E=0.1,n=None,Sext=True):
         ''' Calculates the Greenland (P-space) density evolution in a 1cm**3 box up to t
             gl_nt(Te,ne,t)
             Te  -   electron background temperature in box [eV]

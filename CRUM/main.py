@@ -233,7 +233,8 @@ class CRUMPET(CRM,RATE_DATA,TOOLS):
 
 
         # %%%% Set up the CRM %%%%
-        CRM.__init__(self,species,bg,reactionlist,[verbose,Np],path,vmax,nmax,self.reactions)
+        CRM.__init__(self,  species,bg,reactionlist,verbose,Np,
+                            path,vmax,nmax,self.reactions           )
      
 
 
