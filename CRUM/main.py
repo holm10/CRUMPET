@@ -218,7 +218,7 @@ class CRUMPET(CRM,RATE_DATA,TOOLS):
                     # Loop through the lines following the declaration 
                     # looking for the background species potential
                     for l in range( subcards[j]+1, subcards[j+1]): 
-                        buff[lines[l].split()[0].strip()]=float(
+                        buff[lines[l].split()[0].strip().upper()]=float(
                                             lines[l].split()[1].strip())
 
 

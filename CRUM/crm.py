@@ -70,6 +70,187 @@ class CRM(TOOLS):
         # Do the same for a Diagnostic rate matrix displaying reaction correlations
         self.DIAGNOSTIC()
 
+    def setup_ADAS(self,x,ID,rdata,rlist,plist,K):
+        from CRUM.reactions import REACTION
+        if ID=='EXCITATION': # Electron impact excitation
+            rn=range(x+1,self.nmax+1) # Excitation only possible between current state and nmax
+            fit='ADAS'          # ADAS-type fit
+            Tarr=rdata[database]['T']  # Temperature array for interpolation
+
+
+        elif ID=='RELAXATION': # Radiative relaxation
+            rn=range(1,x)   # Relaxation only possible to lower states
+            fit='COEFFICIENT' # Coefficient-like decay
+            Tarr=None   # Not T-dependent
+
+        # Loop through each of the available final states
+        for y in rn:
+    
+            try:
+                _name='{}_{}-{}'.format(ID,x,y)
+                _ratecoeff=rdata['ADAS']['{}-{}'.format(x,y)] # Get coefficients
+                self.reactions.append(REACTION(_name,'ADAS',_ratecoeff,fit,[rlist,plist,K],bg,species,Tarr))
+
+                
+            except:
+                pass
+
+
+    def setup_APID(self,x,ID,rlist,plist,K):
+        from CRUM.reactions import REACTION
+        coeffs=[    x, 
+                    0.14784*(x==2)      +0.058463*(x==3),  
+                    0.0080871*(x==2)    -0.051272*(x==3), 
+                    -0.06227*(x==2)     +0.85310*(x==3), 
+                    1.9414*(x==2)       -0.57014*(x==3), 
+                    -2.198*(x==2)       +0.76684*(x==3), 
+                    0.95894*(x==2),
+                    1.133*(x>3),
+                    -0.4059*(x>3),
+                    0.0714*(x>3)                        ]
+
+        self.reactions.append(REACTION(self.XY2num(ID,x),'APID',coeffs,'APID',[rlist,plist,K],self.bg,self.species))
+
+    def setup_Johnson(self,i,ID,r):
+        from CRUM.reactions import REACTION
+        from numpy import pi
+
+        def g(i,f):
+            g=[ 1.133*(f==1) + 1.0785*(f==2) + (0.9935 + 0.2328/f - 0.1296/f**2)*(f>2),
+                    -0.4059*(f==1) -0.2319*(f==2) - ((0.6282 - 0.5598/f + 0.5299/f**2)/f)*(f>2),
+                    0.07014*(f==1) + 0.02947*(f==2) + ((0.3887 - 1.181/f + 1.470/f**2)/f**2)*(f>2) ]
+            x=1-(f/i)**2
+            return g[0] + g[1]/x + g[2]/x**2
+
+        h=1.054571596e-27
+        c=2.99792458e10
+        me=9.10938188e-28
+        e=4.80274e-10
+        I=(me * e**4) / (2 * h**2)
+
+        for f in range(1,i):
+            res= (2**6 *e**2 * I**2) / (3**1.5 * pi * me *c**3 * h**2)
+            freq=(1/f**2 - 1/i**2)
+            Afac=(res*g(i,f))/(freq*(i**5)*(f**3))
+
+            rlist=[self.XY2num(a,i,f) for a in r[1]]  # Reactants 
+            plist=[self.XY2num(a,i,f) for a in r[2]]  # Fragments
+
+
+            _rlist=[rlist,plist,r[-1]]
+            self.reactions.append(REACTION(self.XY2num(ID,i,f),'JOHNSON',Afac,'COEFFICIENT',_rlist,self.bg,self.species))
+
+
+
+
+
+
+    def setup_reactions_new(self,reactionlist,rdata):
+        from CRUM.reactions import REACTION
+        from numpy import zeros,pi
+        
+        ''' LOOP OVER ALL THE DEFINED REACTIONS '''
+        for r in reactionlist:
+            # Split the definitions into names and databases
+            database=r[0].split('_')[0].upper()
+            try:
+                ID=r[0].split('_')[1].upper()
+            except:
+                ID='CUSTOM'
+
+
+
+
+            for x in range('N=' in ID,1+('V=' in ID)*self.vmax+('N=' in ID)*self.nmax):
+
+                if '$' in ID:
+
+                    rlist=[self.XY2num(i,x) for i in r[1]]  # Reactants 
+                    plist=[self.XY2num(i,x) for i in r[2]]  # Fragments
+
+                    if database=='ADAS':
+                        self.setup_ADAS(x,ID,rdata,rlist,plist,e[-1])
+                      
+                    elif database=='APID':
+                        self.setup_APID(x,ID,rlist,plist,r[-1])
+                        
+          
+                        ''' Johnson's approximation of Einstein coefficients '''
+                    elif database=='JOHNSON':
+                        self.setup_Johnson(x,ID,r)
+                      
+                        
+                    else:
+                        # Assume ladder-like vibrational transitions (+/-1) only
+                        for y in [-1,1]: 
+
+                            #%%%% Vibrational transitions %%%%
+                            if '&' in ID:
+                                # Make sure we do not excite beyond vmax
+                                if x+y in range(self.vmax+1): 
+                                    vID=self.XY2num(ID,x,x+y) # Substitute initial
+                                            # and final state into temporary string
+                                    rlist=[self.XY2num(i,x,x+y) for i in r[1]] 
+                                                # Reactant with vib. level numbers
+                                    plist=[self.XY2num(i,x,x+y) for i in r[2]] 
+                                                # Product with vib. level numbers 
+
+
+                            #%%%% Vibrationally dependent reactions %%%%
+                            else:
+                                vID=self.XY2num(ID,x,x) # Substitute initial and
+                                                # final state into temporary string
+                                rlist=[self.XY2num(i,x) for i in r[1]] # Reactant
+                                                # with vib. level numbers
+                                plist=[self.XY2num(i,x) for i in r[2]] # Product
+                                                # with vib. level numbers
+                              
+                            _name=vID
+                            _database=database
+                            _ratecoeff=rdata[database][vID] 
+                            _rtype='RATE'
+                            _rlist=[rlist,plist,r[-1]]
+                            if '&' not in ID:
+                                if y==1:
+                                    self.reactions.append(REACTION( 
+                                                _name,_database,_ratecoeff,_rtype,
+                                                _rlist,self.bg,self.species)      )
+
+                            elif x+y in range(self.vmax+1):
+                                self.reactions.append(REACTION(
+                                                _name,_database,_ratecoeff,_rtype,
+                                                _rlist,self.bg,self.species)      )
+                        
+                #%%%%% Read custom rates %%%%%
+                elif database=='CUSTOM':
+                    self.setup_custom(r[1].strip(),database)
+
+                    ''' UEDGE rates '''
+                elif database=='UE':
+                    _name=ID
+                    _ratecoeff=rdata[database][ID] # Get coefficients
+                    _database=database
+                    _rtype='UE'
+                    _rlist=[r[1],r[2],r[-1]]
+                    self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
+
+                    
+                    ''' EIRENE rates '''
+                elif database in ['HYDHEL','AMJUEL','H2VIBR']:
+                    _name=ID
+                    _ratecoeff=rdata[database][ID] # Get coefficients
+                    _database=database
+                    _rtype='RATE'
+                    _rlist=[r[1],r[2],r[-1]]
+                    self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
+
+
+
+                else:
+                    print(ID)
+                    print('Database "{}" not recognized! Aborting.'.format(database))
+                    return
+
 
 
 
@@ -81,9 +262,9 @@ class CRM(TOOLS):
         ''' LOOP OVER ALL THE DEFINED REACTIONS '''
         for r in reactionlist:
             # Split the definitions into names and databases
-            database=r[0].split('_')[0]
+            database=r[0].split('_')[0].upper()
             try:
-                ID=r[0].split('_')[1]
+                ID=r[0].split('_')[1].upper()
             except:
                 pass
 
@@ -92,6 +273,7 @@ class CRM(TOOLS):
                 # Check all vibrational states up to vmax 
                 for x in range(self.vmax+1):
                     # Assume ladder-like vibrational transitions (+/-1) only
+                   
                     for y in [-1,1]: 
   
                         #%%%% Vibrational transitions %%%%
@@ -137,20 +319,20 @@ class CRM(TOOLS):
 
             
             #%%%%% Read custom rates %%%%%
-            elif database.upper()=='CUSTOM':
+            elif database=='CUSTOM':
                 self.setup_custom(r[1].strip(),database)
                     
 
                 ''' ADAS data '''
-            elif database.upper()=='ADAS':
+            elif database=='ADAS':
                 for x in range(1,self.nmax+1): # Read the data for each electronic state up to nmax
-                    if ID.upper()=='EXCITATION': # Electron impact excitation
+                    if ID=='EXCITATION': # Electron impact excitation
                         rn=range(x+1,self.nmax+1) # Excitation only possible between current state and nmax
                         fit='ADAS'          # ADAS-type fit
                         Tarr=rdata[database]['T']  # Temperature array for interpolation
 
 
-                    elif ID.upper()=='RELAXATION': # Radiative relaxation
+                    elif ID=='RELAXATION': # Radiative relaxation
                         rn=range(1,x)   # Relaxation only possible to lower states
                         fit='COEFFICIENT' # Coefficient-like decay
                         Tarr=None   # Not T-dependent
@@ -175,7 +357,7 @@ class CRM(TOOLS):
 
 
                 ''' UEDGE rates '''
-            elif database.upper()=='UE':
+            elif database=='UE':
                 _name=ID
                 _ratecoeff=rdata[database][ID] # Get coefficients
                 _database=database
@@ -187,7 +369,7 @@ class CRM(TOOLS):
                             
                     
                 ''' EIRENE rates '''
-            elif database.upper() in ['HYDHEL','AMJUEL','H2VIBR']:
+            elif database in ['HYDHEL','AMJUEL','H2VIBR']:
                 _name=ID
                 _ratecoeff=rdata[database][ID] # Get coefficients
                 _database=database
@@ -198,72 +380,29 @@ class CRM(TOOLS):
                 
 
                 ''' APID rates '''
-            elif database.upper()=='APID':
+            elif database=='APID':
                 for x in range(2,self.nmax+1):
-                    if ID.upper()=='IONIZ':
+                    if ID=='IONIZ':
                         rlist=[self.XY2num(i,x,y) for i in r[1]]  # Reactants 
                         plist=[self.XY2num(i,x,y) for i in r[2]]  # Fragments
 
-                        if x==2:
-                            coeffs=[x, 0.14784,  0.0080871, -0.06227, 1.9414, -2.198, 0.95894,0,0,0]
-                        elif x==3:
-                            coeffs=[x, 0.058463, -0.051272, 0.85310, -0.57014, 0.76684, 0,0,0]
-                        elif x>3:
-                            coeffs=[x, 0,  0,  0,  0,  0,  0, 1.133, -0.4059, 0.0714]
-
-
-                        _name='{}_{}'.format(ID,x)
-                        _ratecoeff=coeffs
-                        _database=database
-                        _rtype='APID'
-                        _rlist=[rlist,plist,r[-1]]
-                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
-
-                        
-                        
+                        self.setup_APID(x,ID,rlist,plist,r[-1])
                 
                 ''' Johnson's approximation of Einstein coefficients '''
-            elif database.upper()=='JOHNSON':
-                def g(i,f):
-                    g=[ 1.133*(f==1) + 1.0785*(f==2) + (0.9935 + 0.2328/f - 0.1296/f**2)*(f>2),
-                        -0.4059*(f==1) -0.2319*(f==2) - ((0.6282 - 0.5598/f + 0.5299/f**2)/f)*(f>2),
-                        0.07014*(f==1) + 0.02947*(f==2) + ((0.3887 - 1.181/f + 1.470/f**2)/f**2)*(f>2) ]
-                    x=1-(f/i)**2
-                    return g[0] + g[1]/x + g[2]/x**2
-
-                h=1.054571596e-27
-                c=2.99792458e10
-                me=9.10938188e-28
-                e=4.80274e-10
-                I=(me * e**4) / (2 * h**2)
-
-
-
+            elif database=='JOHNSON':
+  
                 for i in range(1,self.nmax+1): # Read the data for each electronic state up to nmax
-                    for f in range(1,i):
-                        res= (2**6 *e**2 * I**2) / (3**1.5 * pi * me *c**3 * h**2)
-                        freq=(1/f**2 - 1/i**2)
-                        Afac=(res*g(i,f))/(freq*(i**5)*(f**3))
-
-                        rlist=[self.XY2num(a,i,f) for a in r[1]]  # Reactants 
-                        plist=[self.XY2num(a,i,f) for a in r[2]]  # Fragments
+                    self.setup_Johnson(i,ID,r)
 
 
-                        _name='{}_{}-{}'.format(ID,i,f)
-                        _ratecoeff=Afac
-                        _database=database
-                        _rtype='COEFFICIENT'
-                        _rlist=[rlist,plist,r[-1]]
-                        self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
-
-                        
-                    
-                
-                
-            
             else:
                 print('Database "{}" not recognized! Aborting.'.format(database))
                 return
+
+
+
+
+
 
     def setup_custom(self,fname,database):
         from CRUM.reactions import REACTION

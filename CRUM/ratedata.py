@@ -89,7 +89,7 @@ class RATE_DATA:
                             for k in range(3):
                                 coeff.append(float(book[i+j][1+k*2].replace(',','').replace('D','E')))
                         i+=1
-                        reactions[reaction]=coeff
+                        reactions[reaction.upper()]=coeff
                         break
                     # Wea re in a (T,E)-fit
                     elif book[i][0]=='0':
@@ -102,7 +102,7 @@ class RATE_DATA:
                         # Store the coefficients
                         # TODO: figure out better way to kill off ne,T fits??
                         if reaction not in ['2.2.14','2.0l2']:
-                            reactions[reaction]=coeff
+                            reactions[reaction.upper()]=coeff
                         
                         i+=9+3*3+2*2 # Set counter after block
                         break
@@ -133,7 +133,7 @@ class RATE_DATA:
             l=f.readline().split() # Read first data line
             # Loop through energy level data
             while l[0]!='-1':
-                reactions['E'+l[0]]=float(l[4])*cm1 # Store as eV in reactions['E']
+                reactions['E'+l[0].upper()]=float(l[4])*cm1 # Store as eV in reactions['E']
                 l=f.readline().split()
             # Read and store temperature point data
             l=f.readline().split()
@@ -147,8 +147,8 @@ class RATE_DATA:
                 l=l[8:]
                 l=[l[i:i+8].strip() for i in range(0,len(l),8)][:-1]
                 # Store excitation and relaxation data
-                reactions[ul+'-'+ll]=float(l[0][:-3]+'e'+l[0][-3:])
-                reactions[ll+'-'+ul]=[float(x[:-3]+'e'+x[-3:]) for x in l[1:len(reactions['T'])+1]]
+                reactions[ul.upper()+'-'+ll.upper()]=float(l[0][:-3]+'e'+l[0][-3:])
+                reactions[ll.upper()+'-'+ul.upper()]=[float(x[:-3]+'e'+x[-3:]) for x in l[1:len(reactions['T'])+1]]
                 l=f.readline()
 
 
@@ -170,6 +170,7 @@ class RATE_DATA:
         with open('{}/{}'.format(path,fname)) as f:  # Open the file
             # Read the ionizationa nd recombination data (1st and 2nd blocks in ehr1.dat)
             for k in datalist:
+                k=k.upper()
                 reactions[k]=[]
                 l=f.readline() # Discard header
                 # Loop through data blocks
