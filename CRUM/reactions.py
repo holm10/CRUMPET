@@ -31,7 +31,6 @@ class REACTION:
         from numpy import ones,array,pi
         from scipy.interpolate import interp2d,interp1d
        
-        print(S,database,name)
         S=self.getS(*S,bg,species)
 
 
@@ -320,7 +319,6 @@ class REACTION:
             return self.interpolation(jn,jt)[0]*c
 
         elif self.type=='APID':
-            print('HeRE*')
 
             def sigma(T,coeffs):
                 ''' The APID-4 rates are taken from Janev's 1993 IAEA paper, the analytic solutions from Stotler's svlib routine used in DEGAS2 '''
@@ -328,7 +326,6 @@ class REACTION:
                 I=13.6/n**2
 
                 def expint(k,p):
-                    print(k,p)
                     a=[-0.57721566,0.99999193,-0.24991055,0.05519968,-0.00976004,0.00107857]
                     ap=[8.5733287401,18.0590169730,8.6347608925, 0.2677737343 ]
                     b=[9.5733223454,25.6329561486,21.0996530827, 3.9584969228 ]
@@ -445,8 +442,9 @@ class REACTION:
                 # Integrand function as described in JUEL-3858
                 return x*sigma(x*T,self.coeffs)*exp(-x)
 
-            print(self.name)
-            if self.name.split('(')[0].upper()=='IONIZ':
+            #if 'IONIZ' in self.name.upper():
+            if 'IONIZ' in self.name:
+            #if self.name.split('_')[0].upper()=='IONIZ':
                 ''' APID ionization rate '''
 
                 '''

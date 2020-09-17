@@ -162,11 +162,11 @@ p + H- > H(n=3) + H(n=1)
 e + H2(v=$) > e + H2(v=&)
 
 
-* APID_IONIZ
+* APID_IONIZ$
 e + H(n=$) > 2*e + p
 	K=Te
 
-* JOHNSON_RELAXATION
+* JOHNSON_RELAXATION$-&
 H(n=$) > H(n=&)
 
 

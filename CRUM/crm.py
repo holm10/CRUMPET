@@ -145,7 +145,7 @@ class CRM(TOOLS):
 
 
 
-    def setup_reactions_new(self,reactionlist,rdata):
+    def setup_reactions(self,reactionlist,rdata):
         from CRUM.reactions import REACTION
         from numpy import zeros,pi
         
@@ -155,13 +155,13 @@ class CRM(TOOLS):
             database=r[0].split('_')[0].upper()
             try:
                 ID=r[0].split('_')[1].upper()
+                spec=''.join(r[1]+r[2]).upper()
             except:
                 ID='CUSTOM'
+                spec=''
 
 
-
-
-            for x in range('N=' in ID,1+('V=' in ID)*self.vmax+('N=' in ID)*self.nmax):
+            for x in range('N=$' in spec,1+('V=$' in spec)*self.vmax+('N=$' in spec)*self.nmax):
 
                 if '$' in ID:
 
@@ -182,7 +182,7 @@ class CRM(TOOLS):
                         
                     else:
                         # Assume ladder-like vibrational transitions (+/-1) only
-                        for y in [-1,1]: 
+                        for y in range(-1*('&' in ID),2,2):
 
                             #%%%% Vibrational transitions %%%%
                             if '&' in ID:
@@ -210,13 +210,8 @@ class CRM(TOOLS):
                             _ratecoeff=rdata[database][vID] 
                             _rtype='RATE'
                             _rlist=[rlist,plist,r[-1]]
-                            if '&' not in ID:
-                                if y==1:
-                                    self.reactions.append(REACTION( 
-                                                _name,_database,_ratecoeff,_rtype,
-                                                _rlist,self.bg,self.species)      )
 
-                            elif x+y in range(self.vmax+1):
+                            if x+y in range(self.vmax+1):
                                 self.reactions.append(REACTION(
                                                 _name,_database,_ratecoeff,_rtype,
                                                 _rlist,self.bg,self.species)      )
@@ -245,159 +240,10 @@ class CRM(TOOLS):
                     self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
 
 
-
                 else:
-                    print(ID)
                     print('Database "{}" not recognized! Aborting.'.format(database))
                     return
 
-
-
-
-
-    def setup_reactions(self,reactionlist,rdata):
-        from CRUM.reactions import REACTION
-        from numpy import zeros,pi
-        
-        ''' LOOP OVER ALL THE DEFINED REACTIONS '''
-        for r in reactionlist:
-            # Split the definitions into names and databases
-            database=r[0].split('_')[0].upper()
-            try:
-                ID=r[0].split('_')[1].upper()
-            except:
-                pass
-
-            #%%% Vibrationally dependent reactions %%%
-            if '$' in ID:
-                # Check all vibrational states up to vmax 
-                for x in range(self.vmax+1):
-                    # Assume ladder-like vibrational transitions (+/-1) only
-                   
-                    for y in [-1,1]: 
-  
-                        #%%%% Vibrational transitions %%%%
-                        if '&' in ID:
-                            # Make sure we do not excite beyond vmax
-                            if x+y in range(self.vmax+1): 
-                                vID=self.XY2num(ID,x,x+y) # Substitute initial
-                                        # and final state into temporary string
-                                rlist=[self.XY2num(i,x,x+y) for i in r[1]] 
-                                            # Reactant with vib. level numbers
-                                plist=[self.XY2num(i,x,x+y) for i in r[2]] 
-                                            # Product with vib. level numbers 
-
-
-                        #%%%% Vibrationally dependent reactions %%%%
-                        else:
-                            vID=self.XY2num(ID,x,x) # Substitute initial and
-                                            # final state into temporary string
-                            rlist=[self.XY2num(i,x) for i in r[1]] # Reactant
-                                            # with vib. level numbers
-                            plist=[self.XY2num(i,x) for i in r[2]] # Product
-                                            # with vib. level numbers
-                          
-                        _name=vID
-                        _database=database
-                        _ratecoeff=rdata[database][vID] 
-                        _rtype='RATE'
-                        _rlist=[rlist,plist,r[-1]]
-                        if '&' not in ID:
-                            if y==1:
-                                self.reactions.append(REACTION( 
-                                            _name,_database,_ratecoeff,_rtype,
-                                            _rlist,self.bg,self.species)      )
-
-                        elif x+y in range(self.vmax+1):
-                            self.reactions.append(REACTION(
-                                            _name,_database,_ratecoeff,_rtype,
-                                            _rlist,self.bg,self.species)      )
-                    
-
-
-
-
-            
-            #%%%%% Read custom rates %%%%%
-            elif database=='CUSTOM':
-                self.setup_custom(r[1].strip(),database)
-                    
-
-                ''' ADAS data '''
-            elif database=='ADAS':
-                for x in range(1,self.nmax+1): # Read the data for each electronic state up to nmax
-                    if ID=='EXCITATION': # Electron impact excitation
-                        rn=range(x+1,self.nmax+1) # Excitation only possible between current state and nmax
-                        fit='ADAS'          # ADAS-type fit
-                        Tarr=rdata[database]['T']  # Temperature array for interpolation
-
-
-                    elif ID=='RELAXATION': # Radiative relaxation
-                        rn=range(1,x)   # Relaxation only possible to lower states
-                        fit='COEFFICIENT' # Coefficient-like decay
-                        Tarr=None   # Not T-dependent
-
-                    # Loop through each of the available final states
-                    for y in rn:
-                            rlist=[self.XY2num(i,x,y) for i in r[1]]  # Reactants 
-                            plist=[self.XY2num(i,x,y) for i in r[2]]  # Fragments
-                    
-                            try:
-                                _name='{}_{}-{}'.format(ID,x,y)
-                                _ratecoeff=rdata[database]['{}-{}'.format(x,y)] # Get coefficients
-                                _database=database
-                                _rtype=fit
-                                _rlist=[rlist,plist,r[-1]]
-                                _Tarr=Tarr
-                                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species,_Tarr))
-
-                                
-                            except:
-                                pass
-
-
-                ''' UEDGE rates '''
-            elif database=='UE':
-                _name=ID
-                _ratecoeff=rdata[database][ID] # Get coefficients
-                _database=database
-                _rtype='UE'
-                _rlist=[r[1],r[2],r[-1]]
-                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,bg,species))
-
-                
-                            
-                    
-                ''' EIRENE rates '''
-            elif database in ['HYDHEL','AMJUEL','H2VIBR']:
-                _name=ID
-                _ratecoeff=rdata[database][ID] # Get coefficients
-                _database=database
-                _rtype='RATE'
-                _rlist=[r[1],r[2],r[-1]]
-                self.reactions.append(REACTION(_name,_database,_ratecoeff,_rtype,_rlist,self.bg,self.species))
-
-                
-
-                ''' APID rates '''
-            elif database=='APID':
-                for x in range(2,self.nmax+1):
-                    if ID=='IONIZ':
-                        rlist=[self.XY2num(i,x,y) for i in r[1]]  # Reactants 
-                        plist=[self.XY2num(i,x,y) for i in r[2]]  # Fragments
-
-                        self.setup_APID(x,ID,rlist,plist,r[-1])
-                
-                ''' Johnson's approximation of Einstein coefficients '''
-            elif database=='JOHNSON':
-  
-                for i in range(1,self.nmax+1): # Read the data for each electronic state up to nmax
-                    self.setup_Johnson(i,ID,r)
-
-
-            else:
-                print('Database "{}" not recognized! Aborting.'.format(database))
-                return
 
 
 
