@@ -112,19 +112,9 @@ class CRM(TOOLS):
 
     def setup_APID(self,x,ID,rlist,plist,K):
         from CRUM.reactions import REACTION
-        coeffs=[    x, 
-                    0.14784*(x==2)      +0.058463*(x==3),  
-                    0.0080871*(x==2)    -0.051272*(x==3), 
-                    -0.06227*(x==2)     +0.85310*(x==3), 
-                    1.9414*(x==2)       -0.57014*(x==3), 
-                    -2.198*(x==2)       +0.76684*(x==3), 
-                    0.95894*(x==2),
-                    1.133*(x>3),
-                    -0.4059*(x>3),
-                    0.0714*(x>3)                        ]
 
         self.reactions.append(REACTION(self.XY2num(ID,x),'APID',
-                        coeffs,'APID',[rlist,plist,K],self.bg,self.species))
+                        x,'APID',[rlist,plist,K],self.bg,self.species))
 
     def setup_Johnson(self,i,ID,r):
         ''' Johnson's approximation of Einstein coefficients '''
@@ -384,6 +374,7 @@ class CRM(TOOLS):
 
 
         Sl=[r.S_r,r.S_V,r.S_g]
+        print(Sl)
         ret=zeros((8,2))
         offset=0
         
@@ -618,17 +609,26 @@ class CRM(TOOLS):
 
         Slabels=['S_e','S_ia','S_V','S_g']
 
-        with open('{}/logs/{}_matrix.log'.format(self.path,char),'w') as f:  # Create a file to write to according to char
+        # Create a file to write to according to char
+        with open('{}/logs/{}_matrix.log'.format(self.path,char),'w') as f:  
             
             if char=='R': # Rate coefficient  matrix is being written
-                f.write('Diagnostic rate coefficient (density-independend) matrix for CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
+                f.write('''Diagnostic rate coefficient (density-independend) 
+                            matrix for CRUM run in {} on {}\n
+                            '''.format(getcwd(),str(datetime.now())[:-7]))
                 f.write('Te={} eV, Ti={} eV, E={} eV\n'.format(te,ti,E))
             elif char=='M': # Rate matrix is being written
-                f.write('Diagnostic rate (density-dependend) matrix for CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
-                f.write('Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 1/cm**3, E={} eV\n'.format(te,ti,ne,ni,E))
+                f.write('''Diagnostic rate (density-dependend) matrix for CRUM 
+                            run in {} on {}\n'''.format(getcwd(),
+                            str(datetime.now())[:-7]))
+                f.write('''Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 
+                            1/cm**3, E={} eV\n'''.format(te,ti,ne,ni,E))
             elif char=='S': # Rate matrix is being written
-                f.write('Diagnostic energy loss (density-dependend) matrix for CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
-                f.write('Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 1/cm**3, E={} eV\n'.format(te,ti,ne,ni,E))
+                f.write('''Diagnostic energy loss (density-dependend) matrix 
+                            for CRUM run in {} on {}\n'''.format(getcwd(),
+                            str(datetime.now())[:-7]))
+                f.write('''Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 1/cm**3, 
+                            E={} eV\n'''.format(te,ti,ne,ni,E))
             
             # Create header line
             out='{}-MAT|'.format(char.upper()).rjust(10) 
@@ -639,9 +639,11 @@ class CRM(TOOLS):
             # Loop through the matrix
             for l in range(len(mat)):
                 if len(mat)==len(self.species):
-                    out=self.slist[l]+'|' # Create a tabulated file with the row species displayed
+                    # Create a tabulated file with the row species displayed
+                    out=self.slist[l]+'|' 
                 else:
-                    out=Slabels[l]+'|' # Create a tabulated file with the row species displayed
+                    # Create a tabulated file with the row species displayed
+                    out=Slabels[l]+'|' 
                 out=out.rjust(10,' ')
                 # Add each element to the line with 10 characters reserved
                 for e in mat[l,:]:
@@ -664,25 +666,30 @@ class CRM(TOOLS):
         from os import getcwd
         from datetime import datetime
  
-        dia,ext=self.populate('diagnostic',0,'*[ne]',0,'*[ni]') # Get the 2D diagnostic list and external source list
+        # Get the 2D diagnostic list and external source list
+        dia,ext=self.populate('diagnostic',0,'*[ne]',0,'*[ni]') 
 
         # Write the diagnostic matrix to the logs
         with open('{}/logs/reaction_matrix.log'.format(self.path),'w') as f:
             # Write the header line
-            f.write('Diagnostic reaction matrix for CRUM run in {} on {}\n'.format(getcwd(),str(datetime.now())[:-7]))
+            f.write('''Diagnostic reaction matrix for CRUM run in {} 
+                        on {}\n'''.format(getcwd(),str(datetime.now())[:-7]))
             # Loop through each species
             for i in range(len(dia)):
                 # Write the species header
                 f.write('\n\n\n======== {} ========\n'.format(self.slist[i]))
                 # Start with the sinks
-                f.write('{} DEPLETION:\n                 {}\n'.format(self.slist[i],dia[i][i]))
+                f.write('''{} DEPLETION:\n                 {}\n
+                            '''.format(self.slist[i],dia[i][i]))
                 # Then do the sources
                 for j in range(len(dia[i])):
                     if len(dia[i][j])>0:    # Don't write anything empty
                         if i!=j:    # Don't duplicate depletion
-                            f.write('From {}:\n                 {}\n'.format(self.slist[j],dia[i][j]))
+                            f.write('''From {}:\n                 {}\n
+                                        '''.format(self.slist[j],dia[i][j]))
                 if len(ext[i])>0:   # Write external source last, if applicable
-                    f.write('{} EXTERNAL SOURCE:\n                 {}\n'.format(self.slist[i],ext[i]))
+                    f.write('''{} EXTERNAL SOURCE:\n                 {}\n
+                                        '''.format(self.slist[i],ext[i]))
         # If verbose, output the log content
         if self.verbose:
             with open('logs/reaction_matrix.log','rt') as f:
@@ -763,7 +770,8 @@ class CRM(TOOLS):
     
         return M,ext
  
-    def Sgl(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,Tm=False,write=False,Ton=True):
+    def Sgl(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,Tm=False,
+                        write=False,Ton=True):
         from numpy import matmul,block
         from numpy.linalg import inv
         if Ti is None: Ti=Te # Check for Ti, set if necessary
@@ -775,7 +783,8 @@ class CRM(TOOLS):
         if write:
             title=['Sgl_el','Sgl_ia','Sgl_v','Sgl_ga','Sgl_gm']
             for i in range(5):
-                self.write_matrix(mat[:,:,i],ext[:,i],title[i],Te,ne,Ti,ni,E,form='{:1.2E}')
+                self.write_matrix(mat[:,:,i],ext[:,i],title[i],
+                                        Te,ne,Ti,ni,E,form='{:1.2E}')
 
         
         U=[ [mat[:,:,0], ext[:,0]],
@@ -808,7 +817,8 @@ class CRM(TOOLS):
             
         return ret
 
-    def S(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,Tm=False,write=False,Ton=True):
+    def S(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,
+                                Tm=False,write=False,Ton=True):
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
 
@@ -818,7 +828,8 @@ class CRM(TOOLS):
         if write:
             title=['Sgl_el','Sgl_ia','Sgl_v','Sgl_ga','Sgl_gm']
             for i in range(5):
-                self.write_matrix(mat[:,:,i],ext[:,i],title[i],Te,ne,Ti,ni,E,form='{:1.2E}')
+                self.write_matrix(mat[:,:,i],ext[:,i],title[i],
+                                    Te,ne,Ti,ni,E,form='{:1.2E}')
 
         return  [   [mat[:,:,0], ext[:,0]],
                     [mat[:,:,1], ext[:,1]],
@@ -827,7 +838,8 @@ class CRM(TOOLS):
                     [mat[:,:,4], ext[:,4]], ]
 
 
-    def I(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,Tm=False,write=False,Ton=True):
+    def I(self,Te,ne,Ti=None,ni=None,E=0.1,
+                                rad=True,Tm=False,write=False,Ton=True):
         ''' Creates a radiaiton intensity matrix '''
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
@@ -836,14 +848,16 @@ class CRM(TOOLS):
         if write:
             title=['Ia','Im']
             for i in range(5):
-                self.write_matrix(mat[:,:,i],ext[:,i],title[i],Te,ne,Ti,ni,E,form='{:1.2E}')
+                self.write_matrix(mat[:,:,i],ext[:,i],title[i],
+                                            Te,ne,Ti,ni,E,form='{:1.2E}')
 
 
         return  [   [mat[:,:,0], ext[:,0]],
                     [mat[:,:,1], ext[:,1]] ]
 
 
-    def E(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,Tm=False,write=False,Ton=True):
+    def E(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,
+                                Tm=False,write=False,Ton=True):
         ''' Creates a radiaiton intensity matrix '''
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
@@ -854,7 +868,8 @@ class CRM(TOOLS):
         if write:
             title=['Ea','Em']
             for i in range(5):
-                self.write_matrix(mat[:,:,i],ext[:,i],title[i],Te,ne,Ti,ni,E,form='{:1.2E}')
+                self.write_matrix(mat[:,:,i],ext[:,i],
+                                title[i],Te,ne,Ti,ni,E,form='{:1.2E}')
 
 
         return  [   [mat[:,:,0], ext[:,0]],
@@ -881,24 +896,28 @@ class CRM(TOOLS):
         '''
         from scipy.integrate import solve_ivp 
 
-        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
+        # Use input n0 as default unless explict n0 requested
+        if n is None: n=self.n0() 
 
         if gl is True:
-            mat,ext,nP0p=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),Sext,n) # Set up Greenland model 
+            # Set up Greenland model 
+            mat,ext,nP0p=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),Sext,n)
             n=nP0p
         else:
             mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
 
         ext=(Sext is True)*ext  # Set source strength
         # Solve and return
-        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),(0,t),n,method='LSODA')
+        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),
+                                            (0,t),n,method='LSODA')
 
 
 
 
 
         
-    def dEdt(self,t,Te,ne,Ti=None,ni=None,E=0.1,Tm=False,rad=True,Sext=True,write=False,gl=True,n=None,Qres=True,Ton=True):
+    def dEdt(self,t,Te,ne,Ti=None,ni=None,E=0.1,Tm=False,rad=True,
+                Sext=True,write=False,gl=True,n=None,Qres=True,Ton=True):
         from numpy import block,zeros,matmul,reshape,sum
         from  numpy.linalg import inv
         from scipy.integrate import solve_ivp
@@ -956,7 +975,9 @@ class CRM(TOOLS):
                 if n is None:
                     n=zeros((len(mat),))
                     n[-Np:]=nP0p
-                ext=block([sum(U[0][1],axis=0), sum(U[1][1],axis=0), sum(U[2][1],axis=0), sum(U[3][1],axis=0), sum(U[4][1],axis=0), GPp])
+                ext=block([ sum(U[0][1],axis=0), sum(U[1][1],axis=0), 
+                            sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
+                            sum(U[4][1],axis=0), GPp                    ])
                 
 
      
@@ -993,9 +1014,12 @@ class CRM(TOOLS):
 
                 n=n.reshape((N+5,))
 
-                ext=block([sum(U[0][1],axis=0), sum(U[1][1],axis=0), sum(U[2][1],axis=0), sum(U[3][1],axis=0), sum(U[4][1],axis=0), G])
+                ext=block([ sum(U[0][1],axis=0), sum(U[1][1],axis=0),
+                            sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
+                            sum(U[4][1],axis=0), G                      ])
 
-        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),(0,t),n,'LSODA',dense_output=True)
+        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),(0,t),
+                                            n,'LSODA',dense_output=True)
 
         
 
@@ -1028,7 +1052,8 @@ class CRM(TOOLS):
         from numpy import matmul,diag,real
         from numpy.linalg import inv,eig
 
-        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
+        # Use input n0 as default unless explict n0 requested
+        if n is None: n=self.n0() 
         
 
         # Create block matric from M
@@ -1046,7 +1071,8 @@ class CRM(TOOLS):
         if matrices is True:
             return mat,T,real(eigs)
         # Order the eigenvalues and vectors in increasing magnitude
-        # TODO should this be done for all the eigenvectors or separately between the Q and P space??
+        # TODO should this be done for all the eigenvectors or separately   
+        # between the Q and P space??
         # --> Does not seem to affect the solution
         eigind=abs(eigs[self.Np:]).argsort()[::1] 
         e1=eigs[self.Np:]
@@ -1094,7 +1120,8 @@ class CRM(TOOLS):
         ''' Evaluates the current CRM '''
         from numpy import matmul
         from numpy.linalg import inv
-        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),matrices=True) # Get matrices and eigenvalues/-vectors
+        # Get matrices and eigenvalues/-vectors
+        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),matrices=True) 
         TQ,delta=T[self.Np:,self.Np:],T[self.Np:,:self.Np]
         tau=1/abs(D)
         tauPmin=min(tau[:self.Np])
@@ -1112,11 +1139,14 @@ class CRM(TOOLS):
             return [maxdelta,maxnorm,tauPmin,tauQmax]
 
     
-    def generate_CRM(self,Te,ne,kappa,Ti=None,ni=None,E=0.1,n=None,Sext=True,epsilon=1):
+    def generate_CRM(self,Te,ne,kappa,Ti=None,ni=None,E=0.1,n=None,
+                                                    Sext=True,epsilon=1):
         ''' Generates the optimal CRMs per Greenland 2001 '''
         from numpy import array,where,matmul
         from numpy.linalg import inv
-        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),Sext=Sext,n=n,matrices=True) # Get matrices and eigenvalues/-vectors
+        # Get matrices and eigenvalues/-vectors
+        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),
+                                        Sext=Sext,n=n,matrices=True) 
         # Construct indicator matrix
         I=abs(T)
         I[I<=kappa]=0
@@ -1155,7 +1185,11 @@ class CRM(TOOLS):
                 norm=matmul(inv(TQ),delta)
                 maxnorm=max([sum(abs(norm[:,i])) for i in range(norm.shape[1])])
                 if maxnorm<epsilon:
-                    print('Possible CRM NP={} model with TQinv*delta={:.2E}, tauP={:.2E} s, tauQ={:.2E} s, and  P-space {} found.'.format(i+1,maxnorm,1/abs(min(sorted_D[:i+1])),1/abs(max(sorted_D[i+1:])),sorted_species[:i+1])) 
+                    print('''Possible CRM NP={} model with TQinv*delta={:.2E}, 
+                            tauP={:.2E} s, tauQ={:.2E} s, and  P-space {} 
+                            found.'''.format(i+1,maxnorm,
+                            1/abs(min(sorted_D[:i+1])),
+                            1/abs(max(sorted_D[i+1:])),sorted_species[:i+1])) 
                 else:
                     rej.append(maxnorm)
         if len(rej)>0:
@@ -1164,9 +1198,11 @@ class CRM(TOOLS):
 
 
         
-    def intensity(self,Te,ne,Ti=None,ni=None,E=0.1,units='v',norm=True,write=False,Sext=True,n=None,reassociation=1e3):
+    def intensity(self,Te,ne,Ti=None,ni=None,E=0.1,units='v',norm=True,
+                            write=False,Sext=True,n=None,reassociation=1e3):
         ''' Returns a list of 2x(NxN) vector with spectroscopic units/intensity of [Ia, Im]'''
-        from numpy import reshape,zeros,multiply,where,transpose,matmul,array,mean,all,diag
+        from numpy import reshape,zeros,multiply,where
+        from numpy import transpose,matmul,array,mean,all,diag
         from scipy.optimize import minimize
         from scipy.integrate import solve_ivp
         from matplotlib.pyplot import figure
@@ -1218,7 +1254,8 @@ class CRM(TOOLS):
         ss.terminal=True
 
         def findfac(fac,n,mat,ext,n0):
-            nend_sum=self.totparticles(solve_ivp(lambda x,y: dt(x,y,mat,ext,n,fac),(0,1),n,'LSODA',dense_output=True).y[:,-1])
+            nend_sum=self.totparticles(solve_ivp(lambda x,y: dt(x,y,mat,ext,n,
+                            fac),(0,1),n,'LSODA',dense_output=True).y[:,-1])
             
             return abs(self.totparticles(n0)-nend_sum)
             
@@ -1249,7 +1286,8 @@ class CRM(TOOLS):
         # Supply molecules to achieve SS
         '''ext[1]=sum(n)/0.2'''
         # Simulate to SS
-        ss_sol=diag(solve_ivp(lambda x,y: dt(x,y,mat,ext,n),(0,1),n,'LSODA',dense_output=True).y[:,-1])
+        ss_sol=diag(solve_ivp(lambda x,y: dt(x,y,mat,ext,n),(0,1),
+                                    n,'LSODA',dense_output=True).y[:,-1])
         #return
 
 

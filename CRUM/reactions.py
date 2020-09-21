@@ -31,9 +31,7 @@ class REACTION:
         from scipy.interpolate import interp2d,interp1d
         from numpy import array
        
-        self.getS(*S,bg,species)
-
-
+        self.parseS(*S,bg,species)
 
         # Store the data required to generate the reaction rates
         self.name=name
@@ -43,20 +41,9 @@ class REACTION:
         self.type=typ
         self.Tarr=array(Tarr)
         self.rec=(not self.e)*(not self.p)
+        self.rate=self.pick_rate()
 
-        ''' Make interpolation object if necessary '''
-        if self.type=='UE': # UEDGE interpolator
-            t=[i for i in range(self.coeffs.shape[0])]
-            n=[i for i in range(self.coeffs.shape[1])]
-
-            self.interpolation=interp2d(n,t,self.coeffs,kind='linear') # Create 2D interpolation function
-
-        if self.type=='ADAS': # ADAS interpolator
-            self.interpolation=interp1d(self.Tarr,self.coeffs,kind='slinear')   # Create 1D interpolation function
-
-        # TODO: Rather than calculating the rate at every time-step, create a function?
-
-    def getS(self,r,p,K,bg,species):
+    def parseS(self,r,p,K,bg,species):
         '''Parses Returns list of energies
 
         Assigns and calculates the energy change of the different comonents
@@ -93,22 +80,22 @@ class REACTION:
         self.e=('e' in self.reactants)
         self.p=('p' in self.reactants)
         
-            
+        self.absorption=False    # Electron absorption
+        self.prode=False         # Electron production (not conserving Ee)
+        self.radrelax=False      # Radiative relaxation
+        self.decay=False         # Non-radiative decay: energy goes into K of prod 
 
-        absorption=False    # Electron absorption
-        prode=False         # Electron production (not conserving Ee)
-        radrelax=False      # Radiative relaxation
-        decay=False         # Non-radiative decay: energy goes into K of prod
         # Check if reaction is an electron absorption reaction
         if self.e:
             try:
                 for x in self.reactants:
                     if x in list(bg): b=x
                 if b not in self.fragments:
-                    absorption=True
+                    self.absorption=True
                     # Account for two-step processes where electron is absorbed
                     # creating a non-stable particle that decays
-                    if len(self.f_mult)>len(self.r_mult): decay=True
+                    if len(self.f_mult)>len(self.r_mult): 
+                        self.decay=True
             except:
                 pass
         
@@ -119,12 +106,14 @@ class REACTION:
         else:
             # Proton-impact ionization
             if 'e' in p:
-                prode=True
+                self.prode=True
 
         # Radiative relaxation when one particle changes state
-        if sum(self.r_mult)==1 and sum(self.f_mult==1): radrelax=True
+        if sum(self.r_mult)==1 and sum(self.f_mult==1): 
+            self.radrelax=True
         # Non-radiative decay when one particle becomes many
-        if sum(self.r_mult)==1 and sum(self.f_mult)>1:  decay=True
+        if sum(self.r_mult)==1 and sum(self.f_mult)>1:  
+            self.decay=True
 
         # TODO: catches for UEDGE ionization and relaxation
 
@@ -145,8 +134,8 @@ class REACTION:
         
         [self.S_r,self.S_V,self.S_g,self.S_e]=['0','0','0','0']
         # Reactant energy loss
-        if radrelax is False:
-            if decay is False:
+        if self.radrelax is False:
+            if self.decay is False:
                 try:
                     self.S_r=str(Vr-Vp-float(K))
                 except:
@@ -157,7 +146,7 @@ class REACTION:
         else:
             self.S_V=str(Vp-Vr)
             self.S_g=str(Vr-Vp)
-        if prode is True:
+        if self.prode is True:
             self.S_e='Te'
 
         if 'erl1' in K: self.S_g+='+erl1'
@@ -165,7 +154,8 @@ class REACTION:
 
 
 
-
+    def getS(self,Te,Ti,Tm,Ta,erl1,erl2): 
+        return
 
     
     def print_reaction(self):
@@ -174,18 +164,64 @@ class REACTION:
         '''
         ret='{}_{}: '.format(self.database,self.name) # Append reaction ID
         for i in range(len(self.reactants)):    # Loop through all reactants
-            ret+=(self.r_mult[i]!=1)*'{}*'.format(self.r_mult[i])+'{} '.format(self.reactants[i])+(i+1!=len(self.reactants))*'+ '
+            ret+=(  self.r_mult[i]!=1)*'{}*'.format(self.r_mult[i])+'''{} 
+                '''.format(self.reactants[i])+(i+1!=len(self.reactants))*'+ '
+
         ret+='=> ' # Add reactants to string
+        
         for i in range(len(self.fragments)):    # Loop through all fragmetns
-            ret+=(self.f_mult[i]!=1)*'{}*'.format(self.f_mult[i])+'{} '.format(self.fragments[i])+(i+1!=len(self.fragments))*'+ ' # Add fragments to string
+            ret+=(  self.f_mult[i]!=1)*'{}*'.format(self.f_mult[i])+'''{} 
+                '''.format(self.fragments[i])+(i+1!=len(self.fragments))*'+ ' 
+            # Add fragments to string
         
         return ret 
 
 
-        """
-    def ADAS_rate(self):
+
+    def pick_rate(self):
+        from scipy.interpolate import interp2d,interp1d
+        if self.type=='RATE': 
+            return self.EIR_rate
+
+        elif self.type=='COEFFICIENT': 
+            return self.coeff_rate
+
+        elif self.type=='SIGMA': 
+            return self.SAWADASIGMA_rate
+
+        elif self.type=='ADAS': 
+            # Create 1D interpolation function
+            self.interpolation=interp1d(self.Tarr,self.coeffs,kind='slinear')   
+            return self.ADAS_rate
+
+        elif self.type=='UE': 
+            t=[i for i in range(self.coeffs.shape[0])]
+            n=[i for i in range(self.coeffs.shape[1])]
+            # Create 2D interpolation function
+            self.interpolation=interp2d(n,t,self.coeffs,kind='linear') 
+            return self.UE_rate
+
+        elif self.type=='APID': 
+            x=self.coeffs
+            self.apidA=     0.14784*(x==2)      +0.058463*(x==3) 
+            self.apidB=[    0.0080871*(x==2)    -0.051272*(x==3), 
+                            -0.06227*(x==2)     +0.85310*(x==3), 
+                            1.9414*(x==2)       -0.57014*(x==3), 
+                            -2.198*(x==2)       +0.76684*(x==3), 
+                            0.95894*(x==2),
+                            1.133*(x>3),
+                            -0.4059*(x>3),
+                            0.0714*(x>3)                        ]
+
+            return self.APID_rate
+        else: 
+            print('Unknown type "{}"'.format(self.type))
+
+
+    
+    def ADAS_rate(self,Te,Ti,E=None,ne=None,omegaj=1):
         T=Te*self.e+Ti*self.p
-         if T<self.Tarr[0]:
+        if T<self.Tarr[0]:
             Tuse=self.Tarr[0]
             coeff=T/Tuse
         else:
@@ -194,12 +230,14 @@ class REACTION:
         Tuse=min(Tuse,self.Tarr[-1])
 #            T=max(T,self.Tarr[0])
         # TODO: How to deal with extrapolation?
-        # TODO: figure out what is implied by the statistical weight omegaj - set =1 for now
+        # TODO: figure out what is implied by the statistical weight omegaj?
+        #       set =1 for now
         # Return the rate as calculated from the ADAS fit, per the ADAS manual
-        return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse) 
+        return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse)
 
 
-    def EIR_rate(self
+    def EIR_rate(self,Te,Ti,E=None,ne=None,omegaj=1):
+        from numpy import log,exp
         T=Te*self.e+Ti*self.p
         ret=0
         if T<0.5:   
@@ -221,17 +259,19 @@ class REACTION:
                 ret+=self.coeffs[i]*(log(Tuse)**i)
                 
         else:
-            print('Unknown fit: {}, {}, {}'.format(self.database,self.name,self.type))
+            print('''Unknown fit: {}, {}, {}
+                    '''.format(self.database,self.name,self.type))
 
         return coeff*exp(ret)
 
 
-    def coeff_rate(
+    def coeff_rate(self,Te,Ti,E=None,ne=None,omegaj=1):
             return self.coeffs
             
 
-    def UE_rate(
-        # Turn the temperature and density into log-log variables, bounded to the limits
+    def UE_rate(self,Te,Ti,E=None,ne=None):
+        # Turn the temperature and density into log-log variables, 
+        # bounded to the limits
         jt=max(0,min(10*(log10(Te+1e-99)+1.2),60))
         jn=max(0,min(2*(log10(ne)-10),15))
         # Interpolate jt
@@ -239,9 +279,12 @@ class REACTION:
         # If the density is being extrapolated, scale accordingly!
         # c=1
         # if self.name in ['RECRAD','IONIZRAD']: c=6.242e11
-        return self.interpolation(jn,jt)[0]*(6.242e11**(self.name in ['RECRAD','IONIZRAD']))
+        return self.interpolation(jn,jt)[0]*\
+                    (6.242e11**(self.name in ['RECRAD','IONIZRAD']))
 
-    def SAWADASIGMA_rate(
+    def SAWADASIGMA_rate(self,Te,Ti,E=None,ne=None):
+        from numpy import sqrt,pi,inf,exp
+        from scipy.integrate import quad
         T=Te*self.e+Ti*self.p
         # TODO Extend to general species?
         mH2=2*1.6735575e-27 # Assume H2 is reactant 1
@@ -252,386 +295,133 @@ class REACTION:
         mr=(me*mH2)/(me+mH2)    # Reduced mass
         vth=sqrt((2*self.coeffs[0]*ev)/mr)  # Thermal CM speed
         
-        def sigma(E,Eth,q0,A,Omega,W,gamma,nu): # Calculate sigma from the Sawada fit based on E
-            Psi=(nu!=0)*(1-W/E)**nu+(gamma!=0)*(1-(W/E)**gamma) # Get triplet/singlet Psi
-            return (E>=Eth)*q0*(A/W**2)*((W/Eth)**Omega)*Psi    # Perform fit
+        def sigma(E,Eth,q0,A,Omega,W,gamma,nu): 
+                # Calculate sigma from the Sawada fit based on E
+            Psi=(nu!=0)*(1-W/E)**nu+(gamma!=0)*(1-(W/E)**gamma) 
+                    # Get triplet/singlet Psi
+            return (E>=Eth)*q0*(A/W**2)*((W/Eth)**Omega)*Psi    
+                    # Perform fit
         
         def R(x,T,coeffs):
             # Integrand function as described in JUEL-3858
             return x*sigma(x*T,*self.coeffs)*exp(-x)
 
         # Perform integration over velocity space according to JUEL-3858
-        return (4/sqrt(pi))*sqrt((T*ev)/(2*me))*quad(R,0,inf,args=(T,self.coeffs))[0]
+        return (4/sqrt(pi))*sqrt((T*ev)/(2*me))*\
+                    quad(R,0,inf,args=(T,self.coeffs))[0]
 
     
 
-    def APID_rate(
-
-            def sigma(T,coeffs):
-                ''' The APID-4 rates are taken from Janev's 1993 IAEA paper, the analytic solutions from Stotler's svlib routine used in DEGAS2 '''
-                n=self.coeffs[0]
-                I=13.6/n**2
-
-                def expint(k,p):
-                    a=[-0.57721566,0.99999193,-0.24991055,0.05519968,-0.00976004,0.00107857]
-                    ap=[8.5733287401,18.0590169730,8.6347608925, 0.2677737343 ]
-                    b=[9.5733223454,25.6329561486,21.0996530827, 3.9584969228 ]
-
-                    def en(zn,z):
-                        return exp(-z)*( 1 + zn/(z+zn)**2 + zn*(zn-2*z)/(z+zn)**4 + zn*(6*z**2-8*zn*z+zn**2)/(z+zn)**6 )/(z+zn)
-
-                    if k==0: 
-                        if p<0:
-                            return None
-                        else:
-                            return exp(-p)/p
-
-                    if p<0: 
-                        return None
-                    elif p==0:
-                        if k==1:
-                            return None
-                        else:
-                            return 1/(k-1)
-
-                    elif p<8 or k==1:
-                        if p<1:
-                            ze1=a[5]
-                            for i in [4,3,2,1,0]:
-                                ze1=a[i]+ze1*p
-                            ze1-=log(p)
-
-                        else:
-                            znum=1
-                            zden=1
-                            for i in range(4):
-                                znum=ap[i]+znum*p
-                                zden=b[i]+zden*p
-                            ze1=exp(-p)*znum/(zden*p)
-
-                        if k==1:
-                            return ze1
-                        else:
-                            zek=ze1
-                            for i in range(2,k+1):
-                                zek=(exp(-p)-p*zek)/(i-1)
-                            return zek
-                    
-                    else:
-                        kp=int(p+0.5)
-                        if k<kp and k<=10:
-                            if kp>10: kp=10
-                            zek=en(kp,p)
-                            for i in range(kp-1,k-1,-1): zek=(exp(-p) -i*zek)/p
-                            return zek
-                    
-                        else: return en(k,p)
-                    return 'Fell througFell throughh'
-
-                    #return exp(-p)/(p**k)
-
-                # Use set constants to eval sigma
-                if n<=3: 
-                    A=self.coeffs[1]
-                    b=self.coeffs[2:7]
-                    zarg=I/T
-
-                    zeint=[]
-                    for i in range(1,7): 
-                        zeint.append(expint(i,zarg))
-
-                    zmul=[]
-                    zmul.append(b[0] + 2*b[1] + 3*b[2] + 4*b[3] + 5*b[4])
-                    zmul.append(-2*( b[1] + 3*b[2] + 6*b[3] + 10*b[4] ))
-                    zmul.append(3*( b[2] + 4*b[3] + 10*b[4] ))
-                    zmul.append(-4*( b[3] + 5*b[4] ))
-                    zmul.append(5*b[4])
-
-                    zi1=0
-                    for i in range(5): zi1+=zmul[i]*zeint[i+1]
-
-
-                    zi2=A*zeint[0]
-                    zi3=1e-13/(I*T)
-                    return 6.692e7*sqrt(T) *zi3*(zi1 + zi2)
-      
-
-                # Higher n, evaluate from formulae
-                else:
-
-                    zn=n
-                    pt=T
-                    pin=I
-                    zg0 = 0.9935 + 0.2328/zn - 0.1296/zn**2
-                    zg1 = -(0.6282 - 0.5598/zn + 0.5299/zn**2) / zn
-                    zg2 = -(0.3887 - 1.181/zn + 1.470/zn**2) / zn**2
-                    zmul = 32. / (3. * sqrt(3.) * pi)
-                    zan = zmul * zn * (zg0/3. + zg1/4. + zg2/5.)  
-                    zrn = 1.94 * zn**(-1.57)
-                    zb = (4.0 - 18.63/zn + 36.24/zn**2 - 28.09/zn**3) / zn
-                    zbn = 2. * zn**2 * (5. + zb) / 3
-                    zyn = pin / pt
-                    zzn = zrn + zyn
-                    ze1y = expint(1,zyn)
-                    ze1z = expint(1,zzn)
-                    zint1 = zan * (ze1y/zyn - ze1z/zzn) 
-                    zxiy = expint(0,zyn) - 2.*ze1y + expint(2,zyn)
-                    zxiz = expint(0,zzn) - 2.*ze1z + expint(2,zzn)
-                    zint2 = (zbn - zan * log(2.*zn**2)) * (zxiy - zxiz)
-                    zint3 = 1.76e-16 * zn**2 * zyn**2
-                    ret = 6.692e7 * sqrt(pt) * zint3 * (zint1 + zint2)
-
-
-
-                return ret
-                    
-            def R(x,T,coeffs):
-                # Integrand function as described in JUEL-3858
-                return x*sigma(x*T,self.coeffs)*exp(-x)
-
-            if 'IONIZ' in self.name:
-                ''' APID ionization rate '''
-                return sigma(T,self.coeffs)
-
-                """ 
-
-
-
-
-
-    def rate(self,Te,Ti,E=None,ne=None,omegaj=1):
-        ''' Returns the reaction rate at the specified temperature
-            rate(Te,Ti,*keys)
-
-            Te          -   Electron temperature for evaluation, used if electron reaction [eV]
-            Ti          -   Ion temperature for evaluation, used if proton impact [eV]
-            
-            Optional parameters
-            E (None)    -   Target particle energy, used if proton impact [eV]
-            ne (None)   -   Electron density, used for UEDGE rates [cm**3]
-            omegaj (1)  -   Statistical weight of ADAS rates 
-        '''
-        from numpy import log,exp,sqrt,pi,inf,array,log10,logspace,linspace
-        from scipy.integrate import quad
-        from matplotlib.pyplot import figure
-
-        # Find reactant species
+    def APID_rate(self,Te,Ti,E=None,ne=None):
+        from numpy import exp,sqrt,log,pi
         T=Te*self.e+Ti*self.p
-        '''
-        if self.e:   T=Te # Electron-mediated reaction, use Te
-        elif 'p' in self.reactants: T=Ti # Proton impact reaction, use Ti
-        else: T=0   # Photoemission, T not used'''
+
+        ''' The APID-4 rates are taken from Janev's 1993 IAEA paper, the analytic solutions from Stotler's svlib routine used in DEGAS2 '''
+        I=13.6/self.coeffs**2
+
+        def expint(k,p):
+            a=[-0.57721566,0.99999193,-0.24991055,0.05519968,
+                                                -0.00976004,0.00107857]
+            ap=[8.5733287401,18.0590169730,8.6347608925, 0.2677737343 ]
+            b=[9.5733223454,25.6329561486,21.0996530827, 3.9584969228 ]
+
+            def en(zn,z):
+                return exp(-p)*( 1 + kp/(kp+p)**2 + kp*(kp-2*p)/(kp+p)**4 + 
+                            kp*(6*p**2-8*kp*p+kp**2)/(kp+p)**6 )/(kp+p)
 
 
-        # Extrapolate from minimum to zero
+            if p<0 or (p==0 and k==1): return None
+            elif k*p==0: return (k==0)*exp(-p)/p + (p==0)*(1/(k-1))
 
 
+            elif p<8 or k==1:
+                if p<1:
+                    ze1=a[5]
+                    for i in [4,3,2,1,0]:
+                        ze1=a[i]+ze1*p
+                    ze1-=log(p)
 
-        # Get rate based on self.type
-        if self.type=='RATE':
-            ''' We have an EIRENE polynomial fit '''
-            ret=0
-            if T<0.5:   
-                Tuse=0.5
-                coeff=T/Tuse
-            else:       
-                Tuse=T
-                coeff=1
-
-            if len(self.coeffs.shape)==2:
-                ''' T,E fit '''
-                for i in range(9):
-                    for j in range(9):
-                        ret+=self.coeffs[i,j]*(log(Tuse)**i)*(log(E)**j)
-
-            elif len(self.coeffs.shape)==1: 
-                ''' T fit '''
-                for i in range(9):
-                    ret+=self.coeffs[i]*(log(Tuse)**i)
-                    
-            else:
-                print('Unknown fit: {}, {}, {}'.format(self.database,self.name,self.type))
-
-            return coeff*exp(ret)
-
-        elif self.type=='COEFFICIENT':
-            ''' Coefficient '''
-            return self.coeffs
-
-        elif self.type=='SIGMA':
-            ''' SAWADA cross-section '''
-            # TODO Extend to general species?
-            mH2=2*1.6735575e-27 # Assume H2 is reactant 1
-            me=9.10938356e-31   # Assume electron is reactant 2
-            ev=1.602e-19        # Helper
-            VH2=sqrt((2*E*ev)/mH2)  # Get the H2 velocity
-            Ve=sqrt((2*T*ev)/me)    # Get the e- velocity
-            mr=(me*mH2)/(me+mH2)    # Reduced mass
-            vth=sqrt((2*self.coeffs[0]*ev)/mr)  # Thermal CM speed
-            
-            def sigma(E,Eth,q0,A,Omega,W,gamma,nu): # Calculate sigma from the Sawada fit based on E
-                Psi=(nu!=0)*(1-W/E)**nu+(gamma!=0)*(1-(W/E)**gamma) # Get triplet/singlet Psi
-                return (E>=Eth)*q0*(A/W**2)*((W/Eth)**Omega)*Psi    # Perform fit
-            
-            def R(x,T,coeffs):
-                # Integrand function as described in JUEL-3858
-                return x*sigma(x*T,*self.coeffs)*exp(-x)
-
-            # Perform integration over velocity space according to JUEL-3858
-            return (4/sqrt(pi))*sqrt((T*ev)/(2*me))*quad(R,0,inf,args=(T,self.coeffs))[0]
-
-
-        elif self.type=='ADAS':
-            ''' ADAS fit '''
-            if T<self.Tarr[0]:
-                Tuse=self.Tarr[0]
-                coeff=T/Tuse
-            else:
-                Tuse=T
-                coeff=1
-            Tuse=min(Tuse,self.Tarr[-1])
-#            T=max(T,self.Tarr[0])
-            # TODO: How to deal with extrapolation?
-            # TODO: figure out what is implied by the statistical weight omegaj - set =1 for now
-            # Return the rate as calculated from the ADAS fit, per the ADAS manual
-            return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse) 
-        
-        elif self.type=='UE':
-            ''' UEDGE fit '''
-            # Turn the temperature and density into log-log variables, bounded to the limits
-            jt=max(0,min(10*(log10(Te+1e-99)+1.2),60))
-            jn=max(0,min(2*(log10(ne)-10),15))
-            # Interpolate jt
-            
-            # If the density is being extrapolated, scale accordingly!
-           # c=1
-           # if self.name in ['RECRAD','IONIZRAD']: c=6.242e11
-            return self.interpolation(jn,jt)[0]*(6.242e11**(self.name in ['RECRAD','IONIZRAD']))
-
-        elif self.type=='APID':
-
-            def sigma(T,coeffs):
-                ''' The APID-4 rates are taken from Janev's 1993 IAEA paper, the analytic solutions from Stotler's svlib routine used in DEGAS2 '''
-                n=self.coeffs[0]
-                I=13.6/n**2
-
-                def expint(k,p):
-                    a=[-0.57721566,0.99999193,-0.24991055,0.05519968,-0.00976004,0.00107857]
-                    ap=[8.5733287401,18.0590169730,8.6347608925, 0.2677737343 ]
-                    b=[9.5733223454,25.6329561486,21.0996530827, 3.9584969228 ]
-
-                    def en(zn,z):
-                        return exp(-z)*( 1 + zn/(z+zn)**2 + zn*(zn-2*z)/(z+zn)**4 + zn*(6*z**2-8*zn*z+zn**2)/(z+zn)**6 )/(z+zn)
-
-
-                    if p<0 or (p==0 and k==1): return None
-                    elif k*p==0: return (k==0)*exp(-p)/p + (p==0)*(1/(k-1))
-
-                    elif p<8 or k==1:
-                        if p<1:
-                            ze1=a[5]
-                            for i in [4,3,2,1,0]:
-                                ze1=a[i]+ze1*p
-                            ze1-=log(p)
-
-                        else:
-                            znum=1
-                            zden=1
-                            for i in range(4):
-                                znum=ap[i]+znum*p
-                                zden=b[i]+zden*p
-                            ze1=exp(-p)*znum/(zden*p)
-
-                        if k==1:
-                            return ze1
-                        else:
-                            zek=ze1
-                            for i in range(2,k+1):
-                                zek=(exp(-p)-p*zek)/(i-1)
-                            return zek
-                    
-                    else:
-                        kp=int(p+0.5)
-                        if k<kp and k<=10:
-                            if kp>10: kp=10
-                            zek=en(kp,p)
-                            for i in range(kp-1,k-1,-1): zek=(exp(-p) -i*zek)/p
-                            return zek
-                    
-                        else: return en(k,p)
-                    return 'Fell througFell throughh'
-
-                    #return exp(-p)/(p**k)
-
-                # Use set constants to eval sigma
-                if n<=3: 
-                    A=self.coeffs[1]
-                    b=self.coeffs[2:7]
-                    zarg=I/T
-
-                    zeint=[]
-                    for i in range(1,7): 
-                        zeint.append(expint(i,zarg))
-
-                    zmul=[]
-                    zmul.append(b[0] + 2*b[1] + 3*b[2] + 4*b[3] + 5*b[4])
-                    zmul.append(-2*( b[1] + 3*b[2] + 6*b[3] + 10*b[4] ))
-                    zmul.append(3*( b[2] + 4*b[3] + 10*b[4] ))
-                    zmul.append(-4*( b[3] + 5*b[4] ))
-                    zmul.append(5*b[4])
-
-                    zi1=0
-                    for i in range(5): zi1+=zmul[i]*zeint[i+1]
-
-
-                    zi2=A*zeint[0]
-                    zi3=1e-13/(I*T)
-                    return 6.692e7*sqrt(T) *zi3*(zi1 + zi2)
-      
-
-                # Higher n, evaluate from formulae
                 else:
+                    znum=1
+                    zden=1
+                    for i in range(4):
+                        znum=ap[i]+znum*p
+                        zden=b[i]+zden*p
+                    ze1=exp(-p)*znum/(zden*p)
 
-                    zn=n
-                    pt=T
-                    pin=I
-                    zg0 = 0.9935 + 0.2328/zn - 0.1296/zn**2
-                    zg1 = -(0.6282 - 0.5598/zn + 0.5299/zn**2) / zn
-                    zg2 = -(0.3887 - 1.181/zn + 1.470/zn**2) / zn**2
-                    zmul = 32. / (3. * sqrt(3.) * pi)
-                    zan = zmul * zn * (zg0/3. + zg1/4. + zg2/5.)  
-                    zrn = 1.94 * zn**(-1.57)
-                    zb = (4.0 - 18.63/zn + 36.24/zn**2 - 28.09/zn**3) / zn
-                    zbn = 2. * zn**2 * (5. + zb) / 3
-                    zyn = pin / pt
-                    zzn = zrn + zyn
-                    ze1y = expint(1,zyn)
-                    ze1z = expint(1,zzn)
-                    zint1 = zan * (ze1y/zyn - ze1z/zzn) 
-                    zxiy = expint(0,zyn) - 2.*ze1y + expint(2,zyn)
-                    zxiz = expint(0,zzn) - 2.*ze1z + expint(2,zzn)
-                    zint2 = (zbn - zan * log(2.*zn**2)) * (zxiy - zxiz)
-                    zint3 = 1.76e-16 * zn**2 * zyn**2
-                    ret = 6.692e7 * sqrt(pt) * zint3 * (zint1 + zint2)
+                if k==1:
+                    return ze1
+                else:
+                    zek=ze1
+                    for i in range(2,k+1):
+                        zek=(exp(-p)-p*zek)/(i-1)
+                    return zek
+            
+            else:
+                kp=int(p+0.5)
+                if k<kp and k<=10:
+                    if kp>10: kp=10
+                    zek=en(kp,p)
+                    for i in range(kp-1,k-1,-1): zek=(exp(-p) -i*zek)/p
+                    return zek
+            
+                else: return en(k,p)
+            return 'Fell througFell throughh'
+
+            #return exp(-p)/(p**k)
+
+        # Use set constants to eval sigma
+        if self.coeffs<=3: 
+            zarg=I/T
+
+            zeint=[]
+            for i in range(1,7): 
+                zeint.append(expint(i,zarg))
+
+            zmul=[]
+            zmul.append(self.apidB[0] + 2*self.apidB[1] + 3*self.apidB[2] + 
+                                        4*self.apidB[3] + 5*self.apidB[4])
+            zmul.append(-2*( self.apidB[1] + 3*self.apidB[2] + 6*self.apidB[3]
+                                        + 10*self.apidB[4] ))
+            zmul.append(3*( self.apidB[2] + 4*self.apidB[3] 
+                                        + 10*self.apidB[4] ))
+            zmul.append(-4*( self.apidB[3] + 5*self.apidB[4] ))
+            zmul.append(5*self.apidB[4])
+
+            zi1=0
+            for i in range(5): zi1+=zmul[i]*zeint[i+1]
 
 
+            zi2=self.apidA*zeint[0]
+            zi3=1e-13/(I*T)
+            return 6.692e7*sqrt(T) *zi3*(zi1 + zi2)
 
-                return ret
-                    
-            def R(x,T,coeffs):
-                # Integrand function as described in JUEL-3858
-                return x*sigma(x*T,self.coeffs)*exp(-x)
 
-            if 'IONIZ' in self.name:
-                ''' APID ionization rate '''
-                return sigma(T,self.coeffs)
-
-                    
-
-                    
+        # Higher n, evaluate from formulae
         else:
-            print('Unknown type "{}"'.format(self.type))
-    
+
+            zn=self.coeffs
+            zg0 = 0.9935 + 0.2328/zn - 0.1296/zn**2
+            zg1 = -(0.6282 - 0.5598/zn + 0.5299/zn**2) / zn
+            zg2 = -(0.3887 - 1.181/zn + 1.470/zn**2) / zn**2
+            zmul = 32. / (3. * sqrt(3.) * pi)
+            zan = zmul * zn * (zg0/3. + zg1/4. + zg2/5.)  
+            zrn = 1.94 * zn**(-1.57)
+            zb = (4.0 - 18.63/zn + 36.24/zn**2 - 28.09/zn**3) / zn
+            zbn = 2. * zn**2 * (5. + zb) / 3
+            zyn = I / T
+            zzn = zrn + zyn
+            ze1y = expint(1,zyn)
+            ze1z = expint(1,zzn)
+            zint1 = zan * (ze1y/zyn - ze1z/zzn) 
+            zxiy = expint(0,zyn) - 2.*ze1y + expint(2,zyn)
+            zxiz = expint(0,zzn) - 2.*ze1z + expint(2,zzn)
+            zint2 = (zbn - zan * log(2.*zn**2)) * (zxiy - zxiz)
+            zint3 = 1.76e-16 * zn**2 * zyn**2
+            ret = 6.692e7 * sqrt(T) * zint3 * (zint1 + zint2)
 
 
+
+        return ret
+            
 
