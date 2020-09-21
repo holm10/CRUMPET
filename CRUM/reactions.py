@@ -161,40 +161,47 @@ class REACTION:
         else:
             self.S_e=self.ret0
 
- 
-    def getS(self,r,Te,Ti,Tm,E,rad=True,Ton=True):
-        ''' To output:
-            S_el    Sext_el
-            S_eV    Sext_eV
-            S_ega   Sext_ega
-            S_egm   Sext_egm
-            S_pe    Sext_pe
-            S_pV    Sext_pV
-            S_pga   Sext_pga
-            S_pgm   Sext_pgm
-        '''
-        from numpy import zeros,array
+
+        # Create energy matrix in order to only evaluate conditionals once
 
 
         Sl=[self.S_r,self.S_V,self.S_g]
-        ret=zeros((8,2))
-        offset=0
+        self.Smat=[]
         
-        if self.p: # Proton reaction: offset to account for proton-balance
-            if not self.e: # If we have recombination, don't offset
+        if self.p:
+            if not self.e:
                 Sl[0]=self.S_e
-                offset=4
-            
+                for i in range(4):
+                    self.Smat.append([self.ret0,self.ret0])
+        
         for i in range(3):
-            # Switch to determine if the line is atomic or molecular
-            S=Sl[i]
-            ext=0
+            ext=self.ret0
+            if (i!=2):
+                self.Smat.append([Sl[i],ext])
+            elif (i==2)*(self.database not in ['ADAS','JOHNSON']):
+                self.Smat.append([self.ret0,self.ret0])
+                self.Smat.append([Sl[i],ext])
+            else:
+                self.Smat.append([Sl[i],ext])
+                self.Smat.append([self.ret0,self.ret0])
+                    
+        while len(self.Smat)<8:
+            for i in range(4):
+                self.Smat.append([self.ret0,self.ret0])
+            
+        
+        
 
-            # TODO: more robust definition! 
-            g=0+1*(i==2)*(r.database not in ['ADAS','JOHNSON'])
-            ret[i+offset+g,:]=array([S(Te,Ti,Tm),ext])
 
-        return ret
+
+
+ 
+    def getS(self,r,Te,Ti,Tm,E):
+        from numpy import array
+
+        ret=[[column(Te,Ti,Tm,E) for column in row] for row in self.Smat]
+        return array(ret)
+
                
 
     def ret0(self,*args):
