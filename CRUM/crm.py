@@ -358,62 +358,6 @@ class CRM(TOOLS):
 
 
 
-
-    def getS(self,r,Te,Ti,Tm,E,ne,rad=True,Ton=True):
-        ''' To output:
-            S_el    Sext_el
-            S_eV    Sext_eV
-            S_ega   Sext_ega
-            S_egm   Sext_egm
-            S_pe    Sext_pe
-            S_pV    Sext_pV
-            S_pga   Sext_pga
-            S_pgm   Sext_pgm
-        '''
-        from numpy import zeros,array
-
-
-        Sl=[r.S_r,r.S_V,r.S_g]
-        print(Sl)
-        ret=zeros((8,2))
-        offset=0
-        
-        if r.p: # Proton reaction: offset to account for proton-balance
-            if not r.e: # If we have recombination, don't offset
-                Sl[0]=r.S_e
-                offset=4
-            
-        for i in range(3):
-            # Switch to determine if the line is atomic or molecular
-            val=Sl[i]
-            # The entry is in string form: turn into number
-            if isinstance(val,str):  
-                temp=val.replace('erl1','0').replace('erl2','0') # Remove radiation contribution - evaluated as external source
-                temp=temp.replace('Te',str(Te*Ton))
-                temp=temp.replace('Ti',str(Ti*Ton))
-                temp=temp.replace('Ta',str(Ti*Ton))         
-                temp=temp.replace('Tm',str(Ton*(Tm is not False)*Tm+Ton*(Tm is False)*E))
-                ext=0
-                #ext=((-1)**('-erl' in val))*rad*(
-                #        ('erl1' in val)*self.ionizrad.rate(Te,Ti,E,ne)
-                #        +('erl2' in val)*self.recrad.rate(Te,Ti,E,ne)
-                #    )
-                S=eval(temp)
-
-            else:
-                S=val  
-                ext=0
-
-            # TODO: more robust definition! 
-            g=0+1*(i==2)*(r.database not in ['ADAS','JOHNSON'])
-            ret[i+offset+g,:]=array([S,ext])
-
-        return ret
-        
-
-        
-
-
     def populate(self,mode,Te,ne,Ti=None,ni=None,E=0,rad=True,Sind=None,Tm=False,Ton=True,Iind=0):
         ''' Function populating a matrix according to the chosen mode 
             populate(mode,Te,ne,*keys)
@@ -474,7 +418,7 @@ class CRM(TOOLS):
                 # Create array: first index Sel,SeV,Seg,Spe,SpV,Spg, second index S,ext
 
                 if mode=='Sgl':
-                    S=self.getS(r,Te,Ti,Tm,E,ne,rad,Ton)
+                    S=r.getS(r,Te,Ti,Tm,E)#,ne,rad,Ton)
 
 
                     Sgl=    array(  [   [S[0]+S[4]],
@@ -484,7 +428,7 @@ class CRM(TOOLS):
                                         [S[3]+S[7]] ]   )[:,0,:]
             
                 elif mode in ['I','E']:
-                    Iv=self.getS(r,Te,Ti,Tm,E,ne,rad,Ton)
+                    Iv=r.getS(r,Te,Ti,Tm,E)#,ne,rad,Ton)
                     I=      array( [    [Iv[2]+Iv[6]],
                                         [Iv[3]+Iv[7]] ]   )[:,0,:]
  

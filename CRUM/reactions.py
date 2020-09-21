@@ -31,12 +31,12 @@ class REACTION:
         from scipy.interpolate import interp2d,interp1d
         from numpy import array
        
+        self.database=database
         self.parseS(*S,bg,species)
 
         # Store the data required to generate the reaction rates
         self.name=name
         self.coeffs=coeffs
-        self.database=database
         self.coeffs=array(coeffs)
         self.type=typ
         self.Tarr=array(Tarr)
@@ -71,11 +71,13 @@ class REACTION:
                 self.f_mult[i]=p[i].split('*')[0]
                 self.fragments[i]=p[i].split('*')[1]
 
-
         try:
-            K=str(eval(K))
+            self.K=eval(K) # Convert number to kin. E change
+            self.Kdep=False
         except:
-            pass
+            self.K=K
+            self.Kdep=True
+
     
         self.e=('e' in self.reactants)
         self.p=('p' in self.reactants)
@@ -118,44 +120,115 @@ class REACTION:
         # TODO: catches for UEDGE ionization and relaxation
 
         
-        Vr,Vp,Dr,Dp=0,0,0,0
+        # Total potential of reactants and products
+        self.Vr,self.Vp=0,0
         for i in range(len(self.reactants)):
             try:
-                Vr+=self.r_mult[i]*species[self.reactants[i]]['V']
+                self.Vr+=self.r_mult[i]*species[self.reactants[i]]['V']
             except:
-                Vr+=self.r_mult[i]*bg[self.reactants[i]]['V']
+                self.Vr+=self.r_mult[i]*bg[self.reactants[i]]['V']
         for i in range(len(self.fragments)):
             try:
-                Vp+=self.f_mult[i]*species[self.fragments[i]]['V']
+                self.Vp+=self.f_mult[i]*species[self.fragments[i]]['V']
             except:
-                Vp+=self.f_mult[i]*bg[self.fragments[i]]['V']
+                self.Vp+=self.f_mult[i]*bg[self.fragments[i]]['V']
 
 
         
-        [self.S_r,self.S_V,self.S_g,self.S_e]=['0','0','0','0']
+        self.S_r,self.S_V,self.S_g,self.S_e=self.ret0,self.ret0,self.ret0,self.ret0
+
+
         # Reactant energy loss
         if self.radrelax is False:
             if self.decay is False:
-                try:
-                    self.S_r=str(Vr-Vp-float(K))
-                except:
-                    self.S_r=str(Vr-Vp)+'-('+K+')'
-            else:
-                self.S_r='-('+K+')'
-            self.S_V=str(Vp-Vr)
+                if self.Kdep:
+                    self.S_r=self.depSr
+                else:
+                    self.S_r=self.indepSr
+            else: # Spontaneous decay
+                if self.Kdep:
+                    self.S_r=self.depdecaySr
+                else:
+                    self.S_r=self.indepdecaySr
+            self.S_V=self.fSV
         else:
-            self.S_V=str(Vp-Vr)
-            self.S_g=str(Vr-Vp)
+            self.S_V=self.fSV
+            self.S_g=self.fSg
+
+
         if self.prode is True:
-            self.S_e='Te'
+            self.S_e=self.depSe
+        else:
+            self.S_e=self.ret0
 
-        if 'erl1' in K: self.S_g+='+erl1'
-        elif 'erl2' in K: self.S_g+='+erl2'
+ 
+    def getS(self,r,Te,Ti,Tm,E,rad=True,Ton=True):
+        ''' To output:
+            S_el    Sext_el
+            S_eV    Sext_eV
+            S_ega   Sext_ega
+            S_egm   Sext_egm
+            S_pe    Sext_pe
+            S_pV    Sext_pV
+            S_pga   Sext_pga
+            S_pgm   Sext_pgm
+        '''
+        from numpy import zeros,array
+
+
+        Sl=[self.S_r,self.S_V,self.S_g]
+        ret=zeros((8,2))
+        offset=0
+        
+        if self.p: # Proton reaction: offset to account for proton-balance
+            if not self.e: # If we have recombination, don't offset
+                Sl[0]=self.S_e
+                offset=4
+            
+        for i in range(3):
+            # Switch to determine if the line is atomic or molecular
+            S=Sl[i]
+            ext=0
+
+            # TODO: more robust definition! 
+            g=0+1*(i==2)*(r.database not in ['ADAS','JOHNSON'])
+            ret[i+offset+g,:]=array([S(Te,Ti,Tm),ext])
+
+        return ret
+               
+
+    def ret0(self,*args):
+        return 0
+
+    def fSV(self,*args):
+        return self.Vp-self.Vr
+
+    def fSg(self,*args):
+        return self.Vr-self.Vp
+
+    def depSr(self,Te=0,Ti=0,Tm=0,E=0):
+        return self.Vr-self.Vp-eval(self.K)
+    
+    def indepSr(self,*args):
+        return self.Vr-self.Vp-self.K 
+
+    def depdecaySr(self,Te=0,Ti=0,Tm=0,E=0):
+        return -eval(self.K)
+
+    def indepdecaySr(self,*args):
+        return -self.K
+
+    def depSe(self,Te,*args):
+        return Te
 
 
 
-    def getS(self,Te,Ti,Tm,Ta,erl1,erl2): 
-        return
+
+
+
+
+
+
 
     
     def print_reaction(self):
