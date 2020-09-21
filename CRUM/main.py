@@ -902,12 +902,18 @@ class CRUMPET(CRM,RATE_DATA,TOOLS):
         if n0 is None:
             n0=self.n0()
 
+        
+
+        nt=self.full_nt(Te,ne,t,gl,Ti,ni,E,n0,Sext) # Solve ODE
+        if gl is True: Np,Nq,N=True,False,False # Np only option
+        '''
         # Check what model to use, Greenland or full
         if gl is True: # Greenland
             nt=self.gl_nt(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
             Np,Nq,N=True,False,False # Np only option
         else: # Full model
             nt=self.full_nt(Te,ne,t,Ti,ni,E,n0,Sext) # Solve ODE
+        '''
 
         if color is None: # Define color sequence up to 10 unless specific sequence requested
             color=[ 'b', 'r', 'm', 'c', 'darkgreen', 'gold', 'brown' ,'lime', 'grey', 'orange' ]
