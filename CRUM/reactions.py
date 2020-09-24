@@ -196,11 +196,20 @@ class REACTION:
 
 
  
-    def getS(self,r,Te,Ti,Tm,E):
-        from numpy import array
+    def getS(self,Te,Ti,Tm,E):
+        from numpy import array,sum
 
-        ret=[[column(Te,Ti,Tm,E) for column in row] for row in self.Smat]
-        return array(ret)
+        S=array([[column(Te,Ti,Tm,E) for column in row] for row in self.Smat])
+
+        ret=    array(  [   [S[0]+S[4]],
+                            [-sum(S,axis=0)],
+                            [S[1]+S[5]],
+                            [S[2]+S[6]],
+                            [S[3]+S[7]] ]   )[:,0,:]
+
+
+
+        return ret
 
                
 
@@ -217,24 +226,16 @@ class REACTION:
         return self.Vr-self.Vp-eval(self.K)
     
     def indepSr(self,*args):
-        return self.Vr-self.Vp-self.K 
+        return self.Vr-self.Vp-self.K
 
     def depdecaySr(self,Te=0,Ti=0,Tm=0,E=0):
         return -eval(self.K)
 
     def indepdecaySr(self,*args):
-        return -self.K
+        return self.K
 
     def depSe(self,Te,*args):
         return Te
-
-
-
-
-
-
-
-
 
 
     

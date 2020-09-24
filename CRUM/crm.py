@@ -357,8 +357,144 @@ class CRM(TOOLS):
     """
 
 
-
     def populate(self,mode,Te,ne,Ti=None,ni=None,E=0,rad=True,Sind=None,Tm=False,Ton=True,Iind=0):
+        ''' Function populating a matrix according to the chosen mode 
+            populate(mode,Te,ne,*keys)
+            mode    -   Matrix writing mode
+                            'diagnostic'    -   Creates a 2D list of reactions handles
+                            'R'             -   Creates a matrix of rate coefficients (cm**3/s)
+                            'M'             -   Creates a matrix of rates (s**-1)
+            Te      -   Background plasma electron temperature [eV]
+            ne      -   Background plasma electron density [cm**-3]
+
+            Optional parameters
+            Ti (None)   -   Background plasma ion temperature [eV]. Ti=Te assumed if None
+            ni (None)   -   Background plasma ion density [cm**-3]. ni=ne assumed if None
+            E (0.1)     -   Target particle energy [eV]
+            rad
+
+            Returns
+            matrix,ext_source
+    
+            matrix      -   The matrix with the requested elements
+            ext_source  -   Vector containing the external source contributions
+                            to each species. Note that the external sources always are
+                            returned as volumetric rates (cm**-3 s**-1), which differ from the
+                            rate matrix
+            
+        '''
+        from numpy import zeros,array,sum,transpose
+        
+
+        if mode=='diagnostic':
+            # Setup a 2D diagnostic list for the matrix and a list for the external source
+            ext_source=[[] for x in range(len(self.species))]
+            ret=[[[] for y in range(len(self.species))] for x in range(len(self.species))]
+        elif mode in ['E','I','Sgl']:
+            ret=zeros((len(self.species),len(self.species),2+3*(mode=='Sgl')))
+            ext_source=zeros((len(self.species),2+3*(mode=='Sgl')))
+        else:
+            # Setup a matrix and vector
+            ret=zeros((len(self.species),len(self.species)))
+            ext_source=zeros((len(self.species)))
+ 
+        for i in range(len(self.species)):
+            ''' Walk through each row (species)'''
+
+            for r in self.reactions:
+                ''' Sort the species of each reaction into the appropriate column '''
+
+        
+                ''' Get the energy loss term '''
+
+                Sgl=r.getS(Te,Ti,Tm,E)
+                
+                # TODO: what if three-particle reaction?
+                bg=r.e*ne+r.p*ni # Specify density for reactions
+                if mode=='R':
+                    bgm=r.rate(Te,Ti,E,ne)
+                    bg=r.rate(Te,Ti,E,ne)
+                    ext=0
+                elif mode in ['M']:#,'Sgl']:
+                    bgm=(r.e*ne)*(r.p*ni)*r.rate(Te,Ti,E,ne) # Specify density for external source
+                    bg=max(bg,1)*r.rate(Te,Ti,E,ne)    # Assure that auto-processes are considered
+                    ext=0
+                elif mode=='Sgl':
+                    bgm=(r.e*ne)*(r.p*ni)*r.rate(Te,Ti,E,ne)*Sgl[:,0] # Specify density for external source
+                    bg=max(bg,1)*r.rate(Te,Ti,E,ne)*Sgl[:,0]    # Assure that auto-processes are considered
+                    ext=Sgl[:,1]
+                elif mode=='I':
+                    bgm=(r.e*ne)*(r.p*ni)*r.rate(Te,Ti,E,ne)*Sgl[-2:,0] # Specify density for external source
+                    bg=max(bg,1)*r.rate(Te,Ti,E,ne)*(abs(Sgl[-2:,0])>0)    # Assure that auto-processes are considered
+                    ext=0
+                elif mode=='E':
+                    bgm=Sgl[-2:,0] # Specify density for external source
+                    bg=Sgl[-2:,0]    # Assure that auto-processes are considered
+                    ext=0
+
+
+                j=None # Set flag to identify external sources
+
+                # Loop through each reaction defined in the CRM
+                for rea in range(len(r.reactants)):
+                    # Find the column into which the fragments goes: if background mark external
+                    try:
+                        j=self.slist.index(r.reactants[rea])  # Get the product species index of the correct column
+                    except:
+                        continue
+            
+                    if self.slist[i]==r.reactants[rea]:   # If the species (row index) is a reactant, r is a depletion process 
+                        ''' DEPLETION '''
+
+                        if mode=='diagnostic':
+                            ''' Diagnostic matrix '''
+                            ret[i][i].append('-'+str(r.r_mult[rea])+'*'+r.database+'_'+r.name+bg)   # Print the rate to the correct element
+
+                        elif mode in ['R','M']:
+                            ''' Rate coefficient matrix '''
+                            ret[i,i]-=r.r_mult[rea]*bg # Calculate the Rate coefficient and store appropriately
+
+
+                for frag in range(len(r.fragments)):    # Loop through the reaction fragments
+                    ''' SOURCE '''
+
+                    # Do nothing if background fragment
+                 #   if r.fragments[frag] not in self.slist: 
+                 #       continue
+                    
+                    # If fragment enters row, add in appropriate column as defined by reactant
+                    if (r.fragments[frag] in self.slist) and (self.slist.index(r.fragments[frag])==i):
+                            multiplier=r.f_mult[frag]**(mode not in ['Sgl','I','E'])   # Fragment multiplier
+                            if j is None: # External flag triggered, store to external source
+                                ''' EXTERNAL SOURCE '''
+
+                                if mode=='diagnostic':
+                                    ''' Diagnostic matrix '''
+                                    ext_source[i].append('+'+str(multiplier)+'*'+r.database+'_'+r.name+bg)
+                                else:
+                                    try:
+                                        ext_source[i]+=multiplier*bgm+ext
+                                    except:
+                                        ext_source[i,:]+=multiplier*bgm+ext
+                                  
+                            else: # No trigger of external source, store to appropriate location in matrix
+                                ''' INTERNAL SOURCE '''
+
+                                if mode=='diagnostic':
+                                    ''' Diagnostic matrix '''
+                                    ret[i][j].append('+'+str(multiplier)+'*'+r.database+'_'+r.name+bg)
+                                else:
+                                    try:
+                                        ret[i,j]+=multiplier*bg+ext
+                                    except:
+                                        ret[i,j,:]+=multiplier*bg+ext
+
+                                    
+        return ret,ext_source
+
+
+
+    def populate_old(self,mode,Te,ne,Ti=None,ni=None,E=0,rad=True,Sind=None,Tm=False,Ton=True,Iind=0):
         ''' Function populating a matrix according to the chosen mode 
             populate(mode,Te,ne,*keys)
             mode    -   Matrix writing mode
@@ -417,22 +553,9 @@ class CRM(TOOLS):
                 ''' Get the energy loss term '''
                 # Create array: first index Sel,SeV,Seg,Spe,SpV,Spg, second index S,ext
 
-                if mode=='Sgl':
-                    S=r.getS(r,Te,Ti,Tm,E)#,ne,rad,Ton)
-
-
-                    Sgl=    array(  [   [S[0]+S[4]],
-                                        [-sum(S,axis=0)],
-                                        [S[1]+S[5]],
-                                        [S[2]+S[6]],
-                                        [S[3]+S[7]] ]   )[:,0,:]
-            
-                elif mode in ['I','E']:
-                    Iv=r.getS(r,Te,Ti,Tm,E)#,ne,rad,Ton)
-                    I=      array( [    [Iv[2]+Iv[6]],
-                                        [Iv[3]+Iv[7]] ]   )[:,0,:]
- 
-
+                Sgl=r.getS(Te,Ti,Tm,E)
+                if mode in ['I','E']:
+                    Sgl=Sgl[-2:]
                 
                 # TODO: what if three-particle reaction?
                 bg=r.e*ne+r.p*ni # Specify density for reactions
@@ -497,11 +620,11 @@ class CRM(TOOLS):
             
                                 elif mode=='I':
                                     ''' Intensity matrix '''
-                                    ext_source[i,:]+=r.rate(Te,Ti,E,ne)*bgm*I[:,0]
+                                    ext_source[i,:]+=r.rate(Te,Ti,E,ne)*bgm*Sgl[:,0]
 
                                 elif mode=='E':
                                     ''' Intensity matrix '''
-                                    ext_source[i,:]+=I[:,0]
+                                    ext_source[i,:]+=Sgl[:,0]
 
 
                             else: # No trigger of external source, store to appropriate location in matrix
@@ -525,12 +648,11 @@ class CRM(TOOLS):
 
                                 elif mode=='I':
                                     ''' Correlation matrix '''    
-                                    ret[i,j,:]+=r.rate(Te,Ti,E,ne)*bg*(abs(I[:,0])>0)
-                                    #ret[i,j]=1
+                                    ret[i,j,:]+=r.rate(Te,Ti,E,ne)*bg*(abs(Sgl[:,0])>0)
 
                                 elif mode=='E':
                                     ''' Correlation matrix '''    
-                                    ret[i,j,:]+=I[:,0]
+                                    ret[i,j,:]+=Sgl[:,0]
                                     
         return ret,ext_source
 
