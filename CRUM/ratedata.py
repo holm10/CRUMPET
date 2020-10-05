@@ -5,7 +5,7 @@
 
 
 
-class RATE_DATA:
+class RateData:
     def __init__(self,amjuel='amjuel.tex',hydhel='hydhel.tex',h2vibr='h2vibr.tex',ADAS='ich0-1.dat',UE='ehr1.dat',path='.'):
         ''' Sets up an atomic and molecular reaction rate database
             __init__(*keys)

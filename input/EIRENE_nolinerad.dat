@@ -121,10 +121,6 @@ H2VIBR  rates/h2vibr.tex
 UE      rates/ehr2.dat
 ADAS    rates/ich0-1.dat
 
-** ENERGIES
-# Define the file with energies and handles to be used in energy calculation
-rates/energy_keys.dat
-
 
 ** SETTINGS
 # Define the most central parameters to the simulations

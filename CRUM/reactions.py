@@ -4,7 +4,7 @@
 # 200205 - Separated from CRUM.py #holm10
 # 200210 - Updated ADAS extrapolation, tidied up code #holm10
  
-class REACTION:
+class Reaction:
 
 
     def __init__(self, name, database, coeffs,typ,S,bg,species,Tarr=0):
@@ -198,8 +198,10 @@ class REACTION:
  
     def getS(self,Te,Ti,Tm,E):
         from numpy import array,sum
+        if Tm == 0:
+            Tm=E
 
-        S=array([[column(Te,Ti,Tm,E) for column in row] for row in self.Smat])
+        S=array([[column(Te,Ti,Tm) for column in row] for row in self.Smat])
 
         ret=    array(  [   [S[0]+S[4]],
                             [-sum(S,axis=0)],
@@ -222,13 +224,13 @@ class REACTION:
     def fSg(self,*args):
         return self.Vr-self.Vp
 
-    def depSr(self,Te=0,Ti=0,Tm=0,E=0):
+    def depSr(self,Te=0,Ti=0,Tm=0):
         return self.Vr-self.Vp-eval(self.K)
     
     def indepSr(self,*args):
         return self.Vr-self.Vp-self.K
 
-    def depdecaySr(self,Te=0,Ti=0,Tm=0,E=0):
+    def depdecaySr(self,Te=0,Ti=0,Tm=0):
         return -eval(self.K)
 
     def indepdecaySr(self,*args):
@@ -245,14 +247,14 @@ class REACTION:
         '''
         ret='{}_{}: '.format(self.database,self.name) # Append reaction ID
         for i in range(len(self.reactants)):    # Loop through all reactants
-            ret+=(  self.r_mult[i]!=1)*'{}*'.format(self.r_mult[i])+'''{} 
-                '''.format(self.reactants[i])+(i+1!=len(self.reactants))*'+ '
-
-        ret+='=> ' # Add reactants to string
-        
+            ret+=(  self.r_mult[i]!=1)*'{}*'.format(self.r_mult[i])\
+                    +'{}'.format(self.reactants[i])\
+                    +(i+1!=len(self.reactants))*'+ '
+        ret+=' => ' # Add reactants to string
         for i in range(len(self.fragments)):    # Loop through all fragmetns
-            ret+=(  self.f_mult[i]!=1)*'{}*'.format(self.f_mult[i])+'''{} 
-                '''.format(self.fragments[i])+(i+1!=len(self.fragments))*'+ ' 
+            ret+=(  self.f_mult[i]!=1)*'{}*'.format(self.f_mult[i])\
+                    +'{}'.format(self.fragments[i])\
+                    +(i+1!=len(self.fragments))*'+ ' 
             # Add fragments to string
         
         return ret 
@@ -340,8 +342,8 @@ class REACTION:
                 ret+=self.coeffs[i]*(log(Tuse)**i)
                 
         else:
-            print('''Unknown fit: {}, {}, {}
-                    '''.format(self.database,self.name,self.type))
+            print('Unknown fit: {}, {}, {}'.format(
+                            self.database,self.name,self.type))
 
         return coeff*exp(ret)
 

@@ -2,28 +2,100 @@
 # Separated from CRUM.py by holm10
 # Changelog
 # 200205 - Separated from CRUM.py #holm10
-from CRUM.tools import TOOLS
+from CRUM.tools import Tools
 
 
-class CRM(TOOLS):
+class Crm(Tools):
+    ''' Class containing the CRM setup and central routines
+
+    This class stores all information of the CRM setup, as defined in 
+    the input file. The class contains all the central routines for
+    solving the system of ODEs or creating a Greenland CRM. Inherits
+    the methods contained in the Tools class.
+
+    ...
+
+    Attributes
+    ----------
+    species : dict
+        Each entry is a dictionary containing information on the 
+        initial density and potential level of the CRM  species. The 
+        dictionary keys are used to identify the species
+    reactions : list of Reaction objects
+        A list that contains all the reactions specified in the input,
+        each reaction having its own Reaction Class 
+    bg : dict
+        As for 'species', but for the plasma background
+    NP : int (default 2)
+        Number of P-species (time-dependently evaluated species) to be
+        considered in the sumulation. First NP species defined in the
+        input deck is considered.
+    vmax : int
+        Number of maxium vibrational states inculded in the CRM
+    nmax : int
+        Number of maximum atomic electronic states included in the CRM
+    verbose : bool
+        Switch whether to show verbose output in the terminal. The 
+        same information os written to the log
+    path :  str (default '.')
+        Path to the parent folder relative to which subsequent paths
+        are defined   species:
+
+    Mehods
+    ------
+    
 
 
-    def __init__(self,species,bg,reactionlist,verbose,NP,path='.',
-                                            vmax=14,nmax=8,rdata=None):
-        ''' Creates a CRM class, at the heart of CRUM
-            __init__(species,reactions,settings)
+    '''
 
-            species     -   List of strings with each species handle/identifier
-            reactions   -   List of reaction objects to be included in the CRM
-            settings    -   List of paramters controlling CRM behaviour
-                            settings[0] - Verbose, switch to show more output
-                            settings[1] - Np, number of P-space species taken as the first 
-                                          members of species
-                            settings[2] - List of same length as species defining the 
-                                          initial state of the CRM species
-
-            Optional parameters
-            path ('.')  -   Path to CRUm run directory
+    def __init__(
+            self, species, bg, reactionlist ,verbose, NP, path='.', vmax=14,
+            nmax=8, rdata=None ):
+        ''' 
+        Parameters
+        ----------
+        species : dict
+            a dictionary of species handles, each containing a dict 
+            defining the species initial density 'n' and the potential
+            of the species 'V'
+        background : dict
+            a dictionary of the background species, each containing a 
+            dict of the species potential 'V'
+        reactionlist : list
+            a list of lists for setting up the CRM reactions. Each 
+            element is a list of the following data
+            handle : string
+                database_reaction as specified in the input
+            reactants : list of strings
+                each element is a handle of the reactants. At least one
+                of the species must be a background species, and only
+                two reactants are currently supported
+            products : list of strings
+                each element is a handle of the products
+            K : string
+                a string of the net kinetic energy transfer for the 
+                background reactants to the products. Presently, all
+                energy is assumed to end up as ion/atom kinetic energy.
+                Supports calculations in the string, e.g. '2*3+4'
+        verbose : boolean
+            switch whether to print the CRM setup to the prompt: the 
+            same info is written to {Crm.path}/logs regardless
+        NP : int
+            the number of P-species to be considered in the model: the 
+            NP first entries in species (e.g. the input file) are taken
+            as the P-species. The remainder are assumed Q-species.
+        path : string, optional (default: '.')
+            a path to which all subsequent paths are relative to. 
+            Relative or an absolute path.
+        vmax : int, optional (default: 14)
+            number of vibrational levels to be considered for 
+            vibrationally dependent processes
+        nmax : int, optional (default: 8)
+            number of electronic levels to be considered for atomic
+            electron transitions
+        rdata : RateData object, optional (default: None)
+            a RateData object that contains the databases and reactions
+            defined in the input file reactions
         '''
         from os import mkdir,getcwd
         from datetime import datetime
@@ -43,10 +115,10 @@ class CRM(TOOLS):
         self.setup_reactions(reactionlist,rdata)
 
         # Define reactions for UEDGE raditation
-        #self.ionizrad=REACTION('IONIZRAD','UE',
+        #self.ionizrad=Reaction('IONIZRAD','UE',
                 #self.get_coeff('UE','IONIZRAD'),'UE',['','',''],bg,species,
                 #['','',None,None,[0,0,0,0]])
-        #self.recrad=REACTION('RECRAD','UE',self.get_coeff('UE','RECRAD'),
+        #self.recrad=Reaction('RECRAD','UE',self.get_coeff('UE','RECRAD'),
                 #'UE',['','',''],bg,species,['','',None,None,[0,0,0,0]])
 
 
@@ -83,7 +155,8 @@ class CRM(TOOLS):
 # %%%%%%%%%%%%%% INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
 
     def setup_ADAS(self,x,ID,rdata,rlist,plist,K):
-        from CRUM.reactions import REACTION
+        ''' Adds an ADAS reactions up to self.nmax'''
+        from CRUM.reactions import Reaction
         if ID=='EXCITATION': # Electron impact excitation
             rn=range(x+1,self.nmax+1)   # Excitation only possible between
                                         # current state and nmax
@@ -102,23 +175,22 @@ class CRM(TOOLS):
             try:
                 _name='{}_{}-{}'.format(ID,x,y)
                 _ratecoeff=rdata['ADAS']['{}-{}'.format(x,y)] #Get coefficients
-                self.reactions.append(REACTION(_name,'ADAS',_ratecoeff,fit,
+                self.reactions.append(Reaction(_name,'ADAS',_ratecoeff,fit,
                                             [rlist,plist,K],bg,species,Tarr))
-
-                
             except:
                 pass
 
 
     def setup_APID(self,x,ID,rlist,plist,K):
-        from CRUM.reactions import REACTION
-
-        self.reactions.append(REACTION(self.XY2num(ID,x),'APID',
+        ''' Adds an APID-style ionization reaction '''
+        from CRUM.reactions import Reaction
+        self.reactions.append(Reaction(self.XY2num(ID,x),'APID',
                         x,'APID',[rlist,plist,K],self.bg,self.species))
 
+
     def setup_Johnson(self,i,ID,r):
-        ''' Johnson's approximation of Einstein coefficients '''
-        from CRUM.reactions import REACTION
+        ''' Adds a Johnson-style relaxation reaction from state n=i'''
+        from CRUM.reactions import Reaction
         from numpy import pi
 
         def g(i,f):
@@ -147,19 +219,47 @@ class CRM(TOOLS):
 
 
             _rlist=[rlist,plist,r[-1]]
-            self.reactions.append(REACTION(self.XY2num(ID,i,f),'JOHNSON',Afac,
+            self.reactions.append(Reaction(self.XY2num(ID,i,f),'JOHNSON',Afac,
                                     'COEFFICIENT',_rlist,self.bg,self.species))
 
 
-
-
-
-
     def setup_reactions(self,reactionlist,rdata):
-        from CRUM.reactions import REACTION
+        ''' Adds the reactions to the CRM
+
+        Called by __init__, adds the reactions from reactionlist to
+        self.reactions using the rates in rdata
+
+        Parameters
+        ----------
+        reactionlist : list 
+            a list of lists for setting up the CRM reactions. Each 
+            element is a list of the following data
+            handle : string
+                database_reaction as specified in the input
+            reactants : list of strings
+                each element is a handle of the reactants. At least one
+                of the species must be a background species, and only
+                two reactants are currently supported
+            products : list of strings
+                each element is a handle of the products
+            K : string
+                a string of the net kinetic energy transfer for the 
+                background reactants to the products. Presently, all
+                energy is assumed to end up as ion/atom kinetic energy.
+                Supports calculations in the string, e.g. '2*3+4'
+        rdata : RateData object, optional (default: None)
+            a RateData object that contains the databases and reactions
+            defined in the input file reactions
+
+        Returns
+        -------
+        None
+        '''
+        # TODO: Change list to dictionary for improved lookup!
+        from CRUM.reactions import Reaction
         from numpy import zeros,pi
         
-        ''' LOOP OVER ALL THE DEFINED REACTIONS '''
+        ''' LOOP OVER ALL THE DEFINED ReactionS '''
         for r in reactionlist:
             # Split the definitions into names and databases
             database=r[0].split('_')[0].upper()
@@ -217,7 +317,7 @@ class CRM(TOOLS):
                                 _rtype='RATE'
                                 _rlist=[rlist,plist,r[-1]]
 
-                                self.reactions.append(REACTION(
+                                self.reactions.append(Reaction(
                                             _name,_database,_ratecoeff,_rtype,
                                             _rlist,self.bg,self.species)      )
                         
@@ -227,27 +327,37 @@ class CRM(TOOLS):
 
                 #%%% EIRENE/UEDGE-DEGAS rates %%%
                 elif database in ['HYDHEL','AMJUEL','H2VIBR','UE']:
-                    self.reactions.append(REACTION(ID,database,
+                    self.reactions.append(Reaction(ID,database,
                                 rdata[database][ID],
                                 'RATE'*(database!='UE')+'UE'*(database=='UE'),
                                 [r[1],r[2],r[-1]],self.bg,self.species))
 
                 #%%% Fell through loop %%%
                 else:
-                    print('''Database "{}" not recognized! 
-                                Aborting.'''.format(database))
+                    print(  'Database "{}" not recognized!\n'
+                            'Aborting.'.format(database))
                     return
 
 
-
-
-
-
-
     def setup_custom(self,fname,database):
-        from CRUM.reactions import REACTION
-        from numpy import zeros,pi
+        ''' Adds the custom reactions defined in the input to the CRM
         
+        Parses any custom input rate file defined in the input file
+        and adds their Reaction objects to the CRM.
+    
+        Parameters
+        ----------
+        fname : string
+            path to the custom rate setup file relative to Crm.path
+        database : string
+            database handle for the rates in the custom rate file
+        
+        Returns
+        -------
+        None
+        '''
+        from CRUM.reactions import Reaction
+        from numpy import zeros,pi
         # Parse the custom rate file into a list and retain subcards
         data,_,subcards=self.file2list(self.path,fname)
         _database=data[0].strip() # Database is defined at fist line
@@ -307,21 +417,8 @@ class CRM(TOOLS):
                     plist=fragments.strip().split(' + ') # Fragments
 
                 # Store reaction
-                self.reactions.append(REACTION(_name,_database,_ratecoeff,
+                self.reactions.append(Reaction(_name,_database,_ratecoeff,
                                     fit,[rlist,plist,K],self.bg,self.species))
-
-
-
-
-
-
-
-
-            
-
-
-
-
 
 # %%%%%%%%%%%%%% ENF OF INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
 
@@ -330,82 +427,64 @@ class CRM(TOOLS):
 
 
 
+    def populate(self, mode, Te, ne, Ti=None, ni=None, E=0.1, Tm=0):
+        ''' Function populating and returning the rate matrix and source
 
+        Parameters
+        ----------
+        mode : string
+            Defines the type of matrix to be written according to
+            'diagnostic' - 2D list of reaction handles
+            'R' - rate coefficient matrix in cm**3 s**-1
+            'M' - rate matrix in s**-1
+            'Sgl' - energy rate matrix in eV s**-1
+            'I' - radiation intensity matrix # TODO: check
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**-3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates
+        Tm : float, optional (default: 0)
+            local molecular temperature for calculating energy losses 
+            associated with molecules. Defaults to E if Tm=0.
+           'E' - radiation power  matrix # TODO: check
 
-
-
-        """
-
-    def full_nt(self,Te,ne,t,Ti=None,ni=None,E=0.1,n=None,Sext=True):
-        ''' Calculates the full CRM density evolution in a 1cm**3 box up to t
-            gl_nt(Te,ne,t)
-            Te  -   electron background temperature in box [eV]
-            ne  -   electron background density in box [cm**-3]
-            t   -   final time of evolution [s]
-
-            Optional parameters
-            Ti (None)   -   ion background temperature in box (=Te if None) [eV]
-            ni (None)   -   ion background density in box (=ne if None) [cm**-1]
-            E (0.1)     -   target particle energy [eV]
-            n (None)    -   initial species distribution (=n0 specified in input if None)
-                            Array of same length as species, order according to 'SPECIES' card
-            Sext (True) -   Include external source (from background plasma reactions into CRM species)
-            
-            Uses the CRM function full_nt
-        '''
-        return self.full_nt(Te,ne,t,Ti,ni,E,n,Sext)
-    """
-
-
-    def populate(self,mode,Te,ne,Ti=None,ni=None,E=0,rad=True,Sind=None,Tm=False,Ton=True,Iind=0):
-        ''' Function populating a matrix according to the chosen mode 
-            populate(mode,Te,ne,*keys)
-            mode    -   Matrix writing mode
-                            'diagnostic'    -   Creates a 2D list of reactions handles
-                            'R'             -   Creates a matrix of rate coefficients (cm**3/s)
-                            'M'             -   Creates a matrix of rates (s**-1)
-            Te      -   Background plasma electron temperature [eV]
-            ne      -   Background plasma electron density [cm**-3]
-
-            Optional parameters
-            Ti (None)   -   Background plasma ion temperature [eV]. Ti=Te assumed if None
-            ni (None)   -   Background plasma ion density [cm**-3]. ni=ne assumed if None
-            E (0.1)     -   Target particle energy [eV]
-            rad
-
-            Returns
-            matrix,ext_source
-    
-            matrix      -   The matrix with the requested elements
-            ext_source  -   Vector containing the external source contributions
-                            to each species. Note that the external sources always are
-                            returned as volumetric rates (cm**-3 s**-1), which differ from the
-                            rate matrix
-            
+        Returns
+        -------
+        mat, ext
+        mat : ndarray
+            Rate matrix containing the rates at the given temperature
+            and density. A 2D list in case mode=diagnostic
+        ext : ndarray
+            Vector of external sinks/sources. List if mode=diagnostic
         '''
         from numpy import zeros,array,sum,transpose
         
+        N=len(self.species)
 
         if mode=='diagnostic':
             # Setup a 2D diagnostic list for the matrix and a list for the external source
-            ext_source=[[] for x in range(len(self.species))]
-            ret=[[[] for y in range(len(self.species))] for x in range(len(self.species))]
+            ext_source=[[] for x in range(N)]
+            ret=[[[] for y in range(N)] for x in range(N)]
         elif mode in ['E','I','Sgl']:
-            ret=zeros((len(self.species),len(self.species),2+3*(mode=='Sgl')))
-            ext_source=zeros((len(self.species),2+3*(mode=='Sgl')))
+            ret=zeros((N,N,2+3*(mode=='Sgl')))
+            ext_source=zeros((N,2+3*(mode=='Sgl')))
         else:
             # Setup a matrix and vector
-            ret=zeros((len(self.species),len(self.species)))
-            ext_source=zeros((len(self.species)))
+            ret=zeros((N,N))
+            ext_source=zeros(N)
  
         for i in range(len(self.species)):
-            ''' Walk through each row (species)'''
+            #%%% Walk through each row (species) %%%
 
             for r in self.reactions:
-                ''' Sort the species of each reaction into the appropriate column '''
-
-        
-                ''' Get the energy loss term '''
+                #%%% Sort the species of each reaction into %%%
+                #%%%  the appropriate column %%%
 
                 Sgl=r.getS(Te,Ti,Tm,E)
                 
@@ -493,182 +572,34 @@ class CRM(TOOLS):
         return ret,ext_source
 
 
-
-    def populate_old(self,mode,Te,ne,Ti=None,ni=None,E=0,rad=True,Sind=None,Tm=False,Ton=True,Iind=0):
-        ''' Function populating a matrix according to the chosen mode 
-            populate(mode,Te,ne,*keys)
-            mode    -   Matrix writing mode
-                            'diagnostic'    -   Creates a 2D list of reactions handles
-                            'R'             -   Creates a matrix of rate coefficients (cm**3/s)
-                            'M'             -   Creates a matrix of rates (s**-1)
-            Te      -   Background plasma electron temperature [eV]
-            ne      -   Background plasma electron density [cm**-3]
-
-            Optional parameters
-            Ti (None)   -   Background plasma ion temperature [eV]. Ti=Te assumed if None
-            ni (None)   -   Background plasma ion density [cm**-3]. ni=ne assumed if None
-            E (0.1)     -   Target particle energy [eV]
-            rad
-
-            Returns
-            matrix,ext_source
-    
-            matrix      -   The matrix with the requested elements
-            ext_source  -   Vector containing the external source contributions
-                            to each species. Note that the external sources always are
-                            returned as volumetric rates (cm**-3 s**-1), which differ from the
-                            rate matrix
-            
-        '''
-        from numpy import zeros,array,sum,transpose
-        
-
-        if mode=='diagnostic':
-            # Setup a 2D diagnostic list for the matrix and a list for the external source
-            ext_source=[]
-            ret=[]
-            for i in range(len(self.species)):
-                ext_source.append([])
-                ret.append([])
-                for j in range(len(self.species)):
-                    ret[i].append([])
-        elif mode=='Sgl':
-            ret=zeros((len(self.species),len(self.species),5))
-            ext_source=zeros((len(self.species),5))
-        elif mode in ['E','I']:
-            ret=zeros((len(self.species),len(self.species),2))
-            ext_source=zeros((len(self.species),2))
-        else:
-            # Setup a matrix and vector
-            ret=zeros((len(self.species),len(self.species)))
-            ext_source=zeros((len(self.species)))
- 
-        for i in range(len(self.species)):
-            ''' Walk through each row (species)'''
-
-            for r in self.reactions:
-                ''' Sort the species of each reaction into the appropriate column '''
-
-        
-                ''' Get the energy loss term '''
-                # Create array: first index Sel,SeV,Seg,Spe,SpV,Spg, second index S,ext
-
-                Sgl=r.getS(Te,Ti,Tm,E)
-                if mode in ['I','E']:
-                    Sgl=Sgl[-2:]
-                
-                # TODO: what if three-particle reaction?
-                bg=r.e*ne+r.p*ni # Specify density for reactions
-                if mode!='diagnostic':
-                    bgm=(r.e*ne)*(r.p*ni) # Specify density for external source
-                    bg=max(bg,1)    # Assure that auto-processes are considered
-                j=None # Set flag to identify external sources
-
-                # Loop through each reaction defined in the CRM
-                for rea in range(len(r.reactants)):
-                    # Find the column into which the fragments goes: if background mark external
-                    try:
-                        j=self.slist.index(r.reactants[rea])  # Get the product species index of the correct column
-                    except:
-                        continue
-            
-                    multiplier=r.r_mult[rea] # Get the reaction multiplier for the density
-
-                    if self.slist[i]==r.reactants[rea]:   # If the species (row index) is a reactant, r is a depletion process 
-                        ''' DEPLETION '''
-
-                        if mode=='diagnostic':
-                            ''' Diagnostic matrix '''
-                            ret[i][i].append('-'+str(multiplier)+'*'+r.database+'_'+r.name+bg)   # Print the rate to the correct element
-
-                        elif mode=='R':
-                            ''' Rate coefficient matrix '''
-                            ret[i,i]-=multiplier*r.rate(Te,Ti,E,ne) # Calculate the Rate coefficient and store appropriately
-
-                        elif mode=='M':
-                            ''' Rate matrix '''
-                            ret[i,i]-=multiplier*r.rate(Te,Ti,E,ne)*bg # Calculate the rate and store appropriately
-
-                for frag in range(len(r.fragments)):    # Loop through the reaction fragments
-                    ''' SOURCE '''
-                    multiplier=r.f_mult[frag]   # Fragment multiplier
-
-                    # Do nothing if background fragment
-                    if r.fragments[frag] not in self.slist: 
-                        continue
-                    
-                    # If fragment enters row, add in appropriate column as defined by reactant
-                    elif self.slist.index(r.fragments[frag])==i:
-                            if j is None: # External flag triggered, store to external source
-                                ''' EXTERNAL SOURCE '''
-
-                                if mode=='diagnostic':
-                                    ''' Diagnostic matrix '''
-                                    ext_source[i].append('+'+str(multiplier)+'*'+r.database+'_'+r.name+bg)
-
-                                elif mode=='R':
-                                    ''' Rate coefficient matrix '''
-                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E,ne)
-
-                                elif mode=='M':
-                                    ''' Rate matrix '''
-                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E,ne)*bgm
-
-                                elif mode=='Sgl':
-                                    ''' Energy source matrix in Greenland form '''
-                                    ext_source[i,:]+=r.rate(Te,Ti,E,ne)*bgm*Sgl[:,0]+Sgl[:,1]
-            
-                                elif mode=='I':
-                                    ''' Intensity matrix '''
-                                    ext_source[i,:]+=r.rate(Te,Ti,E,ne)*bgm*Sgl[:,0]
-
-                                elif mode=='E':
-                                    ''' Intensity matrix '''
-                                    ext_source[i,:]+=Sgl[:,0]
-
-
-                            else: # No trigger of external source, store to appropriate location in matrix
-                                ''' INTERNAL SOURCE '''
-
-                                if mode=='diagnostic':
-                                    ''' Diagnostic matrix '''
-                                    ret[i][j].append('+'+str(multiplier)+'*'+r.database+'_'+r.name+bg)
-                            
-                                elif mode=='R':
-                                    ''' Rate coefficient matrix '''
-                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E,ne)
-
-                                elif mode=='M':
-                                    ''' Rate matrix '''
-                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E,ne)*bg
-
-                                elif mode=='Sgl': 
-                                    ''' Energy source matrix in Greenland form '''
-                                    ret[i,j,:]+=r.rate(Te,Ti,E,ne)*bg*Sgl[:,0]+Sgl[:,1]
-
-                                elif mode=='I':
-                                    ''' Correlation matrix '''    
-                                    ret[i,j,:]+=r.rate(Te,Ti,E,ne)*bg*(abs(Sgl[:,0])>0)
-
-                                elif mode=='E':
-                                    ''' Correlation matrix '''    
-                                    ret[i,j,:]+=Sgl[:,0]
-                                    
-        return ret,ext_source
-
         
     def write_matrix(self,mat,ext,char,te,ne,ti,ni,E,form='{:1.1E}'):
-        ''' Writes the matrix mat to a file and outputs to stdout, if requested
-            write_matrix(mat,ext,char,te,ne,ti,ni,E)
-            
-            mat     -   NxN matrix to be written
-            ext     -   External source, N vector
-            char    -   Character to be identify the matrix in the file name
-            te      -   Electron temperature for header [ev]
-            ne      -   Electron density for header [cm**-3]
-            ti      -   Ion temperature for header [ev]
-            ni      -   Ion density for header [cm**-3]
+        ''' Writes the matrix to the logs
+        
+        Parameters
+        ----------
+        mat : ndarray or 2D list
+            square matrix or list with data to be written
+        ext : ndarray or list
+            1D vector with external data to be written
+        char : string
+            Identifier for file to be written
+        te : float
+            Electron temperature for header
+        ne : float
+            Electron density for header
+        ti : float
+            ion temperature for header
+        ni : float
+            ion density for header
+        E : float
+            molecule energy for header
+        form : string, optional (default: ':1.1E')
+            formatting for numerical output
 
+        Returns
+        -------
+        None
         '''
         from os import getcwd
         from datetime import datetime
@@ -679,22 +610,24 @@ class CRM(TOOLS):
         with open('{}/logs/{}_matrix.log'.format(self.path,char),'w') as f:  
             
             if char=='R': # Rate coefficient  matrix is being written
-                f.write('''Diagnostic rate coefficient (density-independend) 
-                            matrix for CRUM run in {} on {}\n
-                            '''.format(getcwd(),str(datetime.now())[:-7]))
+                f.write('Diagnostic rate coefficient (density-independend) '
+                        'matrix for CRUM run in {} on {}\n'.format(
+                                        getcwd(),str(datetime.now())[:-7]))
                 f.write('Te={} eV, Ti={} eV, E={} eV\n'.format(te,ti,E))
+
             elif char=='M': # Rate matrix is being written
-                f.write('''Diagnostic rate (density-dependend) matrix for CRUM 
-                            run in {} on {}\n'''.format(getcwd(),
-                            str(datetime.now())[:-7]))
-                f.write('''Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 
-                            1/cm**3, E={} eV\n'''.format(te,ti,ne,ni,E))
+                f.write('Diagnostic rate (density-dependend) matrix for CRUM '
+                        'run in {} on {}\n'.format(
+                                            getcwd(),str(datetime.now())[:-7]))
+                f.write('Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} '
+                        '1/cm**3, E={} eV\n'.format(te,ti,ne,ni,E))
+
             elif char=='S': # Rate matrix is being written
-                f.write('''Diagnostic energy loss (density-dependend) matrix 
-                            for CRUM run in {} on {}\n'''.format(getcwd(),
-                            str(datetime.now())[:-7]))
-                f.write('''Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 1/cm**3, 
-                            E={} eV\n'''.format(te,ti,ne,ni,E))
+                f.write('Diagnostic energy loss (density-dependend) matrix '
+                        'for CRUM run in {} on {}\n'.format(
+                                            getcwd(),str(datetime.now())[:-7]))
+                f.write('Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 1/cm**3, '
+                        'E={} eV\n'.format(te,ti,ne,ni,E))
             
             # Create header line
             out='{}-MAT|'.format(char.upper()).rjust(10) 
@@ -728,7 +661,7 @@ class CRM(TOOLS):
 
 
     def DIAGNOSTIC(self):
-        ''' Returns a diagnostic matrix containing lists of reactions accounted for in each element '''
+        ''' Writes a log of the diagnostic reaction matrix '''
         from os import getcwd
         from datetime import datetime
  
@@ -738,24 +671,27 @@ class CRM(TOOLS):
         # Write the diagnostic matrix to the logs
         with open('{}/logs/reaction_matrix.log'.format(self.path),'w') as f:
             # Write the header line
-            f.write('''Diagnostic reaction matrix for CRUM run in {} 
-                        on {}\n'''.format(getcwd(),str(datetime.now())[:-7]))
+            f.write(
+                'Diagnostic reaction matrix for CRUM run in {} on {}\n'.format(
+                                            getcwd(),str(datetime.now())[:-7]))
             # Loop through each species
             for i in range(len(dia)):
                 # Write the species header
                 f.write('\n\n\n======== {} ========\n'.format(self.slist[i]))
                 # Start with the sinks
-                f.write('''{} DEPLETION:\n                 {}\n
-                            '''.format(self.slist[i],dia[i][i]))
+                f.write('{} DEPLETION:\n                 {}\n'.format(
+                                                    self.slist[i],dia[i][i]))
                 # Then do the sources
                 for j in range(len(dia[i])):
                     if len(dia[i][j])>0:    # Don't write anything empty
                         if i!=j:    # Don't duplicate depletion
-                            f.write('''From {}:\n                 {}\n
-                                        '''.format(self.slist[j],dia[i][j]))
+                            f.write('From {}:\n                 {}\n'.format(
+                                                    self.slist[j],dia[i][j]))
                 if len(ext[i])>0:   # Write external source last, if applicable
-                    f.write('''{} EXTERNAL SOURCE:\n                 {}\n
-                                        '''.format(self.slist[i],ext[i]))
+                    f.write('{} EXTERNAL SOURCE:\n'
+                            '                 {}\n'.format(
+                                                        self.slist[i],ext[i]))
+
         # If verbose, output the log content
         if self.verbose:
             with open('logs/reaction_matrix.log','rt') as f:
@@ -765,22 +701,29 @@ class CRM(TOOLS):
             
 
     def R(self,Te,Ti=None,E=0.1,sparse=False,write=True):
-        ''' Creates the rate coefficient matrix
-            R(Te,*keys)
-        
-            Te              -   Background plasma electron temperature [eV]
+        ''' Returns the rate coefficients in cm**3 s**-1
 
-            Optional parameters
-            Ti (None)       -   Background plasma ion temperature [eV]. Ti=Te if Ti is None
-            E (0.1)         -   Target particle energy [eV]
-            sparse (False)  -   Switch for returning the matrix as a csc matrix
-            write (True)    -   Write the rate coefficient matrix to file
+        Parameters
+        ----------
+        Te : float
+            electron temperature in eV
+        Ti : float, optional (default: None)
+            ion temperature in eV. Defaults to Ti=Te
+        E : float, optional (default: 0.1)
+            molecular energy in eV for rates
+        sparse : boolean, optional (default: False)
+            Switch to use sparse arrays (True) or not (False)
+        write : boolean, optional (default: True)
+            Switch for writing the R-matrix to the logs
 
-            Returns
-            R,ext
-            R   -   Rate coefficient matrix
-            ext -   External source matrix 
-
+        Returns
+        -------
+        mat, ext
+        mat : ndarray
+            Rate matrix containing the rates at the given temperature
+            and density in cm**3 s**-1
+        ext : ndarray
+            Vector of external sinks/sources in cm**3 s**-1
         '''
         from scipy.sparse import csc_matrix
         if Ti is None: Ti=Te # Check for Ti, set if necessary
@@ -802,23 +745,34 @@ class CRM(TOOLS):
 
 
     def M(self,Te,ne,Ti=None,ni=None,E=0.1,sparse=False,write=True):
-        ''' Creates the rate  matrix
-            M(Te,*keys)
+        ''' Returns the rate coefficients in cm**3 s**-1
 
-            Te              -   Background plasma electron temperature [eV]
-
-            Optional parameters
-            Ti (None)       -   Background plasma ion temperature [eV]. Ti=Te if Ti is None
-            E (0.1)         -   Target particle energy [eV]
-            sparse (False)  -   Switch for returning the matrix as a csc matrix
-            write (True)    -   Write the rate coefficient matrix to file
-
-            Returns
-            M,ext
-            M   -   Rate matrix
-            ext -   External source matrix 
-
-            '''
+        Parameters
+        ----------
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Defaults to Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Defaults to ni=ne
+        E : float, optional (default: 0.1)
+            molecular energy in eV for rates
+        sparse : boolean, optional (default: False)
+            Switch to use sparse arrays (True) or not (False)
+        write : boolean, optional (default: True)
+            Switch for writing the R-matrix to the logs
+            
+        Returns
+        -------
+        mat, ext
+        mat : ndarray
+            Rate matrix containing the rates at the given temperature
+            and density in cm**3 s**-1
+        ext : ndarray
+            Vector of external sinks/sources in s**-1
+        '''
         from scipy.sparse import csc_matrix
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
@@ -836,14 +790,42 @@ class CRM(TOOLS):
     
         return M,ext
  
-    def Sgl(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,Tm=False,
-                        write=False,Ton=True):
+
+    def Sgl(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, write=False):
+        ''' Returns the energy rates in eV s**-1
+
+        Parameters
+        ----------
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Defaults to Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Defaults to ni=ne
+        E : float, optional (default: 0.1)
+            molecular energy in eV for rates
+        sparse : boolean, optional (default: False)
+            Switch to use sparse arrays (True) or not (False)
+        write : boolean, optional (default: True)
+            Switch for writing the R-matrix to the logs
+            
+        Returns
+        -------
+        mat, ext
+        mat : ndarray
+            Rate matrix containing the energy rates at the given 
+            temperature and density in eV s**-1
+        ext : ndarray
+            Vector of external energy sinks/sources in eV
+        '''
         from numpy import matmul,block
         from numpy.linalg import inv
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
 
-        mat,ext=self.populate('Sgl',Te,ne,Ti,ni,E,Tm=Tm,rad=rad,Ton=Ton)    
+        mat,ext=self.populate('Sgl',Te,ne,Ti,ni,E,Tm=Tm)    
 
 
         if write:
@@ -883,34 +865,46 @@ class CRM(TOOLS):
             
         return ret
 
-    def S(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,
-                                Tm=False,write=False,Ton=True):
+
+    def I(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, write=False):
+        ''' Returns the photon intensity in s**-1
+
+        Parameters
+        ----------
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Defaults to Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Defaults to ni=ne
+        E : float, optional (default: 0.1)
+            molecular energy in eV for rates
+        sparse : boolean, optional (default: False)
+            Switch to use sparse arrays (True) or not (False)
+        write : boolean, optional (default: True)
+            Switch for writing the R-matrix to the logs
+            
+        Returns
+        -------
+        # TODO: remove external sources? No menaing
+        [ [mata, exta], [matm, extm]]
+        mata : ndarray
+            Intensity of atomic lines between the row- and column
+            species
+        exta : ndarray
+            Intensity of atomic lines from external source
+        matm : ndarray
+            Intensity of molecular lines between the row- and column
+            species
+        extm : ndarray
+            Intensity of molecular lines from external source
+        '''
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
 
-        mat,ext=self.populate('Sgl',Te,ne,Ti,ni,E,Tm=Tm,rad=rad,Ton=Ton)    
-
-
-        if write:
-            title=['Sgl_el','Sgl_ia','Sgl_v','Sgl_ga','Sgl_gm']
-            for i in range(5):
-                self.write_matrix(mat[:,:,i],ext[:,i],title[i],
-                                    Te,ne,Ti,ni,E,form='{:1.2E}')
-
-        return  [   [mat[:,:,0], ext[:,0]],
-                    [mat[:,:,1], ext[:,1]],
-                    [mat[:,:,2], ext[:,2]],
-                    [mat[:,:,3], ext[:,3]],
-                    [mat[:,:,4], ext[:,4]], ]
-
-
-    def I(self,Te,ne,Ti=None,ni=None,E=0.1,
-                                rad=True,Tm=False,write=False,Ton=True):
-        ''' Creates a radiaiton intensity matrix '''
-        if Ti is None: Ti=Te # Check for Ti, set if necessary
-        if ni is None: ni=ne # Check for ni, set if necessary
-
-        mat,ext=self.populate('I',Te,ne,Ti,ni,E,Tm=Tm,rad=rad,Ton=Ton)    
+        mat,ext=self.populate('I',Te,ne,Ti,ni,E,Tm=Tm)    
         if write:
             title=['Ia','Im']
             for i in range(5):
@@ -922,13 +916,46 @@ class CRM(TOOLS):
                     [mat[:,:,1], ext[:,1]] ]
 
 
-    def E(self,Te,ne,Ti=None,ni=None,E=0.1,rad=True,
-                                Tm=False,write=False,Ton=True):
-        ''' Creates a radiaiton intensity matrix '''
+    def E(self,Te,ne,Ti=None,ni=None,E=0.1,
+                                Tm=0,write=False):
+        ''' Returns the photon power in eV s**-1
+
+        Parameters
+        ----------
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Defaults to Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Defaults to ni=ne
+        E : float, optional (default: 0.1)
+            molecular energy in eV for rates
+        sparse : boolean, optional (default: False)
+            Switch to use sparse arrays (True) or not (False)
+        write : boolean, optional (default: True)
+            Switch for writing the R-matrix to the logs
+            
+        Returns
+        -------
+        # TODO: remove external sources? No menaing
+        [ [mata, exta], [matm, extm]]
+        mata : ndarray
+            Power of atomic lines between the row- and column
+            species
+        exta : ndarray
+            Power of atomic lines from external source
+        matm : ndarray
+            Power of molecular lines between the row- and column
+            species
+        extm : ndarray
+            Power of molecular lines from external source
+        '''
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
 
-        mat,ext=self.populate('E',Te,ne,Ti,ni,E,Tm=Tm,rad=rad,Ton=Ton)    
+        mat,ext=self.populate('E',Te,ne,Ti,ni,E,Tm=Tm)    
 
 
         if write:
@@ -941,185 +968,198 @@ class CRM(TOOLS):
         return  [   [mat[:,:,0], ext[:,0]],
                     [mat[:,:,1], ext[:,1]] ]
 
+ 
+    def ddt(self, t, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, Sext=True, gl=True,
+            n=None, Qres=True, densonly=False, write=False):
+        ''' Solves the time-evolution of the CRM system at given T and n
 
-
-    def full_nt(self,Te,ne,t,gl,Ti=None,ni=None,E=0.1,n=None,Sext=True):
-        ''' Solves the full NxN problem 
-            full_nt(Te,ne,t,*keys)
-            
-            Te      -   Background plasma electron temperature [eV]
-            ne      -   Background plasma electron density [cm**-3]
-
-            Optional parameters
-            Ti (None)   -   Background plasma ion temperature [eV]. Ti=Te assumed if None
-            ni (None)   -   Background plasma ion density [cm**-3]. ni=ne assumed if None
-            E (0.1)     -   Target particle energy [eV]
-            Sext (True) -   Include external source (from background plasma reactions into CRM species)
-            n (None)    -   Initial distribution of particeles, taken as n0 specified in input if None
-
-            Returns
-            ivp_solve bunch object containing the time-dependent ODE system solution
-        '''
-        from scipy.integrate import solve_ivp 
-
-        # Use input n0 as default unless explict n0 requested
-        if n is None: n=self.n0() 
-
-        if gl is True:
-            # Set up Greenland model 
-            mat,ext,nP0p=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),Sext,n)
-            n=nP0p
-        else:
-            mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
-
-        ext=(Sext is True)*ext  # Set source strength
-        # Solve and return
-        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),
-                                            (0,t),n,method='LSODA')
-
-
-
-
-
+        Paramters
+        ---------
+        t : float
+            end-time of simulation in s
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**-3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates
+        Sext : boolean, optional (default: True)
+            switch for considering 'external' sinks/sources (e.g. 
+            re-association)
+        Tm : float, optional (default: 0)
+            local molecular temperature for calculating energy losses 
+            associated with molecules. Defaults to E if Tm=0.
+        gl : boolean, optional (default: False)
+            switch determining wheter to evaluate the Np x Np 
+            Greenland CRM (True) or solve the full NxN system of 
+            ODEs (False)
+        n0 : list of floats, optional (default: None)
+            Initial density distribution of the species defined in the 
+            input. List must be of the same length as the species list,
+            and the order is determined by the input file. Defaults to 
+            the initial densities defined in the input if n0 is None.
+        Qres : boolean, optional (default: True)
+            Switch determining whether to resolve the Q-species energy
+            transfer or return the net energy transfer divided into 
+            processes. 
+        densonly : boolean, optional (default: False)
+            Only returns density rates if True, otherwise evaluates
+            both density and energy rates
         
-    def dEdt(self,t,Te,ne,Ti=None,ni=None,E=0.1,Tm=False,rad=True,
-                Sext=True,write=False,gl=True,n=None,Qres=True,Ton=True):
+        Returns
+        -------
+        scipy.integrate._ivp.ivp.OdeResult object
+            The solution of the IVP ODE problem up to time t. A function 
+            that interpolates the solution in the interval [0,t] is
+            accessed by the method sol().
+            The solution dimensionality along axis=0 is determined by 
+            the CRM setup and along axis=1 by the time-resolution 
+            according to the following:
+                density=True 
+                    Qres=False : Np
+                        Data ordered according to input species list
+                    Qres=True : N (requires gl=False)
+                        Data ordered according to input species list
+
+                density=False
+                    Qres=False
+                        gl=True : 5 + Np
+                            Total Ee, Ei/a, Epot, Erada, Eradm, followed
+                            by Np-resolved density rates
+                        gl=False : 5 + N
+                            Total Ee, Ei/a, Epot, Erada, Eradm, followed
+                            by species-resolved density rates
+                    Qres=True
+                        gl=True : 5*N + Np
+                            Species-resolved Ee, Ei/a, Epot, Erada, 
+                            Eradm, followed by Np-resolved density rates
+                        gl=False : 6*N
+                            Species-resolved Ee, Ei/a, Epot, Erada, 
+                            Eradm, followed by species-resolved density
+                            rates
+        '''
         from numpy import block,zeros,matmul,reshape,sum
         from  numpy.linalg import inv
         from scipy.integrate import solve_ivp
 
-
+        #densonly=False
         # TODO: Combine with full_nt  
         N=len(self.species)
         Np=self.Np
-        Nq=N-Np  
 
-
-        
+        if n is None:
+            n0=self.n0()
+        else:
+            n0=n
 
         M,G=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
 
-        ret=[]
         if gl is True:
-            if n is None:
-                n0=self.n0()
-            else:
-                n0=n
-            # Create block matrix from M
-            MP=M[:self.Np,:self.Np]
-            MQ=M[self.Np:,self.Np:]
-            V=M[self.Np:,:self.Np]
-            H=M[:self.Np,self.Np:]
+            M,G,n0=self.gl_crm(M,G,Sext,n0)
+            sfunc=self.Sgl
 
-            Meff,GPp,nP0p=self.gl_crm(M,G,Sext,n0)
-        
-            U=self.Sgl(Te,ne,Ti,ni,E,rad,Tm,write=write,Ton=Ton)
+        else:
+            sfunc=self.S
 
-
-            if Qres is True:
-
+        if densonly is False:
+                
+            U=sfunc(Te,ne,Ti,ni,E,Tm,write=write)
+            
+            if Qres is True: 
                 mat=block(  [   [zeros((N,5*N)),     U[0][0]],
                                 [zeros((N,5*N)),     U[1][0]],
                                 [zeros((N,5*N)),     U[2][0]],
                                 [zeros((N,5*N)),     U[3][0]],
                                 [zeros((N,5*N)),     U[4][0]],
-                                [zeros((Np,5*N)),     Meff]   ])
-                if n is None:
-                    n=zeros((len(mat),))
-                    n[-Np:]=nP0p
-                ext=block([U[0][1], U[1][1], U[2][1], U[3][1], U[4][1], GPp])
+                                [zeros((Np*gl+N*(not gl),5*N)),     M]   ])
 
-            else:
-
-                mat=block(  [   [zeros((5,)),      sum(U[0][0],axis=0)],
-                                [zeros((5,)),      sum(U[1][0],axis=0)],
-                                [zeros((5,)),      sum(U[2][0],axis=0)],
-                                [zeros((5,)),      sum(U[3][0],axis=0)],
-                                [zeros((5,)),      sum(U[4][0],axis=0)],
-                                [zeros((Np,5)),   Meff]   ])
-
-                if n is None:
-                    n=zeros((len(mat),))
-                    n[-Np:]=nP0p
-                ext=block([ sum(U[0][1],axis=0), sum(U[1][1],axis=0), 
-                            sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
-                            sum(U[4][1],axis=0), GPp                    ])
-                
-
-     
-
-        else:
-             
-            if Qres is True:
-                U=self.S(Te,ne,Ti,ni,E,rad,Tm,write=True,Ton=Ton)
-    
-
-                mat=block(  [   [zeros((N,5*N)),        U[0][0]],
-                                [zeros((N,5*N)),        U[1][0]],
-                                [zeros((N,5*N)),        U[2][0]],
-                                [zeros((N,5*N)),        U[3][0]],
-                                [zeros((N,5*N)),        U[4][0]],
-                                [zeros((N,5*N)),        M]   ])
-                if n is None:
-                    n=zeros((len(mat),))
-                    n[-N:]=self.n0()
+                n=zeros((len(mat),))
+                n[-Np*gl-N*(not gl):]=n0
                 ext=block([U[0][1], U[1][1], U[2][1], U[3][1], U[4][1], G])
 
             else:
-                U=self.S(Te,ne,Ti,ni,E,rad,Tm,write=True,Ton=Ton)
 
-                mat=block(  [   [zeros((5,)),      sum(U[0][0],axis=0)],
-                                [zeros((5,)),      sum(U[1][0],axis=0)],
-                                [zeros((5,)),      sum(U[2][0],axis=0)],
-                                [zeros((5,)),      sum(U[3][0],axis=0)],
-                                [zeros((5,)),      sum(U[4][0],axis=0)],
-                                [zeros((N,5)),    M]   ])
+                    mat=block(  [   [zeros((5,)),      sum(U[0][0],axis=0)],
+                                    [zeros((5,)),      sum(U[1][0],axis=0)],
+                                    [zeros((5,)),      sum(U[2][0],axis=0)],
+                                    [zeros((5,)),      sum(U[3][0],axis=0)],
+                                    [zeros((5,)),      sum(U[4][0],axis=0)],
+                                    [zeros((Np*gl+N*(not gl),5)),   M]   ])
 
-                if n is None:
-                    n=block([   zeros((5,)), self.n0()    ] )
+                    if gl is True:
+                        n=zeros((len(mat),))
+                        n[-Np:]=n0
+                    else:
+                        n=block([   zeros((5,)), n0    ] )
+                        n=n.reshape((N+5,))
 
-                n=n.reshape((N+5,))
+                    ext=block([ sum(U[0][1],axis=0), sum(U[1][1],axis=0), 
+                                sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
+                                sum(U[4][1],axis=0), G                    ])
+                
+        else:
+            mat=M
+            ext=G
+            n=n0
 
-                ext=block([ sum(U[0][1],axis=0), sum(U[1][1],axis=0),
-                            sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
-                            sum(U[4][1],axis=0), G                      ])
-
-        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),(0,t),
+        return solve_ivp(lambda x,y: self.linearized(x,y,mat,ext),(0,t),
                                             n,'LSODA',dense_output=True)
 
         
 
-    #def gl_E(self,mat,ext,Sext=True,n=None,matrices=False):
 
 
-    def gl_crm(self,mat,ext,Sext=True,n=None,matrices=False):
+
+
+    def gl_crm(self,mat,ext,Sext=True,n0=None,matrices=False):
         ''' Returns the P-space matrices according to Greenland 2001
-            gl_crm(ne,*keys)
 
-            Optional parameters
-            Sext (True) -   Include external source (from background plasma reactions into CRM species)
-            n (None)    -   Initial distribution of particeles, taken as n0 specified in input if None
-            matrices (False)    -   Switch determining whether to return the CRM or the matrices
+        Parameters
+        ----------
+        mat : ndarray
+            2D rate matrix
+        ext : ndarray
+            1D external sink/source vector
+        Sext : boolean, optional (default: True)
+            switch for considering 'external' sinks/sources (e.g. 
+            re-association)
+        n0 : list of floats, optional (default: None)
+            Initial density distribution of the species defined in the 
+            input. List must be of the same length as the species list,
+            and the order is determined by the input file. Defaults to 
+            the initial densities defined in the input if n0 is None.
+        eigen : boolean, optional (default: False)
+            switch to return the eigenvector and eigenvalues (True) 
+            rather than the Greenland rate matrices (False)
 
-            Returns (matrices=False)
-            Meff,GPp,nP0p
-            Meff        -   Effective rate matrix, Np x Np
-            GPp         -   The modified external source, accounting for 
-                            reactions turning Q-species into P-species
-            nP0p        -   The modified initial density for the P-space, 
-                            accounting for Q->P space reactions
-
-            Returns (matrices=True)
-            M           -   The full rate matrix
-            T           -   The normalized, right eigenvector matrix
-            D           -   The diagonalized eigenvalue matrix
-
+        # TODO: Eigenvalues into its own function!
+        Returns 
+        -------
+        Meff, GPp, nP0p if eigen is False
+        Meff : ndarray
+            the Greenland Np x Np effective rate matrix for the 
+            P-species
+        GPp : ndarray
+            the Greenland Np effective external sink/source vector for
+            the P-species
+        nP0p : ndarray
+            the Greenland Np effective initial densities for the 
+            P-species
+        eigenvectors, eigenvalues if eigen is True
+        eigenvectors : ndarray
+            The eigenvectors of the supplied rate matrix
+        eigenvalues : ndarray
+            The eigenvalues of the supplied rate matrix
         '''
         from numpy import matmul,diag,real
         from numpy.linalg import inv,eig
 
         # Use input n0 as default unless explict n0 requested
-        if n is None: n=self.n0() 
+        if n0 is None: n0=self.n0() 
         
 
         # Create block matric from M
@@ -1134,8 +1174,8 @@ class CRM(TOOLS):
         # Diagonalize M
         eigs,T=eig(mat)
 
-        if matrices is True:
-            return mat,T,real(eigs)
+        if eigen is True:
+            return T,real(eigs)
         # Order the eigenvalues and vectors in increasing magnitude
         # TODO should this be done for all the eigenvectors or separately   
         # between the Q and P space??
@@ -1163,27 +1203,53 @@ class CRM(TOOLS):
 
         # Calculate P-space CRM
         GPp=real((Sext is True)*ext[:self.Np]-matmul(matmul(Delta,inv(TQ)),ext[self.Np:]))
-        nP0p=real(n[:self.Np]-matmul(matmul(Delta,inv(TQ)),n[self.Np:]))
+        nP0p=real(n0[:self.Np]-matmul(matmul(Delta,inv(TQ)),n0[self.Np:]))
         
-        if matrices is False:
-            return Meff,GPp,nP0p
+        return Meff,GPp,nP0p
 
   
-    def ddt(self,t,n,mat,ext):
-        ''' Returns the time-derivative of the density for the CRM i
-            dndt(t,n,mat,ext)
-        
-            t   -   Time of evaluation [s]
-            n   -   Vector of initial density distribution [cm**-3]
-            mat -   Rate matrix
-            ext -   External source vector
-        '''
+    def linearized(self,t,n,mat,ext):
+        ''' RHS of the linearized system of ODEs ''' 
         from numpy import matmul
 
         return matmul(mat,n)+ext
 
     def evaluate_CRM(self,Te,ne,Ti=None,ni=None,E=0.1,printout=True):
-        ''' Evaluates the current CRM '''
+        ''' **INCOMPLETE** Evaluates the current CRM  according to Greenland 2001
+
+        Evaluates the separation between the minimum lifetimes and CRM
+        parameters of the P-space and that of the Q-space, which need
+        to be sufficiently far apart for the CRM approximation to be 
+        accurate.
+
+        Parameters
+        ----------
+         Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**-3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates
+        printout : boolean, optional (default: True)
+            switch to print results (True) or return the results (False)
+
+        Returns
+        -------
+        None if printout is True
+        maxdelta, maxnorm, tauPmin, tauQmax
+        maxdelta : float
+            maximum norm of the Greenland delta-parameter
+        maxnorm : float
+            maximum of the norm of inv(Q_t)*delta
+        tauPmin : float
+            minimum lifetime of the P-species
+        tauQmax : float
+            maximum lifetome of the Q-species
+        '''
         from numpy import matmul
         from numpy.linalg import inv
         # Get matrices and eigenvalues/-vectors
@@ -1205,19 +1271,44 @@ class CRM(TOOLS):
             return [maxdelta,maxnorm,tauPmin,tauQmax]
 
     
-    def generate_CRM(self,Te,ne,kappa,Ti=None,ni=None,E=0.1,n=None,
-                                                    Sext=True,epsilon=1):
-        ''' Generates the optimal CRMs per Greenland 2001 '''
+    def generate_CRM(self, Te, ne, kappa, Ti=None, ni=None, E=0.1, epsilon=1):
+        ''' **INCOMPLETE** Generates the optimal CRMs per Greenland 2001 
+
+        Algorithm for finding the optimal set of P-species for a given 
+        temperature and density. 
+        
+        Parameters
+        ----------
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**-3
+        kappa : float
+            the threshold of the algorithm, <<1
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates
+        epsilon : float, optional (default: 1)
+            sensitivity??
+
+        Returns
+        -------
+        None
+        '''
         from numpy import array,where,matmul
         from numpy.linalg import inv
         # Get matrices and eigenvalues/-vectors
-        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),
-                                        Sext=Sext,n=n,matrices=True) 
+        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),matrices=True) 
         # Construct indicator matrix
         I=abs(T)
         I[I<=kappa]=0
         I[I>kappa]=1
 
+
+        # TODO: What is epsilon?
         # Create Z-array
         Z=[]
         for i in I: # Loop over species
@@ -1251,9 +1342,9 @@ class CRM(TOOLS):
                 norm=matmul(inv(TQ),delta)
                 maxnorm=max([sum(abs(norm[:,i])) for i in range(norm.shape[1])])
                 if maxnorm<epsilon:
-                    print('''Possible CRM NP={} model with TQinv*delta={:.2E}, 
-                            tauP={:.2E} s, tauQ={:.2E} s, and  P-space {} 
-                            found.'''.format(i+1,maxnorm,
+                    print(  'Possible CRM NP={} model with TQinv*delta={:.2E}, '
+                            'tauP={:.2E} s, tauQ={:.2E} s, and  P-space {} '
+                            'found.'.format(i+1,maxnorm,
                             1/abs(min(sorted_D[:i+1])),
                             1/abs(max(sorted_D[i+1:])),sorted_species[:i+1])) 
                 else:
@@ -1520,6 +1611,297 @@ class CRM(TOOLS):
 
 
 
+    def populate_old(self,mode,Te,ne,Ti=None,ni=None,E=0,Sind=None,Tm=0,Iind=0):
+        ''' **REDUNDANT*** '''
+        from numpy import zeros,array,sum,transpose
+        
 
+        if mode=='diagnostic':
+            # Setup a 2D diagnostic list for the matrix and a list for the external source
+            ext_source=[]
+            ret=[]
+            for i in range(len(self.species)):
+                ext_source.append([])
+                ret.append([])
+                for j in range(len(self.species)):
+                    ret[i].append([])
+        elif mode=='Sgl':
+            ret=zeros((len(self.species),len(self.species),5))
+            ext_source=zeros((len(self.species),5))
+        elif mode in ['E','I']:
+            ret=zeros((len(self.species),len(self.species),2))
+            ext_source=zeros((len(self.species),2))
+        else:
+            # Setup a matrix and vector
+            ret=zeros((len(self.species),len(self.species)))
+            ext_source=zeros((len(self.species)))
+ 
+        for i in range(len(self.species)):
+            ''' Walk through each row (species)'''
+
+            for r in self.reactions:
+                ''' Sort the species of each reaction into the appropriate column '''
+
+        
+                ''' Get the energy loss term '''
+                # Create array: first index Sel,SeV,Seg,Spe,SpV,Spg, second index S,ext
+
+                Sgl=r.getS(Te,Ti,Tm,E)
+                if mode in ['I','E']:
+                    Sgl=Sgl[-2:]
+                
+                # TODO: what if three-particle reaction?
+                bg=r.e*ne+r.p*ni # Specify density for reactions
+                if mode!='diagnostic':
+                    bgm=(r.e*ne)*(r.p*ni) # Specify density for external source
+                    bg=max(bg,1)    # Assure that auto-processes are considered
+                j=None # Set flag to identify external sources
+
+                # Loop through each reaction defined in the CRM
+                for rea in range(len(r.reactants)):
+                    # Find the column into which the fragments goes: if background mark external
+                    try:
+                        j=self.slist.index(r.reactants[rea])  # Get the product species index of the correct column
+                    except:
+                        continue
+            
+                    multiplier=r.r_mult[rea] # Get the reaction multiplier for the density
+
+                    if self.slist[i]==r.reactants[rea]:   # If the species (row index) is a reactant, r is a depletion process 
+                        ''' DEPLETION '''
+
+                        if mode=='diagnostic':
+                            ''' Diagnostic matrix '''
+                            ret[i][i].append('-'+str(multiplier)+'*'+r.database+'_'+r.name+bg)   # Print the rate to the correct element
+
+                        elif mode=='R':
+                            ''' Rate coefficient matrix '''
+                            ret[i,i]-=multiplier*r.rate(Te,Ti,E,ne) # Calculate the Rate coefficient and store appropriately
+
+                        elif mode=='M':
+                            ''' Rate matrix '''
+                            ret[i,i]-=multiplier*r.rate(Te,Ti,E,ne)*bg # Calculate the rate and store appropriately
+
+                for frag in range(len(r.fragments)):    # Loop through the reaction fragments
+                    ''' SOURCE '''
+                    multiplier=r.f_mult[frag]   # Fragment multiplier
+
+                    # Do nothing if background fragment
+                    if r.fragments[frag] not in self.slist: 
+                        continue
+                    
+                    # If fragment enters row, add in appropriate column as defined by reactant
+                    elif self.slist.index(r.fragments[frag])==i:
+                            if j is None: # External flag triggered, store to external source
+                                ''' EXTERNAL SOURCE '''
+
+                                if mode=='diagnostic':
+                                    ''' Diagnostic matrix '''
+                                    ext_source[i].append('+'+str(multiplier)+'*'+r.database+'_'+r.name+bg)
+
+                                elif mode=='R':
+                                    ''' Rate coefficient matrix '''
+                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E,ne)
+
+                                elif mode=='M':
+                                    ''' Rate matrix '''
+                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E,ne)*bgm
+
+                                elif mode=='Sgl':
+                                    ''' Energy source matrix in Greenland form '''
+                                    ext_source[i,:]+=r.rate(Te,Ti,E,ne)*bgm*Sgl[:,0]+Sgl[:,1]
+            
+                                elif mode=='I':
+                                    ''' Intensity matrix '''
+                                    ext_source[i,:]+=r.rate(Te,Ti,E,ne)*bgm*Sgl[:,0]
+
+                                elif mode=='E':
+                                    ''' Intensity matrix '''
+                                    ext_source[i,:]+=Sgl[:,0]
+
+
+                            else: # No trigger of external source, store to appropriate location in matrix
+                                ''' INTERNAL SOURCE '''
+
+                                if mode=='diagnostic':
+                                    ''' Diagnostic matrix '''
+                                    ret[i][j].append('+'+str(multiplier)+'*'+r.database+'_'+r.name+bg)
+                            
+                                elif mode=='R':
+                                    ''' Rate coefficient matrix '''
+                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E,ne)
+
+                                elif mode=='M':
+                                    ''' Rate matrix '''
+                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E,ne)*bg
+
+                                elif mode=='Sgl': 
+                                    ''' Energy source matrix in Greenland form '''
+                                    ret[i,j,:]+=r.rate(Te,Ti,E,ne)*bg*Sgl[:,0]+Sgl[:,1]
+
+                                elif mode=='I':
+                                    ''' Correlation matrix '''    
+                                    ret[i,j,:]+=r.rate(Te,Ti,E,ne)*bg*(abs(Sgl[:,0])>0)
+
+                                elif mode=='E':
+                                    ''' Correlation matrix '''    
+                                    ret[i,j,:]+=Sgl[:,0]
+                                    
+        return ret,ext_source
+
+
+    def S(self, Te, ne, Ti=None, ni=None, E=0.1,
+                                Tm=0,write=False):
+        ''' **OBSOLETE** '''
+        if Ti is None: Ti=Te # Check for Ti, set if necessary
+        if ni is None: ni=ne # Check for ni, set if necessary
+
+        mat,ext=self.populate('Sgl',Te,ne,Ti,ni,E,Tm=Tm)    
+
+
+        if write:
+            title=['Sgl_el','Sgl_ia','Sgl_v','Sgl_ga','Sgl_gm']
+            for i in range(5):
+                self.write_matrix(mat[:,:,i],ext[:,i],title[i],
+                                    Te,ne,Ti,ni,E,form='{:1.2E}')
+
+        return  [   [mat[:,:,0], ext[:,0]],
+                    [mat[:,:,1], ext[:,1]],
+                    [mat[:,:,2], ext[:,2]],
+                    [mat[:,:,3], ext[:,3]],
+                    [mat[:,:,4], ext[:,4]], ]
+
+
+
+
+    def full_nt(self,Te,ne,t,gl,Ti=None,ni=None,E=0.1,n=None,Sext=True):
+        ''' **OBSOLETE** '''
+        from scipy.integrate import solve_ivp 
+
+        # Use input n0 as default unless explict n0 requested
+        if n is None: n=self.n0() 
+
+        if gl is True:
+            # Set up Greenland model 
+            mat,ext,nP0p=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),Sext,n)
+            n=nP0p
+        else:
+            mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
+
+        ext=(Sext is True)*ext  # Set source strength
+        # Solve and return
+        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),
+                                            (0,t),n,method='LSODA') 
+
+
+
+        
+    def dEdt_old(self,t,Te,ne,Ti=None,ni=None,E=0.1,Tm=0,
+                Sext=True,write=False,gl=True,n=None,Qres=True):
+        ''' **OBSOLETE** '''
+        from numpy import block,zeros,matmul,reshape,sum
+        from  numpy.linalg import inv
+        from scipy.integrate import solve_ivp
+
+
+        # TODO: Combine with full_nt  
+        N=len(self.species)
+        Np=self.Np
+        Nq=N-Np  
+
+
+        
+
+        M,G=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
+
+        ret=[]
+        if gl is True:
+            if n is None:
+                n0=self.n0()
+            else:
+                n0=n
+            # Create block matrix from M
+            MP=M[:self.Np,:self.Np]
+            MQ=M[self.Np:,self.Np:]
+            V=M[self.Np:,:self.Np]
+            H=M[:self.Np,self.Np:]
+
+            Meff,GPp,nP0p=self.gl_crm(M,G,Sext,n0)
+        
+            U=self.Sgl(Te,ne,Ti,ni,E,Tm,write=write)
+
+
+            if Qres is True:
+
+                mat=block(  [   [zeros((N,5*N)),     U[0][0]],
+                                [zeros((N,5*N)),     U[1][0]],
+                                [zeros((N,5*N)),     U[2][0]],
+                                [zeros((N,5*N)),     U[3][0]],
+                                [zeros((N,5*N)),     U[4][0]],
+                                [zeros((Np,5*N)),     Meff]   ])
+                if n is None:
+                    n=zeros((len(mat),))
+                    n[-Np:]=nP0p
+                ext=block([U[0][1], U[1][1], U[2][1], U[3][1], U[4][1], GPp])
+
+            else:
+
+                mat=block(  [   [zeros((5,)),      sum(U[0][0],axis=0)],
+                                [zeros((5,)),      sum(U[1][0],axis=0)],
+                                [zeros((5,)),      sum(U[2][0],axis=0)],
+                                [zeros((5,)),      sum(U[3][0],axis=0)],
+                                [zeros((5,)),      sum(U[4][0],axis=0)],
+                                [zeros((Np,5)),   Meff]   ])
+
+                if n is None:
+                    n=zeros((len(mat),))
+                    n[-Np:]=nP0p
+                ext=block([ sum(U[0][1],axis=0), sum(U[1][1],axis=0), 
+                            sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
+                            sum(U[4][1],axis=0), GPp                    ])
+                
+
+     
+
+        else:
+             
+            if Qres is True:
+                U=self.S(Te,ne,Ti,ni,E,Tm,write=True)
+    
+
+                mat=block(  [   [zeros((N,5*N)),        U[0][0]],
+                                [zeros((N,5*N)),        U[1][0]],
+                                [zeros((N,5*N)),        U[2][0]],
+                                [zeros((N,5*N)),        U[3][0]],
+                                [zeros((N,5*N)),        U[4][0]],
+                                [zeros((N,5*N)),        M]   ])
+                if n is None:
+                    n=zeros((len(mat),))
+                    n[-N:]=self.n0()
+                ext=block([U[0][1], U[1][1], U[2][1], U[3][1], U[4][1], G])
+
+            else:
+                U=self.S(Te,ne,Ti,ni,E,Tm,write=True)
+
+                mat=block(  [   [zeros((5,)),      sum(U[0][0],axis=0)],
+                                [zeros((5,)),      sum(U[1][0],axis=0)],
+                                [zeros((5,)),      sum(U[2][0],axis=0)],
+                                [zeros((5,)),      sum(U[3][0],axis=0)],
+                                [zeros((5,)),      sum(U[4][0],axis=0)],
+                                [zeros((N,5)),    M]   ])
+
+                if n is None:
+                    n=block([   zeros((5,)), self.n0()    ] )
+
+                n=n.reshape((N+5,))
+
+                ext=block([ sum(U[0][1],axis=0), sum(U[1][1],axis=0),
+                            sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
+                            sum(U[4][1],axis=0), G                      ])
+
+        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),(0,t),
+                                            n,'LSODA',dense_output=True)
+
+        
 
 

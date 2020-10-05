@@ -4,11 +4,11 @@
 # 200205 - Created based on CRUM.py
 import CRUM
 
-from CRUM.main import CRUMPET
-from CRUM.crm import CRM
-from CRUM.ratedata import RATE_DATA
-from CRUM.reactions import REACTION
-from CRUM.tools import TOOLS
+from CRUM.main import Crumpet
+from CRUM.crm import Crm
+from CRUM.ratedata import RateData
+from CRUM.reactions import Reaction
+from CRUM.tools import Tools
 
 
 import CRUM.main as m
@@ -20,3 +20,4 @@ reload(m)
 reload(r)
 reload(rd)
 reload(c)
+
