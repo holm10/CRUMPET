@@ -48,6 +48,7 @@ class Crm(Tools):
 
     '''
 
+
     def __init__(
             self, species, bg, reactionlist ,verbose, NP, path='.', vmax=14,
             nmax=8, rdata=None ):
@@ -101,129 +102,112 @@ class Crm(Tools):
         from datetime import datetime
 
         # Store class objects
-        self.species=species
-        self.bg=bg
-        self.slist=list(self.species)
-        self.verbose=verbose
-        self.Np=NP
-        self.path=path
-        self.reactions=[]
-        self.vmax=vmax
-        self.nmax=nmax
-
-
-        self.setup_reactions(reactionlist,rdata)
-
+        self.species = species
+        self.bg = bg
+        self.slist = list(self.species)
+        self.verbose = verbose
+        self.Np = NP
+        self.path = path
+        self.reactions = []
+        self.vmax = vmax
+        self.nmax = nmax
+        self.setup_reactions(reactionlist ,rdata)
         # Define reactions for UEDGE raditation
         #self.ionizrad=Reaction('IONIZRAD','UE',
                 #self.get_coeff('UE','IONIZRAD'),'UE',['','',''],bg,species,
                 #['','',None,None,[0,0,0,0]])
         #self.recrad=Reaction('RECRAD','UE',self.get_coeff('UE','RECRAD'),
                 #'UE',['','',''],bg,species,['','',None,None,[0,0,0,0]])
-
-
-
         # Ensure that there is a logs directory under the run path
         try:
             mkdir('{}/logs'.format(self.path))
         except:
             pass
-
-
         # Write a log of the CRM setup path/logs
-        with open('{}/logs/setup.log'.format(self.path),'w') as f:
+        with open('{}/logs/setup.log'.format(self.path), 'w') as f:
             f.write('CRUM run in {} on {}\n'.format(getcwd(),
-                                            str(datetime.now())[:-7]))
+                    str(datetime.now())[:-7]))
             f.write('Defined species:\n')
             for i in self.slist:
                 f.write('    {}\n'.format(i))
-
             f.write('Defined reactions:\n')
             for r in self.reactions:
                 f.write('{}\n'.format(r.print_reaction()))
         # Output to stdout if run verbosely
         if self.verbose:
-            with open('logs/setup.log','rt') as f:
-                for l in f:
-                    print(l.strip())
+            with open('logs/setup.log', 'rt') as f:
+                for m in f:
+                    print(m.strip())
         # Do the same for a Diagnostic rate matrix displaying 
         # reaction correlations
         self.DIAGNOSTIC()
 
-
-
 # %%%%%%%%%%%%%% INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
-
-    def setup_ADAS(self,x,ID,rdata,rlist,plist,K):
+    def setup_ADAS(self, x, ID, rdata, rlist, plist, K):
         ''' Adds an ADAS reactions up to self.nmax'''
         from CRUM.reactions import Reaction
-        if ID=='EXCITATION': # Electron impact excitation
-            rn=range(x+1,self.nmax+1)   # Excitation only possible between
-                                        # current state and nmax
-            fit='ADAS'          # ADAS-type fit
-            Tarr=rdata[database]['T']  # Temperature array for interpolation
 
-
+        if ID == 'EXCITATION': # Electron impact excitation
+            # Excitation only possible between current state and nmax
+            rn = range(x + 1, self.nmax + 1)   
+            fit = 'ADAS' # ADAS-type fit
+            Tarr = rdata[database]['T']  # Temperature array for interpolation
         elif ID=='RELAXATION': # Radiative relaxation
-            rn=range(1,x)   # Relaxation only possible to lower states
-            fit='COEFFICIENT' # Coefficient-like decay
-            Tarr=None   # Not T-dependent
-
+            rn = range(1, x)   # Relaxation only possible to lower states
+            fit = 'COEFFICIENT' # Coefficient-like decay
+            Tarr = None   # Not T-dependent
         # Loop through each of the available final states
         for y in rn:
-    
             try:
-                _name='{}_{}-{}'.format(ID,x,y)
-                _ratecoeff=rdata['ADAS']['{}-{}'.format(x,y)] #Get coefficients
-                self.reactions.append(Reaction(_name,'ADAS',_ratecoeff,fit,
-                                            [rlist,plist,K],bg,species,Tarr))
+                _name = '{}_{}-{}'.format(ID, x, y)
+                #Get coefficients
+                _ratecoeff = rdata['ADAS']['{}-{}'.format(x, y)] 
+                self.reactions.append(Reaction(_name, 'ADAS', _ratecoeff, fit,
+                        [rlist, plist, K], bg, species, Tarr))
             except:
                 pass
 
 
-    def setup_APID(self,x,ID,rlist,plist,K):
+    def setup_APID(self, x, ID, rlist, plist, K):
         ''' Adds an APID-style ionization reaction '''
         from CRUM.reactions import Reaction
-        self.reactions.append(Reaction(self.XY2num(ID,x),'APID',
-                        x,'APID',[rlist,plist,K],self.bg,self.species))
+        self.reactions.append(Reaction(self.XY2num(ID, x), 'APID', x, 'APID',
+                [rlist,plist,K],self.bg,self.species))
 
 
-    def setup_Johnson(self,i,ID,r):
+    def setup_Johnson(self, i, ID, r):
         ''' Adds a Johnson-style relaxation reaction from state n=i'''
         from CRUM.reactions import Reaction
         from numpy import pi
 
-        def g(i,f):
-            g=[ 1.133*(f==1) + 1.0785*(f==2) + (0.9935 + 0.2328/f \
-                                                    - 0.1296/f**2)*(f>2),
-                    -0.4059*(f==1) -0.2319*(f==2) - ((0.6282 - 0.5598/f \
-                                                    + 0.5299/f**2)/f)*(f>2),
-                    0.07014*(f==1) + 0.02947*(f==2) + ((0.3887 - 1.181/f \
-                                                    + 1.470/f**2)/f**2)*(f>2) ]
-            x=1-(f/i)**2
+        def g(i, f):
+            g = [
+                    1.133*(f == 1) + 1.0785*(f == 2) + (0.9935 + 0.2328/f
+                    - 0.1296/f**2)*(f > 2),
+                    -0.4059*(f == 1) - 0.2319*(f==2) - ((0.6282 - 0.5598/f
+                    + 0.5299/f**2)/f)*(f > 2),
+                    0.07014*(f == 1) + 0.02947*(f == 2) + ((0.3887 - 1.181/f
+                    + 1.470/f**2)/f**2)*(f > 2) ]
+            x=1 - (f/i)**2
             return g[0] + g[1]/x + g[2]/x**2
 
-        h=1.054571596e-27
-        c=2.99792458e10
-        me=9.10938188e-28
-        e=4.80274e-10
-        I=(me * e**4) / (2 * h**2)
-
-        for f in range(1,i):
-            res= (2**6 *e**2 * I**2) / (3**1.5 * pi * me *c**3 * h**2)
-            freq=(1/f**2 - 1/i**2)
-            Afac=(res*g(i,f))/(freq*(i**5)*(f**3))
-
-            rlist=[self.XY2num(a,i,f) for a in r[1]]  # Reactants 
-            plist=[self.XY2num(a,i,f) for a in r[2]]  # Fragments
-
-
-            _rlist=[rlist,plist,r[-1]]
-            self.reactions.append(Reaction(self.XY2num(ID,i,f),'JOHNSON',Afac,
-                                    'COEFFICIENT',_rlist,self.bg,self.species))
+        h = 1.054571596e-27
+        c = 2.99792458e10
+        me = 9.10938188e-28
+        e = 4.80274e-10
+        I = (me*e**4)/(2*h**2)
+        for f in range(1, i):
+            res = (2**6 * e**2 * I**2)/(3**1.5*pi*me*c**3 * h**2)
+            freq = (1/f**2 - 1/i**2)
+            Afac = (res*g(i, f))/(freq*(i**5)*(f**3))
+            rlist = [self.XY2num(a, i, f) for a in r[1]]  # Reactants 
+            plist = [self.XY2num(a, i, f) for a in r[2]]  # Fragments
+            _rlist = [rlist, plist, r[-1]]
+            self.reactions.append(Reaction(self.XY2num(ID, i, f), 'JOHNSON',
+                    Afac, 'COEFFICIENT', _rlist, self.bg, self.species))
 
 
-    def setup_reactions(self,reactionlist,rdata):
+    def setup_reactions(self, reactionlist, rdata):
         ''' Adds the reactions to the CRM
 
         Called by __init__, adds the reactions from reactionlist to
@@ -257,81 +241,67 @@ class Crm(Tools):
         '''
         # TODO: Change list to dictionary for improved lookup!
         from CRUM.reactions import Reaction
-        from numpy import zeros,pi
+        from numpy import zeros, pi
         
         ''' LOOP OVER ALL THE DEFINED ReactionS '''
         for r in reactionlist:
             # Split the definitions into names and databases
-            database=r[0].split('_')[0].upper()
+            database = r[0].split('_')[0].upper()
             try:
-                ID=r[0].split('_')[1].upper()
-                spec=''.join(r[1]+r[2]).upper()
+                ID = r[0].split('_')[1].upper()
+                spec = ''.join(r[1] + r[2]).upper()
             except:
-                ID='CUSTOM'
-                spec=''
-
+                ID = 'CUSTOM'
+                spec = ''
             # Loop through states, if necessary. Dynamicallt set boundaries
             # according to electronic or vibrational transitions
             for x in range('N=$' in spec,
-                        1+('V=$' in spec)*self.vmax+('N=$' in spec)*self.nmax):
-
+                    1 + ('V=$' in spec)*self.vmax + ('N=$' in spec)*self.nmax):
                 # Vibrational/electronic dependence present
                 if '$' in ID:
-
                     # Substitute state into reactants and product strings 
-                    rlist=[self.XY2num(i,x) for i in r[1]]  # Reactants 
-                    plist=[self.XY2num(i,x) for i in r[2]]  # Fragments
-
+                    rlist = [self.XY2num(i, x) for i in r[1]]  # Reactants 
+                    plist = [self.XY2num(i, x) for i in r[2]]  # Fragments
                     # %%% ADAS rates detected %%%
-                    if database=='ADAS':
-                        self.setup_ADAS(x,ID,rdata,rlist,plist,r[-1])
-                      
+                    if database == 'ADAS':
+                        self.setup_ADAS(x, ID, rdata, rlist, plist, r[-1])
                     # %%% APID rates detected %%%
-                    elif database=='APID':
-                        self.setup_APID(x,ID,rlist,plist,r[-1])
-                        
-          
+                    elif database == 'APID':
+                        self.setup_APID(x, ID, rlist, plist, r[-1])
                     # %%% APID rates detected %%%
-                    elif database=='JOHNSON':
-                        self.setup_Johnson(x,ID,r)
-                      
-                        
+                    elif database == 'JOHNSON':
+                        self.setup_Johnson(x, ID, r)
                     # %%% Neither of the above: rate for transitions %%%
                     else:
                         # Assume ladder-like vibrational transitions (+/-1) only
-                        for y in range(-1*('&' in ID),2,2):
-
+                        for y in range(-1*('&' in ID), 2, 2):
                             # Limit transitions to [0,vmax]
-                            if x+y in range(self.vmax+1):
+                            if x + y in range(self.vmax + 1):
                                 # Retain intial and final states in name
-                                vID=self.XY2num(ID,x,x+y) 
+                                vID = self.XY2num(ID, x, x + y) 
                                 # List of reactants with initial states
-                                rlist=[self.XY2num(i,x,x+y) for \
-                                                            i in r[1]]
+                                rlist = [self.XY2num(i, x, x + y) for 
+                                        i in r[1]]
                                 # List of products with final states
-                                plist=[self.XY2num(i,x,x+y) for \
-                                                            i in r[2]]
-                                _name=vID
-                                _database=database
-                                _ratecoeff=rdata[database][vID] 
-                                _rtype='RATE'
-                                _rlist=[rlist,plist,r[-1]]
-
+                                plist = [self.XY2num(i, x, x + y) for
+                                        i in r[2]]
+                                _name = vID
+                                _database = database
+                                _ratecoeff = rdata[database][vID] 
+                                _rtype = 'RATE'
+                                _rlist = [rlist, plist, r[-1]]
                                 self.reactions.append(Reaction(
-                                            _name,_database,_ratecoeff,_rtype,
-                                            _rlist,self.bg,self.species)      )
-                        
+                                        _name, _database, _ratecoeff, _rtype,
+                                        _rlist, self.bg, self.species))
                 #%%%%% Read custom rates %%%%%
-                elif database=='CUSTOM':
-                    self.setup_custom(r[1].strip(),database)
-
+                elif database == 'CUSTOM':
+                    self.setup_custom(r[1].strip(), database)
                 #%%% EIRENE/UEDGE-DEGAS rates %%%
-                elif database in ['HYDHEL','AMJUEL','H2VIBR','UE']:
-                    self.reactions.append(Reaction(ID,database,
-                                rdata[database][ID],
-                                'RATE'*(database!='UE')+'UE'*(database=='UE'),
-                                [r[1],r[2],r[-1]],self.bg,self.species))
-
+                elif database in ['HYDHEL', 'AMJUEL', 'H2VIBR', 'UE']:
+                    self.reactions.append(Reaction(ID, database,
+                            rdata[database][ID], 'RATE'*(database != 'UE') + 
+                            'UE'*(database == 'UE'), [r[1], r[2], r[-1]],
+                            self.bg, self.species))
                 #%%% Fell through loop %%%
                 else:
                     print(  'Database "{}" not recognized!\n'
@@ -339,7 +309,7 @@ class Crm(Tools):
                     return
 
 
-    def setup_custom(self,fname,database):
+    def setup_custom(self, fname, database):
         ''' Adds the custom reactions defined in the input to the CRM
         
         Parses any custom input rate file defined in the input file
@@ -357,75 +327,63 @@ class Crm(Tools):
         None
         '''
         from CRUM.reactions import Reaction
-        from numpy import zeros,pi
+        from numpy import zeros, pi
         # Parse the custom rate file into a list and retain subcards
-        data,_,subcards=self.file2list(self.path,fname)
-        _database=data[0].strip() # Database is defined at fist line
-
+        data, _, subcards = self.file2list(self.path, fname)
+        _database = data[0].strip() # Database is defined at fist line
         # Loop through the rates, each a separate subcard
-        for i in range(len(subcards)-1):
-            subc=subcards[i] # Helper index
-            fit=data[subc].split()[1].upper() # Rate typy, first subcard entry
-            name=data[subc].split()[2] # Name/ID of reacrtion - second entry
-            reactants,fragments=data[subc+1].split(' > ') # Reactants and 
+        for i in range(len(subcards) - 1):
+            subc = subcards[i] # Helper index
+            # Rate typy, first subcard entry
+            fit = data[subc].split()[1].upper() 
+            name = data[subc].split()[2] # Name/ID of reacrtion - second entry
+            reactants, fragments=data[subc + 1].split(' > ') # Reactants and 
                                     # fragments are defined on the second line
-            K='0' # Kinetic energy exchange in reaction is 0 unless defined
-
+            K = '0' # Kinetic energy exchange in reaction is 0 unless defined
             # Execute if no vib dependence, loop if vibr. dep. process
-            for j in range(1+('$' in name)*self.vmax):
-
+            for j in range(1 + ('$' in name)*self.vmax):
                 # %%% Vibrationally dependent process %%%
                 if '$' in name:
-
                     # Read kinetic energy for each process
-                    for k in range(0,100):
-                        if data[k][0]=='K': 
-                            K=data[k].strip().split('=')[-1]
-                        elif data[k][0]=='v':
-                            m=k
+                    for k in range(0, 100):
+                        if data[k][0] == 'K': 
+                            K = data[k].strip().split('=')[-1]
+                        elif data[k][0] == 'v':
+                            m = k
                             break
-
                     # Write data
-                    _name=self.XY2num(name,j)
-                    rlist=self.XY2num(reactants,j).strip().split(' + ') 
-                                                # Reactants w/ v-level number
-                    plist=self.XY2num(fragments,j).strip().split(' + ') 
-                                                # Products w/ v-level number
-                    _ratecoeff=[float(x) for x in data[subc+m+j*2].split()] 
-                                                # Coefficients for v-level
-
+                    _name = self.XY2num(name, j)
+                    # Reactants w/ v-level number
+                    rlist = self.XY2num(reactants, j).strip().split(' + ') 
+                    # Products w/ v-level number
+                    plist = self.XY2num(fragments, j).strip().split(' + ') 
+                    # Coefficients for v-level
+                    _ratecoeff = [float(x) for x in 
+                            data[subc + m+  j*2].split()] 
                 # %%% Specified rate %%%
                 else:
-                    
                     # Read the kinetic energy of the process
-                    for k in range(2,100):
-                        if data[subc+k][0]=='K': 
-                            K=data[subc+m].strip().split('=')[-1]
+                    for k in range(2, 100):
+                        if data[subc + k][0] == 'K': 
+                            K = data[subc + m].strip().split('=')[-1]
                         else:
-                            m=k
+                            m = k
                             break
-        
                     # Cross-section as defined in SAWADA 95 has special form
-                    if fit=='SIGMA': 
-                        _ratecoeff=[float(x) for x in data[subc+m].split()] 
+                    if fit == 'SIGMA': 
+                        _ratecoeff = [float(x) for x in data[subc + m].split()] 
                     # Other processes have pre-defined form
-                    else: _ratecoeff=float(data[subc+m])
-                    
+                    else: 
+                        _ratecoeff = float(data[subc + m])
                     # Write data
-                    _name=name
-                    rlist=reactants.strip().split(' + ') # Reactants
-                    plist=fragments.strip().split(' + ') # Fragments
-
+                    _name = name
+                    rlist = reactants.strip().split(' + ') # Reactants
+                    plist = fragments.strip().split(' + ') # Fragments
                 # Store reaction
-                self.reactions.append(Reaction(_name,_database,_ratecoeff,
-                                    fit,[rlist,plist,K],self.bg,self.species))
+                self.reactions.append(Reaction(_name, _database, _ratecoeff,
+                        fit, [rlist, plist, K], self.bg, self.species))
 
 # %%%%%%%%%%%%%% ENF OF INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
-
-
-
-
-
 
     def populate(self, mode, Te, ne, Ti=None, ni=None, E=0.1, Tm=0):
         ''' Function populating and returning the rate matrix and source
@@ -465,115 +423,119 @@ class Crm(Tools):
         '''
         from numpy import zeros,array,sum,transpose
         
-        N=len(self.species)
-
-        if mode=='diagnostic':
-            # Setup a 2D diagnostic list for the matrix and a list for the external source
-            ext_source=[[] for x in range(N)]
-            ret=[[[] for y in range(N)] for x in range(N)]
-        elif mode in ['E','I','Sgl']:
-            ret=zeros((N,N,2+3*(mode=='Sgl')))
-            ext_source=zeros((N,2+3*(mode=='Sgl')))
+        N = len(self.species)
+        if mode == 'diagnostic':
+            # Setup a 2D diagnostic list for the matrix and a list for 
+            # the external source
+            ext_source = [[] for x in range(N)]
+            ret = [[[] for y in range(N)] for x in range(N)]
+        elif mode in ['E', 'I', 'Sgl']:
+            ret = zeros((N, N, 2 + 3*(mode == 'Sgl')))
+            ext_source = zeros((N, 2+3*(mode == 'Sgl')))
         else:
             # Setup a matrix and vector
-            ret=zeros((N,N))
-            ext_source=zeros(N)
- 
+            ret = zeros((N, N))
+            ext_source = zeros(N)
         for i in range(len(self.species)):
             #%%% Walk through each row (species) %%%
-
             for r in self.reactions:
                 #%%% Sort the species of each reaction into %%%
                 #%%%  the appropriate column %%%
-
-                Sgl=r.getS(Te,Ti,Tm,E)
-                
+                Sgl = r.getS(Te, Ti, Tm, E)
                 # TODO: what if three-particle reaction?
-                bg=r.e*ne+r.p*ni # Specify density for reactions
-                if mode=='R':
-                    bgm=r.rate(Te,Ti,E,ne)
-                    bg=r.rate(Te,Ti,E,ne)
-                    ext=0
+                bg = r.e*ne + r.p*ni # Specify density for reactions
+                if mode == 'R':
+                    bgm = r.rate(Te, Ti, E=E, ne=ne)
+                    bg = r.rate(Te, Ti, E=E, ne=ne)
+                    ext = 0
                 elif mode in ['M']:#,'Sgl']:
-                    bgm=(r.e*ne)*(r.p*ni)*r.rate(Te,Ti,E,ne) # Specify density for external source
-                    bg=max(bg,1)*r.rate(Te,Ti,E,ne)    # Assure that auto-processes are considered
-                    ext=0
-                elif mode=='Sgl':
-                    bgm=(r.e*ne)*(r.p*ni)*r.rate(Te,Ti,E,ne)*Sgl[:,0] # Specify density for external source
-                    bg=max(bg,1)*r.rate(Te,Ti,E,ne)*Sgl[:,0]    # Assure that auto-processes are considered
-                    ext=Sgl[:,1]
-                elif mode=='I':
-                    bgm=(r.e*ne)*(r.p*ni)*r.rate(Te,Ti,E,ne)*Sgl[-2:,0] # Specify density for external source
-                    bg=max(bg,1)*r.rate(Te,Ti,E,ne)*(abs(Sgl[-2:,0])>0)    # Assure that auto-processes are considered
-                    ext=0
-                elif mode=='E':
-                    bgm=Sgl[-2:,0] # Specify density for external source
-                    bg=Sgl[-2:,0]    # Assure that auto-processes are considered
-                    ext=0
-
-
-                j=None # Set flag to identify external sources
-
+                    # Specify density for external source
+                    bgm = (r.e*ne)*(r.p*ni)*r.rate(Te, Ti, E=E, ne=ne) 
+                    # Assure that auto-processes are considered
+                    bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)    
+                    ext = 0
+                elif mode == 'Sgl':
+                    # Specify density for external source
+                    bgm = (r.e*ne)*(r.p*ni)*r.rate(Te, Ti, E=E, ne=ne)*Sgl[:,0] 
+                    # Assure that auto-processes are considered
+                    bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)*Sgl[:,0]    
+                    ext = Sgl[:,1]
+                elif mode == 'I':
+                    # Specify density for external source
+                    bgm = (r.e*ne)*(r.p*ni)*r.rate(Te, Ti, E=E, ne=ne)*Sgl[-2:,0] 
+                    # Assure that auto-processes are considered
+                    bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)*(abs(Sgl[-2:,0]) > 0)    
+                    ext = 0
+                elif mode == 'E':
+                    bgm = Sgl[-2:,0] # Specify density for external source
+                    # Assure that auto-processes are considered
+                    bg = Sgl[-2:,0]  
+                    ext = 0
+                j = None # Set flag to identify external sources
                 # Loop through each reaction defined in the CRM
                 for rea in range(len(r.reactants)):
-                    # Find the column into which the fragments goes: if background mark external
+                    # Find the column into which the fragments goes: 
+                    # if background mark external
                     try:
-                        j=self.slist.index(r.reactants[rea])  # Get the product species index of the correct column
+                        # Get the product species index of the correct column
+                        j = self.slist.index(r.reactants[rea])  
                     except:
                         continue
-            
-                    if self.slist[i]==r.reactants[rea]:   # If the species (row index) is a reactant, r is a depletion process 
+                    # If the species (row index) is a reactant, r is a 
+                    # depletion process 
+                    if self.slist[i] == r.reactants[rea]:   
                         ''' DEPLETION '''
-
-                        if mode=='diagnostic':
+                        if mode == 'diagnostic':
                             ''' Diagnostic matrix '''
-                            ret[i][i].append('-'+str(r.r_mult[rea])+'*'+r.database+'_'+r.name+bg)   # Print the rate to the correct element
-
+                            # Print the rate to the correct element
+                            ret[i][i].append('-' + str(r.r_mult[rea]) + '*' + 
+                                    r.database + '_' + r.name + bg)   
                         elif mode in ['R','M']:
                             ''' Rate coefficient matrix '''
-                            ret[i,i]-=r.r_mult[rea]*bg # Calculate the Rate coefficient and store appropriately
-
-
-                for frag in range(len(r.fragments)):    # Loop through the reaction fragments
+                            # Calculate the Rate coefficient and store 
+                            # appropriately
+                            ret[i,i]-=r.r_mult[rea]*bg 
+                # Loop through the reaction fragments
+                for frag in range(len(r.fragments)):    
                     ''' SOURCE '''
-
                     # Do nothing if background fragment
                  #   if r.fragments[frag] not in self.slist: 
                  #       continue
-                    
-                    # If fragment enters row, add in appropriate column as defined by reactant
-                    if (r.fragments[frag] in self.slist) and (self.slist.index(r.fragments[frag])==i):
-                            multiplier=r.f_mult[frag]**(mode not in ['Sgl','I','E'])   # Fragment multiplier
-                            if j is None: # External flag triggered, store to external source
-                                ''' EXTERNAL SOURCE '''
-
-                                if mode=='diagnostic':
-                                    ''' Diagnostic matrix '''
-                                    ext_source[i].append('+'+str(multiplier)+'*'+r.database+'_'+r.name+bg)
-                                else:
-                                    try:
-                                        ext_source[i]+=multiplier*bgm+ext
-                                    except:
-                                        ext_source[i,:]+=multiplier*bgm+ext
-                                  
-                            else: # No trigger of external source, store to appropriate location in matrix
-                                ''' INTERNAL SOURCE '''
-
-                                if mode=='diagnostic':
-                                    ''' Diagnostic matrix '''
-                                    ret[i][j].append('+'+str(multiplier)+'*'+r.database+'_'+r.name+bg)
-                                else:
-                                    try:
-                                        ret[i,j]+=multiplier*bg+ext
-                                    except:
-                                        ret[i,j,:]+=multiplier*bg+ext
-
-                                    
-        return ret,ext_source
-
+                    # If fragment enters row, add in appropriate column as
+                    # defined by reactant
+                    if (r.fragments[frag] in self.slist) and (
+                            self.slist.index(r.fragments[frag]) == i):
+                        multiplier = r.f_mult[frag]**(mode not in 
+                                ['Sgl', 'I', 'E'])   # Fragment multiplier
+                        # External flag triggered, store to external source
+                        if j is None: 
+                            ''' EXTERNAL SOURCE '''
+                            if mode == 'diagnostic':
+                                ''' Diagnostic matrix '''
+                                ext_source[i].append('+' + str(multiplier) + 
+                                        '*' + r.database + '_' + r.name + bg)
+                            else:
+                                try:
+                                    ext_source[i] += multiplier*bgm + ext
+                                except:
+                                    ext_source[i,:] += multiplier*bgm + ext
+                        # No trigger of external source, store to appropriate
+                        # location in matrix
+                        else: 
+                            ''' INTERNAL SOURCE '''
+                            if mode == 'diagnostic':
+                                ''' Diagnostic matrix '''
+                                ret[i][j].append('+' + str(multiplier) + '*' + 
+                                        r.database+'_' + r.name + bg)
+                            else:
+                                try:
+                                    ret[i,j] += multiplier*bg + ext
+                                except:
+                                    ret[i,j,:] += multiplier*bg + ext
+        return ret, ext_source
 
         
-    def write_matrix(self,mat,ext,char,te,ne,ti,ni,E,form='{:1.1E}'):
+    def write_matrix(self, mat, ext, char, te, ne, ti, ni, E, form='{:1.1E}'):
         ''' Writes the matrix to the logs
         
         Parameters
@@ -604,60 +566,54 @@ class Crm(Tools):
         from os import getcwd
         from datetime import datetime
 
-        Slabels=['S_e','S_ia','S_V','S_g']
-
+        Slabels = ['S_e', 'S_ia', 'S_V', 'S_g']
         # Create a file to write to according to char
-        with open('{}/logs/{}_matrix.log'.format(self.path,char),'w') as f:  
-            
-            if char=='R': # Rate coefficient  matrix is being written
+        with open('{}/logs/{}_matrix.log'.format(self.path,char), 'w') as f:  
+            if char == 'R': # Rate coefficient  matrix is being written
                 f.write('Diagnostic rate coefficient (density-independend) '
-                        'matrix for CRUM run in {} on {}\n'.format(
-                                        getcwd(),str(datetime.now())[:-7]))
+                        'matrix for CRUM run in {} on {}\n'.format(getcwd(),
+                        str(datetime.now())[:-7]))
                 f.write('Te={} eV, Ti={} eV, E={} eV\n'.format(te,ti,E))
-
-            elif char=='M': # Rate matrix is being written
+            elif char == 'M': # Rate matrix is being written
                 f.write('Diagnostic rate (density-dependend) matrix for CRUM '
-                        'run in {} on {}\n'.format(
-                                            getcwd(),str(datetime.now())[:-7]))
+                        'run in {} on {}\n'.format(getcwd(),
+                        str(datetime.now())[:-7]))
                 f.write('Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} '
                         '1/cm**3, E={} eV\n'.format(te,ti,ne,ni,E))
-
-            elif char=='S': # Rate matrix is being written
+            elif char == 'S': # Rate matrix is being written
                 f.write('Diagnostic energy loss (density-dependend) matrix '
-                        'for CRUM run in {} on {}\n'.format(
-                                            getcwd(),str(datetime.now())[:-7]))
+                        'for CRUM run in {} on {}\n'.format(getcwd(),
+                        str(datetime.now())[:-7]))
                 f.write('Te={} eV, Ti={} eV, ne={} 1/cm**3, ni={} 1/cm**3, '
-                        'E={} eV\n'.format(te,ti,ne,ni,E))
-            
+                        'E={} eV\n'.format(te, ti, ne, ni, E))
             # Create header line
-            out='{}-MAT|'.format(char.upper()).rjust(10) 
+            out = '{}-MAT|'.format(char.upper()).rjust(10) 
             for s in self.slist:
-                out+=s.rjust(10,' ')
-            f.write(out+'\n'+'_'*(1+len(self.species))*10+'\n')
+                out += s.rjust(10,' ')
+            f.write(out + '\n'+'_'*(1 + len(self.species))*10 + '\n')
 
             # Loop through the matrix
-            for l in range(len(mat)):
-                if len(mat)==len(self.species):
+            for m in range(len(mat)):
+                if len(mat) == len(self.species):
                     # Create a tabulated file with the row species displayed
-                    out=self.slist[l]+'|' 
+                    out = self.slist[m]+'|' 
                 else:
                     # Create a tabulated file with the row species displayed
-                    out=Slabels[l]+'|' 
-                out=out.rjust(10,' ')
+                    out = Slabels[m]+'|' 
+                out = out.rjust(10,' ')
                 # Add each element to the line with 10 characters reserved
-                for e in mat[l,:]:
-                    if e==0:
-                        out+=' '*9+'_'
+                for e in mat[m,:]:
+                    if e == 0:
+                        out += ' '*9+'_'
                     else:
-                        out+=form.format(e).rjust(10,' ')
-                f.write(out+'\n')
+                        out += form.format(e).rjust(10,' ')
+                f.write(out + '\n')
             # Write the external source to the bottom of the output
-            f.write('_'*(1+len(self.species))*10+'\n')
-            out='S_ext|'.rjust(10,' ')
+            f.write('_'*(1 + len(self.species))*10 + '\n')
+            out = 'S_ext|'.rjust(10,' ')
             for s in ext:
-                out+=form.format(s).rjust(10,' ')
+                out += form.format(s).rjust(10,' ')
             f.write(out)
-
 
 
     def DIAGNOSTIC(self):
@@ -666,41 +622,38 @@ class Crm(Tools):
         from datetime import datetime
  
         # Get the 2D diagnostic list and external source list
-        dia,ext=self.populate('diagnostic',0,'*[ne]',0,'*[ni]') 
-
+        dia, ext = self.populate('diagnostic', 0, '*[ne]', 0, '*[ni]') 
         # Write the diagnostic matrix to the logs
-        with open('{}/logs/reaction_matrix.log'.format(self.path),'w') as f:
+        with open('{}/logs/reaction_matrix.log'.format(self.path), 'w') as f:
             # Write the header line
-            f.write(
-                'Diagnostic reaction matrix for CRUM run in {} on {}\n'.format(
-                                            getcwd(),str(datetime.now())[:-7]))
+            f.write('Diagnostic reaction matrix for CRUM run in {} on '
+                    '{}\n'.format(getcwd(), str(datetime.now())[:-7]))
             # Loop through each species
             for i in range(len(dia)):
                 # Write the species header
                 f.write('\n\n\n======== {} ========\n'.format(self.slist[i]))
                 # Start with the sinks
                 f.write('{} DEPLETION:\n                 {}\n'.format(
-                                                    self.slist[i],dia[i][i]))
+                        self.slist[i],dia[i][i]))
                 # Then do the sources
                 for j in range(len(dia[i])):
                     if len(dia[i][j])>0:    # Don't write anything empty
-                        if i!=j:    # Don't duplicate depletion
+                        if i != j:    # Don't duplicate depletion
                             f.write('From {}:\n                 {}\n'.format(
-                                                    self.slist[j],dia[i][j]))
-                if len(ext[i])>0:   # Write external source last, if applicable
+                                    self.slist[j], dia[i][j]))
+                # Write external source last, if applicable
+                if len(ext[i]) > 0:   
                     f.write('{} EXTERNAL SOURCE:\n'
-                            '                 {}\n'.format(
-                                                        self.slist[i],ext[i]))
-
+                            '                 {}\n'.format(self.slist[i],
+                            ext[i]))
         # If verbose, output the log content
         if self.verbose:
-            with open('logs/reaction_matrix.log','rt') as f:
-                for l in f:
-                    print(l.strip())
-            
+            with open('logs/reaction_matrix.log', 'rt') as f:
+                for m in f:
+                    print(m.strip())
             
 
-    def R(self,Te,Ti=None,E=0.1,sparse=False,write=True):
+    def R(self, Te, Ti=None, E=0.1, sparse=False, write=True):
         ''' Returns the rate coefficients in cm**3 s**-1
 
         Parameters
@@ -726,25 +679,25 @@ class Crm(Tools):
             Vector of external sinks/sources in cm**3 s**-1
         '''
         from scipy.sparse import csc_matrix
-        if Ti is None: Ti=Te # Check for Ti, set if necessary
-        ni,ne=1,1 # Set densities to one to get rate coefficients as output
-        R,ext=self.populate('R',Te,0,Ti,0,E)
-    
+
+        if Ti is None: 
+            Ti=Te # Check for Ti, set if necessary
+        # Set densities to one to get rate coefficients as output
+        ni=1
+        ne=1
+        R, ext = self.populate('R', Te, 0, Ti, 0, E)
         if write: # Write to log if requested
-            self.write_matrix(R,ext,'R',Te,0,Ti,0,E)
+            self.write_matrix(R, ext, 'R', Te, 0, Ti, 0, E)
             if self.verbose: # Print rate matrix to stdout if running verbose
-                with open('logs/R_matrix.log','rt') as f:
-                    for l in f:
-                        print(l.strip())
-        
-        if sparse: R=csc_matrix(R)  # Use sparse format if requested
-
-        return R,ext
-
+                with open('logs/R_matrix.log', 'rt') as f:
+                    for m in f:
+                        print(m.strip())
+        if sparse: 
+            R = csc_matrix(R)  # Use sparse format if requested
+        return R, ext
 
 
-
-    def M(self,Te,ne,Ti=None,ni=None,E=0.1,sparse=False,write=True):
+    def M(self, Te, ne, Ti=None, ni=None, E=0.1, sparse=False, write=True):
         ''' Returns the rate coefficients in cm**3 s**-1
 
         Parameters
@@ -774,20 +727,20 @@ class Crm(Tools):
             Vector of external sinks/sources in s**-1
         '''
         from scipy.sparse import csc_matrix
-        if Ti is None: Ti=Te # Check for Ti, set if necessary
-        if ni is None: ni=ne # Check for ni, set if necessary
 
-        M,ext=self.populate('M',Te,ne,Ti,ni,E)
-
+        if Ti is None: 
+            Ti = Te # Check for Ti, set if necessary
+        if ni is None: 
+            ni = ne # Check for ni, set if necessary
+        M, ext = self.populate('M', Te, ne, Ti, ni, E)
         if write:   # Write to log if requested
-            self.write_matrix(M,ext,'M',Te,ne,Ti,ne,E)
+            self.write_matrix(M, ext, 'M', Te, ne, Ti, ne, E)
             if self.verbose: # Print output if running verbose
-                with open('logs/M_matrix.log','rt') as f:
-                    for l in f:
-                        print(l.strip())
-        
-        if sparse: M=csc_matrix(M) # Use sparse format if requested
-    
+                with open('logs/M_matrix.log', 'rt') as f:
+                    for m in f:
+                        print(m.strip())
+        if sparse: 
+            M = csc_matrix(M) # Use sparse format if requested
         return M,ext
  
 
@@ -820,49 +773,41 @@ class Crm(Tools):
         ext : ndarray
             Vector of external energy sinks/sources in eV
         '''
-        from numpy import matmul,block
+        from numpy import matmul, block
         from numpy.linalg import inv
-        if Ti is None: Ti=Te # Check for Ti, set if necessary
-        if ni is None: ni=ne # Check for ni, set if necessary
 
-        mat,ext=self.populate('Sgl',Te,ne,Ti,ni,E,Tm=Tm)    
-
-
+        if Ti is None: 
+            Ti=Te # Check for Ti, set if necessary
+        if ni is None: 
+            ni=ne # Check for ni, set if necessary
+        mat, ext = self.populate('Sgl', Te, ne, Ti, ni, E, Tm=Tm)    
         if write:
-            title=['Sgl_el','Sgl_ia','Sgl_v','Sgl_ga','Sgl_gm']
+            title = ['Sgl_el', 'Sgl_ia', 'Sgl_v', 'Sgl_ga', 'Sgl_gm']
             for i in range(5):
-                self.write_matrix(mat[:,:,i],ext[:,i],title[i],
-                                        Te,ne,Ti,ni,E,form='{:1.2E}')
-
-        
-        U=[ [mat[:,:,0], ext[:,0]],
-            [mat[:,:,1], ext[:,1]],
-            [mat[:,:,2], ext[:,2]],
-            [mat[:,:,3], ext[:,3]],
-            [mat[:,:,4], ext[:,4]], ]
-
-
-        M,G=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
-
-        MP=M[:self.Np,:self.Np]
-        MQ=M[self.Np:,self.Np:]
-        V=M[self.Np:,:self.Np]
-        H=M[:self.Np,self.Np:]
-        
-
-        ret=[]
+                self.write_matrix(mat[:,:,i], ext[:,i], title[i], Te, ne, Ti, 
+                        ni, E, form='{:1.2E}')
+        U = [
+                [mat[:,:,0], ext[:,0]],
+                [mat[:,:,1], ext[:,1]],
+                [mat[:,:,2], ext[:,2]],
+                [mat[:,:,3], ext[:,3]],
+                [mat[:,:,4], ext[:,4]], 
+            ]
+        # Get the full rate matrix
+        M, G = self.M(Te, ne, Ti, ni, E, write=write) 
+        MP = M[:self.Np, :self.Np]
+        MQ = M[self.Np:, self.Np:]
+        V = M[self.Np:, :self.Np]
+        H = M[:self.Np, self.Np:]
+        ret = []
         for S in U:
-            UP=S[0][:self.Np,:self.Np]
-            UQ=S[0][self.Np:,self.Np:]
-            UV=S[0][self.Np:,:self.Np]
-            UH=S[0][:self.Np,self.Np:]
-
-            P=UP-matmul(UH,matmul(inv(MQ),V))
-            Q=UV-matmul(UQ,matmul(inv(MQ),V))
-            
-            ret.append([block( [ [P],[Q]]),S[1]])
-
-            
+            UP = S[0][:self.Np, :self.Np]
+            UQ = S[0][self.Np:, self.Np:]
+            UV = S[0][self.Np:, :self.Np]
+            UH = S[0][:self.Np, self.Np:]
+            P = UP - matmul(UH, matmul(inv(MQ), V))
+            Q = UV - matmul(UQ, matmul(inv(MQ), V))
+            ret.append([block([[P], [Q]]), S[1]])
         return ret
 
 
@@ -901,23 +846,20 @@ class Crm(Tools):
         extm : ndarray
             Intensity of molecular lines from external source
         '''
-        if Ti is None: Ti=Te # Check for Ti, set if necessary
-        if ni is None: ni=ne # Check for ni, set if necessary
-
-        mat,ext=self.populate('I',Te,ne,Ti,ni,E,Tm=Tm)    
+        if Ti is None: 
+            Ti=Te # Check for Ti, set if necessary
+        if ni is None: 
+            ni=ne # Check for ni, set if necessary
+        mat, ext = self.populate('I', Te, ne, Ti, ni, E, Tm=Tm)    
         if write:
-            title=['Ia','Im']
+            title=['Ia', 'Im']
             for i in range(5):
-                self.write_matrix(mat[:,:,i],ext[:,i],title[i],
-                                            Te,ne,Ti,ni,E,form='{:1.2E}')
+                self.write_matrix(mat[:,:,i], ext[:,i], title[i], Te, ne, Ti,
+                        ni, E, form='{:1.2E}')
+        return  [[mat[:,:,0], ext[:,0]], [mat[:,:,1], ext[:,1]]]
 
 
-        return  [   [mat[:,:,0], ext[:,0]],
-                    [mat[:,:,1], ext[:,1]] ]
-
-
-    def E(self,Te,ne,Ti=None,ni=None,E=0.1,
-                                Tm=0,write=False):
+    def E(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, write=False):
         ''' Returns the photon power in eV s**-1
 
         Parameters
@@ -952,21 +894,17 @@ class Crm(Tools):
         extm : ndarray
             Power of molecular lines from external source
         '''
-        if Ti is None: Ti=Te # Check for Ti, set if necessary
-        if ni is None: ni=ne # Check for ni, set if necessary
-
-        mat,ext=self.populate('E',Te,ne,Ti,ni,E,Tm=Tm)    
-
-
+        if Ti is None: 
+            Ti=Te # Check for Ti, set if necessary
+        if ni is None: 
+            ni=ne # Check for ni, set if necessary
+        mat, ext = self.populate('E', Te, ne, Ti, ni, E, Tm=Tm)    
         if write:
-            title=['Ea','Em']
+            title=['Ea', 'Em']
             for i in range(5):
-                self.write_matrix(mat[:,:,i],ext[:,i],
-                                title[i],Te,ne,Ti,ni,E,form='{:1.2E}')
-
-
-        return  [   [mat[:,:,0], ext[:,0]],
-                    [mat[:,:,1], ext[:,1]] ]
+                self.write_matrix(mat[:,:,i], ext[:,i], title[i], Te, ne, Ti,
+                        ni, E, form='{:1.2E}')
+        return  [[mat[:,:,0], ext[:,0]], [mat[:,:,1], ext[:,1]]]
 
  
     def ddt(self, t, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, Sext=True, gl=True,
@@ -1042,80 +980,68 @@ class Crm(Tools):
                             Eradm, followed by species-resolved density
                             rates
         '''
-        from numpy import block,zeros,matmul,reshape,sum
+        from numpy import block, zeros, matmul, reshape, sum
         from  numpy.linalg import inv
         from scipy.integrate import solve_ivp
 
         #densonly=False
         # TODO: Combine with full_nt  
-        N=len(self.species)
-        Np=self.Np
-
+        N = len(self.species)
+        Np = self.Np
         if n is None:
-            n0=self.n0()
+            n0 = self.n0()
         else:
-            n0=n
-
-        M,G=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
-
+            n0 = n
+        # Get the full rate matrix
+        M, G = self.M(Te, ne, Ti, ni, E, write=write) 
         if gl is True:
-            M,G,n0=self.gl_crm(M,G,Sext,n0)
-            sfunc=self.Sgl
-
+            M, G, n0 = self.gl_crm(M, G, Sext, n0)
+            sfunc = self.Sgl
         else:
-            sfunc=self.S
-
+            sfunc = self.S
         if densonly is False:
-                
-            U=sfunc(Te,ne,Ti,ni,E,Tm,write=write)
-            
+            U=sfunc(Te, ne, Ti, ni, E, Tm, write=write)
             if Qres is True: 
-                mat=block(  [   [zeros((N,5*N)),     U[0][0]],
-                                [zeros((N,5*N)),     U[1][0]],
-                                [zeros((N,5*N)),     U[2][0]],
-                                [zeros((N,5*N)),     U[3][0]],
-                                [zeros((N,5*N)),     U[4][0]],
-                                [zeros((Np*gl+N*(not gl),5*N)),     M]   ])
-
-                n=zeros((len(mat),))
-                n[-Np*gl-N*(not gl):]=n0
-                ext=block([U[0][1], U[1][1], U[2][1], U[3][1], U[4][1], G])
-
+                mat = block([
+                        [zeros((N, 5*N)), U[0][0]],
+                        [zeros((N, 5*N)), U[1][0]],
+                        [zeros((N, 5*N)), U[2][0]],
+                        [zeros((N, 5*N)), U[3][0]],
+                        [zeros((N, 5*N)), U[4][0]],
+                        [zeros((Np*gl + N*(not gl), 5*N)), M],
+                        ])
+                n = zeros((len(mat),))
+                n[-Np*gl - N*(not gl):] = n0
+                ext = block([U[0][1], U[1][1], U[2][1], U[3][1], U[4][1], G])
             else:
-
-                    mat=block(  [   [zeros((5,)),      sum(U[0][0],axis=0)],
-                                    [zeros((5,)),      sum(U[1][0],axis=0)],
-                                    [zeros((5,)),      sum(U[2][0],axis=0)],
-                                    [zeros((5,)),      sum(U[3][0],axis=0)],
-                                    [zeros((5,)),      sum(U[4][0],axis=0)],
-                                    [zeros((Np*gl+N*(not gl),5)),   M]   ])
-
-                    if gl is True:
-                        n=zeros((len(mat),))
-                        n[-Np:]=n0
-                    else:
-                        n=block([   zeros((5,)), n0    ] )
-                        n=n.reshape((N+5,))
-
-                    ext=block([ sum(U[0][1],axis=0), sum(U[1][1],axis=0), 
-                                sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
-                                sum(U[4][1],axis=0), G                    ])
-                
+                mat = block([
+                        [zeros((5,)), sum(U[0][0], axis=0)],
+                        [zeros((5,)), sum(U[1][0], axis=0)],
+                        [zeros((5,)), sum(U[2][0], axis=0)],
+                        [zeros((5,)), sum(U[3][0], axis=0)],
+                        [zeros((5,)), sum(U[4][0], axis=0)],
+                        [zeros((Np*gl + N*(not gl), 5)), M],
+                        ])
+                if gl is True:
+                    n = zeros((len(mat),))
+                    n[-Np:] = n0
+                else:
+                    n = block([zeros((5,)), n0])
+                    n = n.reshape((N+5,))
+                ext = block([
+                        sum(U[0][1], axis=0), sum(U[1][1], axis=0), 
+                        sum(U[2][1], axis=0), sum(U[3][1], axis=0), 
+                        sum(U[4][1],axis=0), G
+                        ])
         else:
-            mat=M
-            ext=G
-            n=n0
-
-        return solve_ivp(lambda x,y: self.linearized(x,y,mat,ext),(0,t),
-                                            n,'LSODA',dense_output=True)
-
-        
+            mat = M
+            ext = G
+            n = n0
+        return solve_ivp(lambda x, y: self.linearized(x, y, mat, ext), (0, t),
+                n, 'LSODA', dense_output=True)
 
 
-
-
-
-    def gl_crm(self,mat,ext,Sext=True,n0=None,matrices=False):
+    def gl_crm(self, mat, ext, Sext=True, n0=None, matrices=False):
         ''' Returns the P-space matrices according to Greenland 2001
 
         Parameters
@@ -1155,66 +1081,59 @@ class Crm(Tools):
         eigenvalues : ndarray
             The eigenvalues of the supplied rate matrix
         '''
-        from numpy import matmul,diag,real
-        from numpy.linalg import inv,eig
+        from numpy import matmul, diag, real
+        from numpy.linalg import inv, eig
 
         # Use input n0 as default unless explict n0 requested
-        if n0 is None: n0=self.n0() 
-        
-
+        if n0 is None: 
+            n0 = self.n0() 
         # Create block matric from M
-        MP=mat[:self.Np,:self.Np]
-        MQ=mat[self.Np:,self.Np:]
-        V=mat[self.Np:,:self.Np]
-        H=mat[:self.Np,self.Np:]
-
+        MP = mat[:self.Np, :self.Np]
+        MQ = mat[self.Np:, self.Np:]
+        V = mat[self.Np:, :self.Np]
+        H = mat[:self.Np, self.Np:]
         # Calculate Meff
-        Meff=(MP-matmul(matmul(H,inv(MQ)),V))
-
+        Meff = (MP - matmul(matmul(H, inv(MQ)), V))
         # Diagonalize M
-        eigs,T=eig(mat)
-
+        eigs, T = eig(mat)
         if eigen is True:
-            return T,real(eigs)
+            return T, real(eigs)
         # Order the eigenvalues and vectors in increasing magnitude
         # TODO should this be done for all the eigenvectors or separately   
         # between the Q and P space??
         # --> Does not seem to affect the solution
-        eigind=abs(eigs[self.Np:]).argsort()[::1] 
-        e1=eigs[self.Np:]
-        T1=T[:,self.Np:]
-        e1=e1[eigind]
-        T1=T1[:,eigind]
-
+        eigind = abs(eigs[self.Np:]).argsort()[::1] 
+        e1 = eigs[self.Np:]
+        T1 = T[:,self.Np:]
+        e1 = e1[eigind]
+        T1 = T1[:,eigind]
         #eigs=eigs[eigind]
         #T=T[:,eigind]
-        eigs[self.Np:]=e1
-        T[:,self.Np:]=T1
+        eigs[self.Np:] = e1
+        T[:,self.Np:] = T1
         # Only use real parts TODO is this OK??
-        eigs=real(eigs)
-        D=diag(eigs)
-
+        eigs = real(eigs)
+        D = diag(eigs)
         # Create block matrix
-        TQ=T[self.Np:,self.Np:]
-        TP=T[:self.Np,:self.Np]
-        delta=T[self.Np:,:self.Np]
-        Delta=T[:self.Np,self.Np:]
-        
-
+        TQ = T[self.Np:, self.Np:]
+        TP = T[:self.Np, :self.Np]
+        delta = T[self.Np:, :self.Np]
+        Delta = T[:self.Np, self.Np:]
         # Calculate P-space CRM
-        GPp=real((Sext is True)*ext[:self.Np]-matmul(matmul(Delta,inv(TQ)),ext[self.Np:]))
-        nP0p=real(n0[:self.Np]-matmul(matmul(Delta,inv(TQ)),n0[self.Np:]))
-        
-        return Meff,GPp,nP0p
+        GPp = real((Sext is True)*ext[:self.Np] - matmul(matmul(Delta,
+                inv(TQ)), ext[self.Np:]))
+        nP0p = real(n0[:self.Np] - matmul(matmul(Delta, inv(TQ)), 
+                n0[self.Np:])) 
+        return Meff, GPp, nP0p
 
   
-    def linearized(self,t,n,mat,ext):
+    def linearized(self, t, n, mat, ext):
         ''' RHS of the linearized system of ODEs ''' 
         from numpy import matmul
 
-        return matmul(mat,n)+ext
+        return matmul(mat, n) + ext
 
-    def evaluate_CRM(self,Te,ne,Ti=None,ni=None,E=0.1,printout=True):
+    def evaluate_CRM(self, Te, ne, Ti=None, ni=None, E=0.1, printout=True):
         ''' **INCOMPLETE** Evaluates the current CRM  according to Greenland 2001
 
         Evaluates the separation between the minimum lifetimes and CRM
@@ -1252,15 +1171,17 @@ class Crm(Tools):
         '''
         from numpy import matmul
         from numpy.linalg import inv
+
         # Get matrices and eigenvalues/-vectors
-        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),matrices=True) 
-        TQ,delta=T[self.Np:,self.Np:],T[self.Np:,:self.Np]
-        tau=1/abs(D)
-        tauPmin=min(tau[:self.Np])
-        tauQmax=max(tau[self.Np:])
-        norm=matmul(inv(TQ),delta)
-        maxnorm=max([sum(abs(norm[:,i])) for i in range(norm.shape[1])])
-        maxdelta=max([sum(abs(delta[:,i])) for i in range(delta.shape[1])])
+        M, T, D = self.gl_crm(*self.M(Te, ne, Ti, ni, E, write=False), 
+                matrices=True) 
+        TQ, delta = T[self.Np:, self.Np:], T[self.Np:, :self.Np]
+        tau = 1/abs(D)
+        tauPmin = min(tau[:self.Np])
+        tauQmax = max(tau[self.Np:])
+        norm = matmul(inv(TQ), delta)
+        maxnorm = max([sum(abs(norm[:,i])) for i in range(norm.shape[1])])
+        maxdelta = max([sum(abs(delta[:,i])) for i in range(delta.shape[1])])
         if printout is True:
             print("Validity of CRM with Np={}".format(self.slist[:self.Np]))
             print("    max(|delta|)={:.2E}".format(maxdelta))
@@ -1268,7 +1189,7 @@ class Crm(Tools):
             print("    min(tau_P)={:.2E}".format(tauPmin))
             print("    max(tau_Q)={:.2E}".format(tauQmax))
         else:
-            return [maxdelta,maxnorm,tauPmin,tauQmax]
+            return [maxdelta ,maxnorm, tauPmin, tauQmax]
 
     
     def generate_CRM(self, Te, ne, kappa, Ti=None, ni=None, E=0.1, epsilon=1):
@@ -1300,70 +1221,107 @@ class Crm(Tools):
         '''
         from numpy import array,where,matmul
         from numpy.linalg import inv
+
         # Get matrices and eigenvalues/-vectors
-        M,T,D=self.gl_crm(*self.M(Te,ne,Ti,ni,E,write=False),matrices=True) 
+        M, T, D = self.gl_crm(*self.M(Te, ne, Ti, ni, E, write=False),
+                matrices=True) 
         # Construct indicator matrix
-        I=abs(T)
-        I[I<=kappa]=0
-        I[I>kappa]=1
-
-
+        I = abs(T)
+        I[I <= kappa] = 0
+        I[I > kappa] = 1
         # TODO: What is epsilon?
         # Create Z-array
-        Z=[]
+        Z = []
         for i in I: # Loop over species
-            N=0
-            while i[N]==0: # Count leading zeros
-                N+=1
+            N = 0
+            while i[N] == 0: # Count leading zeros
+                N += 1
                 # Break if all species are 0
-                if N==len(i):
+                if N == len(i):
                     break
             Z.append(N)
-
         # Get increasing order of leading zeros
-        Z=array(Z)
-        Zind=Z.argsort()[::1] 
+        Z = array(Z)
+        Zind = Z.argsort()[::1] 
         # Check whether indicator matrix is singular
-        if max(Z)==M.shape[1]:
+        if max(Z) == M.shape[1]:
             print('WARNING! Matrix I is singular')
-
         # Identify a boolean array for valid Np
-        Np=[Z[Zind][i]>=i for i in range(len(Z))]
-
-
-        di=range(len(Z))-Zind # Track change in index space
-        sorted_D=D[Zind]
-        sorted_species=[self.slist[i] for i in Zind]
-        rej=[]
+        Np = [Z[Zind][i] >= i for i in range(len(Z))]
+        di = range(len(Z)) - Zind # Track change in index space
+        sorted_D = D[Zind]
+        sorted_species = [self.slist[i] for i in Zind]
+        rej = []
         for i in range(len(Z)):
-            if Np[i]==True:
-                if i+1==len(Z): continue # Full model, uninteresting
-                TQ,delta=T[i+1:,i+1:],T[i+1:,:i+1]
-                norm=matmul(inv(TQ),delta)
-                maxnorm=max([sum(abs(norm[:,i])) for i in range(norm.shape[1])])
-                if maxnorm<epsilon:
-                    print(  'Possible CRM NP={} model with TQinv*delta={:.2E}, '
+            if Np[i] == True:
+                if i + 1 == len(Z): 
+                    continue # Full model, uninteresting
+                TQ = T[i+1:,i+1:]
+                delta = T[i+1:,:i+1]
+                norm = matmul(inv(TQ), delta)
+                maxnorm = max([sum(abs(norm[:,i])) for i in 
+                        range(norm.shape[1])])
+                if maxnorm < epsilon:
+                    print('Possible CRM NP={} model with TQinv*delta={:.2E}, '
                             'tauP={:.2E} s, tauQ={:.2E} s, and  P-space {} '
-                            'found.'.format(i+1,maxnorm,
-                            1/abs(min(sorted_D[:i+1])),
-                            1/abs(max(sorted_D[i+1:])),sorted_species[:i+1])) 
+                            'found.'.format(i + 1, maxnorm,
+                            1/abs(min(sorted_D[:i + 1])),
+                            1/abs(max(sorted_D[i + 1:])), 
+                            sorted_species[:i + 1])) 
                 else:
                     rej.append(maxnorm)
-        if len(rej)>0:
+        if len(rej) > 0:
             print('Minimum rejected maxnorm={:.2E}'.format(min(rej)))
 
-
-
         
-    def intensity(self,Te,ne,Ti=None,ni=None,E=0.1,units='v',norm=True,
-                            write=False,Sext=True,n=None,reassociation=1e3):
-        ''' Returns a list of 2x(NxN) vector with spectroscopic units/intensity of [Ia, Im]'''
-        from numpy import reshape,zeros,multiply,where
-        from numpy import transpose,matmul,array,mean,all,diag
+    def intensity(self, Te, ne, Ti=None, ni=None, E=0.1, units='v', norm=True,
+                  write=False, Sext=True, n=None):
+        ''' **INCOMPLETE** Returns a matrix of gamma intensities
+        
+        Parameters
+        ----------
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**-3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates       
+        units : string, optional (default: l)
+            units of the plot ordinate
+            ev - power in eV/s
+            v - wavenumber cm**-1
+            f - frequency Hz
+            l - wavelength nm
+            Å - wavelength Å
+        norm : boolean, optional (default: False)
+            normalize the lines to the total as determined by units
+        Sext : boolean, optional (default: True)
+            switch for considering 'external' sinks/sources (e.g. 
+            re-association)
+        write : boolean, optional (default: True)
+            Switch for writing the R-matrix to the logs
+        n0 : list of floats, optional (default: None)
+            Initial density distribution of the species defined in the 
+            input. List must be of the same length as the species list,
+            and the order is determined by the input file. Defaults to 
+            the initial densities defined in the input if n0 is None.
+
+        Returns
+        -------
+        intensity : ndarray
+            A 2-by-NxN array of values of the requested units. The first
+            index is atomic lines, and the second molecular lines.
+        '''
+        # TODO: Solve steady state from dn/dt=0!
+        from numpy import reshape, zeros, multiply, where
+        from numpy import transpose, matmul, array, mean, all, diag
         from scipy.optimize import minimize
         from scipy.integrate import solve_ivp
         from matplotlib.pyplot import figure
-
 
         '''
         def dt(t,n,mat,ext):
@@ -1373,7 +1331,8 @@ class Crm(Tools):
 
 
 
-        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
+        if n is None: n=self.n0() 
+        # Use input n0 as default unless explict n0 requested
         NN=len(self.species)*len(self.species)
 
         mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
@@ -1381,12 +1340,13 @@ class Crm(Tools):
         # Supply molecules to achieve SS
         ext[1]=sum(n)/2
         # Simulate to SS
-        ss_sol=solve_ivp(lambda x,y: dt(x,y,mat,ext),(0,10),n,'LSODA',dense_output=True)
+        ss_sol=solve_ivp(lambda x,y: dt(x,y,mat,ext),(0,10),n,'LSODA',
+                dense_output=True)
 
         ss_sol=diag(ss_sol.y[:,-1])
         '''
 
-        def dt(t,n,mat,ext,n0):
+        def dt(t, n, mat, ext, n0):
             '''
             ntot=self.totparticles(n)
             dn=self.totparticles(n)-self.totparticles(n0)
@@ -1400,38 +1360,31 @@ class Crm(Tools):
             #ext[0]=-fac*n[0]
             #ext[1]=-0.99*self.totpart(ext)
             #ext[1]=-0.5*ext[0]
-            return matmul(mat,n)+ext
+            return matmul(mat, n) + ext
 
-        def ss(t,Y):
+        def ss(t, Y):
             global ss_n 
-            if norm(Y-ss_n)<7e5:
+            if norm(Y - ss_n) < 7e5:
                 return 0
             else:
                 return 1
-        ss.terminal=True
+        ss.terminal = True
 
-        def findfac(fac,n,mat,ext,n0):
-            nend_sum=self.totparticles(solve_ivp(lambda x,y: dt(x,y,mat,ext,n,
-                            fac),(0,1),n,'LSODA',dense_output=True).y[:,-1])
-            
-            return abs(self.totparticles(n0)-nend_sum)
-            
-            
+        def findfac(fac, n, mat, ext, n0):
+            nend_sum = self.totparticles(solve_ivp(lambda x, y: dt(x, y, mat,
+                    ext, n, fac), (0, 1), n, 'LSODA', 
+                    dense_output=True).y[:,-1])
+            return abs(self.totparticles(n0) - nend_sum)
 
-
-        if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
-        NN=len(self.species)*len(self.species)
-
-        mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
-       
+        if n is None: 
+            n=self.n0() # Use input n0 as default unless explict n0 requested
+        NN = len(self.species)*len(self.species)
+        # Get the full rate matrix
+        mat, ext = self.M(Te, ne, Ti, ni, E, write=False) 
         ''' Assume re-association to achieve SS 
         mat[0,0]=-reassociation
         mat[1,0]=-mat[0,0]*0.5 # Conserve nucleii
-    
         fac=minimize(findfac,5e4,(n,mat,ext,n))
-        '''
-
-        '''
         psor=-4.119965e20 
         psorgc=3.26090e20
         n[0]=4.846e13
@@ -1443,157 +1396,180 @@ class Crm(Tools):
         # Supply molecules to achieve SS
         '''ext[1]=sum(n)/0.2'''
         # Simulate to SS
-        ss_sol=diag(solve_ivp(lambda x,y: dt(x,y,mat,ext,n),(0,1),
-                                    n,'LSODA',dense_output=True).y[:,-1])
-        #return
-
-
-
-
-
-
-
+        ss_sol = diag(solve_ivp(lambda x, y: dt(x, y, mat, ext, n), (0, 1), n,
+                'LSODA', dense_output=True).y[:,-1])
         #def ss(n,mat):
         #    return matmul(mat,n)
-
-        #if n is None: n=self.n0() # Use input n0 as default unless explict n0 requested
+        #if n is None: n=self.n0() 
+        # Use input n0 as default unless explict n0 requested
         #NN=len(self.species)*len(self.species)
-
         #mat,ext=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
         # Take 2 'time-steps' for initial guess
         #for i in range(2):
         #    n=n+(matmul(mat,n)+ext*(Sext is True))*1e-9
-
-
-        x=self.E(Te,ne,Ti,Te,E,write=False)
-        y=self.I(Te,ne,Ti,Te,E,write=False)
-   
-
+        x = self.E(Te, ne, Ti, Te, E, write=False)
+        y = self.I(Te, ne, Ti, Te, E, write=False)
         if write:
-            self.write_matrix(y[0][0],n,'Ia',Te,ne,Ti,ni,E,form='{:1.2E}')
-            self.write_matrix(y[1][0],n,'Im',Te,ne,Ti,ni,E,form='{:1.2E}')
-
-        
-        ret=[]
+            self.write_matrix(y[0][0], n, 'Ia', Te, ne, Ti, ni, E, 
+                    form='{:1.2E}')
+            self.write_matrix(y[1][0], n, 'Im', Te, ne, Ti, ni, E,
+                    form='{:1.2E}')
+        ret = []
         #ss_sol=diag((fsolve(ss,n,(mat))))
         for i in range(2):
-            arr=zeros((NN,2))
-
+            arr = zeros((NN, 2))
             # Use the steady-state solution to find transitions 
-            Y=matmul(y[i][0],ss_sol)
-            arr[:,0]=reshape(x[i][0],(1,NN))
-            arr[:,1]=reshape(Y,(1,NN))
-
+            Y = matmul(y[i][0], ss_sol)
+            arr[:,0] = reshape(x[i][0], (1, NN))
+            arr[:,1] = reshape(Y, (1, NN))
             # Drop non-radiative entries
-            arr=transpose(arr[~all(abs(arr)< 1e-8,axis = 1)])
-        
-            if units=='ev':     arr[0,:]=1*arr[0,:]
-            elif units=='v':    arr[0,:]=1e7/(1239.84193/arr[0,:])
-            elif units=='f':    arr[0,:]=241.798*arr[0,:]
-            elif units=='l':    arr[0,:]=1239.84193/arr[0,:]
-            elif units=='Å':    arr[0,:]=12398.4193/arr[0,:]
-
-
+            arr = transpose(arr[~all(abs(arr) < 1e-8, axis=1)])
+            if units == 'ev':     
+                arr[0,:] = arr[0,:]
+            elif units == 'v':    
+                arr[0,:]=1e7/(1239.84193/arr[0,:])
+            elif units == 'f':
+                arr[0,:]=241.798*arr[0,:]
+            elif units == 'l':
+                arr[0,:]=1239.84193/arr[0,:]
+            elif units == 'Å':
+                arr[0,:]=12398.4193/arr[0,:]
             if norm is True:
-                nrm=sum(arr[1,:])
-
+                nrm = sum(arr[1,:])
             else:
-                nrm=1
-            arr[1,:]=arr[1,:]/nrm
-
+                nrm = 1
+            arr[1,:] = arr[1,:]/nrm
             ret.append(arr)
-
         return ret
             
 
-    def species_rate(self,key,Te,ne,Ti=None,ni=None,E=0.1):
-        if Ti is None: Ti=Te
-        if ni is None: ni=ne
+    def species_rate(self,species,Te,ne,Ti=None,ni=None,E=0.1):
+        ''' Returns the total reaction  rate of a given species
 
-        ret=0
+        Returns the net reaction rate of all reactions that have
+        the specified species handle as a reactant. For CRM species,
+        this is analog to depletion rate, but for background species
+        it is net rate of reactions involving the background species.
+
+        Parameters
+        ----------
+        species : string
+            species handle as defined in the input file
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**-3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates
+        
+        Returns
+        -------
+        totrate : float
+            the net rate of all reactions having species as a reactant 
+        '''
+
+        if Ti is None: 
+            Ti = Te
+        if ni is None: 
+            ni = ne
+        ret = 0
         for r in self.reactions:
-            mult=1
-            if key in r.reactants:
-                if r.type=='COEFFICIENT':
-                    mult=1/ne
-                ret+=r.rate(Te,Ti,E,ne)*mult
-
+            mult = 1
+            if species in r.reactants:
+                if r.type == 'COEFFICIENT':
+                    mult = 1/ne
+                ret += r.rate(Te, Ti, E, ne)*mult
         return ret
 
 
-
-
-
-
-
-
     def n0(self):
+        ''' Returns initial densities as specieifed in the input '''
         from numpy import zeros
-        ret=zeros((len(self.species),))
+        ret = zeros((len(self.species),))
         for s in range(len(self.species)):
             try:
-                ret[s]=self.species[self.slist[s]]['n'] 
+                ret[s] = self.species[self.slist[s]]['n'] 
             except:
                 pass
         return ret
 
 
-    def get_reaction(self,database,name):
+    def get_reaction(self, database, name):
+        ''' Returns the Reaction object for the requested reaction
+        
+        Parameters
+        ----------
+        database : string
+            the database where to look for the reaction
+        name : string
+            the reaction name/handle to look for
+        '''
         for r in self.reactions:
-            if name==r.name:
-                if r.database==database:
+            if name == r.name:
+                if r.database == database:
                     return r        
         return None
 
-    def get_rate(self,database,name,T,n,E=0.1):
-        return self.get_reaction(database,name).rate(T,T,E,n)
+
+    def get_rate(self, database, name, T, n, E=0.1):
+        ''' **INCOMPLETE** Returns the rate of the requested reaction '''
+        return self.get_reaction(database,name).rate(T, T, E, n)
 
 
+    def totparticles(self, arr):
+        ''' Returns the total number of nuclei for a vector or matrix
 
+        Parameters
+        ----------
+        arr : ndarray
+            array or matrix of species densities along axes=0
 
-    def totparticles(self,arr,V=1):
-        ''' Returns the total number of nuclei for each time-step or of the full vector
-            totparticles(arr,*keys)
-            
-            arr     -   1D or 2D array contining the densities of CRM species
-                        The first dimension are the densities defined according
-                        to the species array [cm**-3]
-                        The second dimension should be the time-steps
-
-            Optional parameters
-            V (1)   -   Volume of the test box [cm**3]
-
-            Function assumes any molecular species to contain the string 'H2' in 
-            their identifier!
+        Returns
+        -------
+        totnuclei : float
+            total number of nulclei in the system
         '''
+        # TODO: Generalize to allow for any element as handle
         from numpy import zeros
 
-        
         try:    # If matrix 
-            ret=zeros((arr.shape[1],))
+            ret = zeros((arr.shape[1],))
             for j in range(arr.shape[1]):   # Loop through eac time-step
                 for i in range(len(arr)):   # Loop through each species in arr
-                    ret[j]+=(1+('H2' in self.slist[i]))*arr[i,j]
+                    ret[j] += (1 + ('H2' in self.slist[i]))*arr[i,j]
         except: # If vector
-            ret=0
+            ret = 0
             for i in range(len(arr)): # Loop through each species in arr
-                ret+=(1+('H2' in self.slist[i]))*arr[i]
-
+                ret += (1 + ('H2' in self.slist[i]))*arr[i]
         return ret
 
-    def totmol(self,arr):
+    def totmol(self, arr):
         from numpy import zeros
+        ''' Returns the total number of molecules in a vector or matrix
 
-        
+        Parameters
+        ----------
+        arr : ndarray
+            array or matrix of species densities along axes=0
+
+        Returns
+        -------
+        totnuclei : float
+            total number of molecules in the system
+        '''
         try:    # If matrix 
-            ret=zeros((arr.shape[1],))
+            ret = zeros((arr.shape[1],))
             for j in range(arr.shape[1]):   # Loop through eac time-step
                 for i in range(len(arr)):   # Loop through each species in arr
-                    ret[j]+=(('H2' in self.slist[i]))*arr[i,j]
+                    ret[j] += (('H2' in self.slist[i]))*arr[i,j]
         except: # If vector
-            ret=0
+            ret = 0
             for i in range(len(arr)): # Loop through each species in arr
-                ret+=(('H2' in self.slist[i]))*arr[i]
+                ret += (('H2' in self.slist[i]))*arr[i]
         return ret
 
 
@@ -1617,7 +1593,8 @@ class Crm(Tools):
         
 
         if mode=='diagnostic':
-            # Setup a 2D diagnostic list for the matrix and a list for the external source
+            # Setup a 2D diagnostic list for the matrix and a list for 
+            # the external source
             ext_source=[]
             ret=[]
             for i in range(len(self.species)):
