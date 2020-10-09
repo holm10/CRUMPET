@@ -1,0 +1,1625 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crm &#8212; CRUMPET 0.2rc1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RateData" href="CRUMPET.RateData.html" />
+    <link rel="prev" title="Crumpet" href="CRUMPET.Crumpet.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="crm">
+<h1>Crm<a class="headerlink" href="#crm" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="CRUMPET.Crm">
+<em class="property">class </em><code class="sig-prename descclassname">CRUMPET.</code><code class="sig-name descname">Crm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">species</span></em>, <em class="sig-param"><span class="n">bg</span></em>, <em class="sig-param"><span class="n">reactionlist</span></em>, <em class="sig-param"><span class="n">verbose</span></em>, <em class="sig-param"><span class="n">NP</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">14</span></em>, <em class="sig-param"><span class="n">nmax</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">rdata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CRUMPET.tools.Tools</span></code></p>
+<p>Class containing the CRM setup and central routines</p>
+<p>This class stores all information of the CRM setup, as defined in
+the input file. The class contains all the central routines for
+solving the system of ODEs or creating a Greenland CRM. Inherits
+the methods contained in the Tools class.</p>
+<p>…</p>
+<dl class="py attribute">
+<dt id="CRUMPET.Crm.species">
+<code class="sig-name descname">species</code><a class="headerlink" href="#CRUMPET.Crm.species" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each entry is a dictionary containing information on the
+initial density and potential level of the CRM  species. The
+dictionary keys are used to identify the species</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CRUMPET.Crm.reactions">
+<code class="sig-name descname">reactions</code><a class="headerlink" href="#CRUMPET.Crm.reactions" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list that contains all the reactions specified in the input,
+each reaction having its own Reaction Class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of Reaction objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CRUMPET.Crm.bg">
+<code class="sig-name descname">bg</code><a class="headerlink" href="#CRUMPET.Crm.bg" title="Permalink to this definition">¶</a></dt>
+<dd><p>As for ‘species’, but for the plasma background</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CRUMPET.Crm.NP">
+<code class="sig-name descname">NP</code><a class="headerlink" href="#CRUMPET.Crm.NP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of P-species (time-dependently evaluated species) to be
+considered in the sumulation. First NP species defined in the
+input deck is considered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int (default 2)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CRUMPET.Crm.vmax">
+<code class="sig-name descname">vmax</code><a class="headerlink" href="#CRUMPET.Crm.vmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of maxium vibrational states inculded in the CRM</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CRUMPET.Crm.nmax">
+<code class="sig-name descname">nmax</code><a class="headerlink" href="#CRUMPET.Crm.nmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of maximum atomic electronic states included in the CRM</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CRUMPET.Crm.verbose">
+<code class="sig-name descname">verbose</code><a class="headerlink" href="#CRUMPET.Crm.verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switch whether to show verbose output in the terminal. The
+same information os written to the log</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CRUMPET.Crm.path">
+<code class="sig-name descname">path</code><a class="headerlink" href="#CRUMPET.Crm.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to the parent folder relative to which subsequent paths
+are defined   species:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str (default ‘.’)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id7" title="CRUMPET.Crm.DIAGNOSTIC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DIAGNOSTIC</span></code></a>()</p></td>
+<td><p>Writes a log of the diagnostic reaction matrix</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id12" title="CRUMPET.Crm.E"><code class="xref py py-obj docutils literal notranslate"><span class="pre">E</span></code></a>(Te, ne[, Ti, ni, E, Tm, write])</p></td>
+<td><p>Returns the photon power in eV s**-1</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id11" title="CRUMPET.Crm.I"><code class="xref py py-obj docutils literal notranslate"><span class="pre">I</span></code></a>(Te, ne[, Ti, ni, E, Tm, write])</p></td>
+<td><p>Returns the photon intensity in s**-1</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id9" title="CRUMPET.Crm.M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">M</span></code></a>(Te, ne[, Ti, ni, E, sparse, write])</p></td>
+<td><p>Returns the rate coefficients in cm**3 s**-1</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id8" title="CRUMPET.Crm.R"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code></a>(Te[, Ti, E, sparse, write])</p></td>
+<td><p>Returns the rate coefficients in cm**3 s**-1</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id26" title="CRUMPET.Crm.S"><code class="xref py py-obj docutils literal notranslate"><span class="pre">S</span></code></a>(Te, ne[, Ti, ni, E, Tm, write])</p></td>
+<td><p><strong>OBSOLETE</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id10" title="CRUMPET.Crm.Sgl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sgl</span></code></a>(Te, ne[, Ti, ni, E, Tm, write])</p></td>
+<td><p>Returns the energy rates in eV s**-1</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id28" title="CRUMPET.Crm.dEdt_old"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dEdt_old</span></code></a>(t, Te, ne[, Ti, ni, E, Tm, Sext, …])</p></td>
+<td><p><strong>OBSOLETE</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id13" title="CRUMPET.Crm.ddt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ddt</span></code></a>(t, Te, ne[, Ti, ni, E, Tm, Sext, gl, n, …])</p></td>
+<td><p>Solves the time-evolution of the CRM system at given T and n</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id16" title="CRUMPET.Crm.evaluate_CRM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_CRM</span></code></a>(Te, ne[, Ti, ni, E, printout])</p></td>
+<td><p><strong>INCOMPLETE</strong> Evaluates the current CRM  according to Greenland 2001</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id27" title="CRUMPET.Crm.full_nt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">full_nt</span></code></a>(Te, ne, t, gl[, Ti, ni, E, n, Sext])</p></td>
+<td><p><strong>OBSOLETE</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id17" title="CRUMPET.Crm.generate_CRM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_CRM</span></code></a>(Te, ne, kappa[, Ti, ni, E, epsilon])</p></td>
+<td><p><strong>INCOMPLETE</strong> Generates the optimal CRMs per Greenland 2001</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id22" title="CRUMPET.Crm.get_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_rate</span></code></a>(database, name, T, n[, E])</p></td>
+<td><p><strong>INCOMPLETE</strong> Returns the rate of the requested reaction</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id21" title="CRUMPET.Crm.get_reaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_reaction</span></code></a>(database, name)</p></td>
+<td><p>Returns the Reaction object for the requested reaction</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id14" title="CRUMPET.Crm.gl_crm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gl_crm</span></code></a>(mat, ext[, Sext, n0, matrices])</p></td>
+<td><p>Returns the P-space matrices according to Greenland 2001</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id18" title="CRUMPET.Crm.intensity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intensity</span></code></a>(Te, ne[, Ti, ni, E, units, norm, …])</p></td>
+<td><p><strong>INCOMPLETE</strong> Returns a matrix of gamma intensities</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id15" title="CRUMPET.Crm.linearized"><code class="xref py py-obj docutils literal notranslate"><span class="pre">linearized</span></code></a>(t, n, mat, ext)</p></td>
+<td><p>RHS of the linearized system of ODEs</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id20" title="CRUMPET.Crm.n0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n0</span></code></a>()</p></td>
+<td><p>Returns initial densities as specieifed in the input</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id5" title="CRUMPET.Crm.populate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">populate</span></code></a>(mode, Te, ne[, Ti, ni, E, Tm])</p></td>
+<td><p>Function populating and returning the rate matrix and source</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id25" title="CRUMPET.Crm.populate_old"><code class="xref py py-obj docutils literal notranslate"><span class="pre">populate_old</span></code></a>(mode, Te, ne[, Ti, ni, E, …])</p></td>
+<td><p><strong>REDUNDANT*</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="CRUMPET.Crm.setup_ADAS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_ADAS</span></code></a>(x, ID, rdata, rlist, plist, K)</p></td>
+<td><p>Adds an ADAS reactions up to self.nmax</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id1" title="CRUMPET.Crm.setup_APID"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_APID</span></code></a>(x, ID, rlist, plist, K)</p></td>
+<td><p>Adds an APID-style ionization reaction</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id2" title="CRUMPET.Crm.setup_Johnson"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_Johnson</span></code></a>(i, ID, r)</p></td>
+<td><p>Adds a Johnson-style relaxation reaction from state n=i</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id4" title="CRUMPET.Crm.setup_custom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_custom</span></code></a>(fname, database)</p></td>
+<td><p>Adds the custom reactions defined in the input to the CRM</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="CRUMPET.Crm.setup_reactions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_reactions</span></code></a>(reactionlist, rdata)</p></td>
+<td><p>Adds the reactions to the CRM</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id19" title="CRUMPET.Crm.species_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">species_rate</span></code></a>(species, Te, ne[, Ti, ni, E])</p></td>
+<td><p>Returns the total reaction  rate of a given species</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id24" title="CRUMPET.Crm.totmol"><code class="xref py py-obj docutils literal notranslate"><span class="pre">totmol</span></code></a>(arr)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id23" title="CRUMPET.Crm.totparticles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">totparticles</span></code></a>(arr)</p></td>
+<td><p>Returns the total number of nuclei for a vector or matrix</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id6" title="CRUMPET.Crm.write_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_matrix</span></code></a>(mat, ext, char, te, ne, ti, ni, E)</p></td>
+<td><p>Writes the matrix to the logs</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="CRUMPET.Crm.DIAGNOSTIC">
+<code class="sig-name descname">DIAGNOSTIC</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.DIAGNOSTIC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a log of the diagnostic reaction matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.E">
+<code class="sig-name descname">E</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.E" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the photon power in eV s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Defaults to ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong># TODO</strong> (<em>remove external sources? No menaing</em>)</p></li>
+<li><p><em>[ [mata, exta], [matm, extm]]</em></p></li>
+<li><p><strong>mata</strong> (<em>ndarray</em>) – Power of atomic lines between the row- and column
+species</p></li>
+<li><p><strong>exta</strong> (<em>ndarray</em>) – Power of atomic lines from external source</p></li>
+<li><p><strong>matm</strong> (<em>ndarray</em>) – Power of molecular lines between the row- and column
+species</p></li>
+<li><p><strong>extm</strong> (<em>ndarray</em>) – Power of molecular lines from external source</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.I">
+<code class="sig-name descname">I</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.I" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the photon intensity in s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Defaults to ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong># TODO</strong> (<em>remove external sources? No menaing</em>)</p></li>
+<li><p><em>[ [mata, exta], [matm, extm]]</em></p></li>
+<li><p><strong>mata</strong> (<em>ndarray</em>) – Intensity of atomic lines between the row- and column
+species</p></li>
+<li><p><strong>exta</strong> (<em>ndarray</em>) – Intensity of atomic lines from external source</p></li>
+<li><p><strong>matm</strong> (<em>ndarray</em>) – Intensity of molecular lines between the row- and column
+species</p></li>
+<li><p><strong>extm</strong> (<em>ndarray</em>) – Intensity of molecular lines from external source</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.M">
+<code class="sig-name descname">M</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">sparse</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.M" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rate coefficients in cm**3 s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Defaults to ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>mat, ext</em></p></li>
+<li><p><strong>mat</strong> (<em>ndarray</em>) – Rate matrix containing the rates at the given temperature
+and density in cm**3 s**-1</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – Vector of external sinks/sources in s**-1</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.R">
+<code class="sig-name descname">R</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">sparse</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.R" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rate coefficients in cm**3 s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>mat, ext</em></p></li>
+<li><p><strong>mat</strong> (<em>ndarray</em>) – Rate matrix containing the rates at the given temperature
+and density in cm**3 s**-1</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – Vector of external sinks/sources in cm**3 s**-1</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.S">
+<code class="sig-name descname">S</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.S" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>OBSOLETE</strong></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.Sgl">
+<code class="sig-name descname">Sgl</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.Sgl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the energy rates in eV s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Defaults to ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>mat, ext</em></p></li>
+<li><p><strong>mat</strong> (<em>ndarray</em>) – Rate matrix containing the energy rates at the given
+temperature and density in eV s**-1</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – Vector of external energy sinks/sources in eV</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.dEdt_old">
+<code class="sig-name descname">dEdt_old</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.dEdt_old" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>OBSOLETE</strong></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.ddt">
+<code class="sig-name descname">ddt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">densonly</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.ddt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the time-evolution of the CRM system at given T and n</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em>) – end-time of simulation in s</p></li>
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
+re-association)</p></li>
+<li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
+associated with molecules. Defaults to E if Tm=0.</p></li>
+<li><p><strong>gl</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – switch determining wheter to evaluate the Np x Np
+Greenland CRM (True) or solve the full NxN system of
+ODEs (False)</p></li>
+<li><p><strong>n0</strong> (<em>list of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+<li><p><strong>Qres</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch determining whether to resolve the Q-species energy
+transfer or return the net energy transfer divided into
+processes.</p></li>
+<li><p><strong>densonly</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Only returns density rates if True, otherwise evaluates
+both density and energy rates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The solution of the IVP ODE problem up to time t. A function
+that interpolates the solution in the interval [0,t] is
+accessed by the method sol().
+The solution dimensionality along axis=0 is determined by
+the CRM setup and along axis=1 by the time-resolution
+according to the following:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>density=True</dt><dd><dl class="simple">
+<dt>Qres=False<span class="classifier">Np</span></dt><dd><p>Data ordered according to input species list</p>
+</dd>
+<dt>Qres=True<span class="classifier">N (requires gl=False)</span></dt><dd><p>Data ordered according to input species list</p>
+</dd>
+</dl>
+</dd>
+<dt>density=False</dt><dd><dl class="simple">
+<dt>Qres=False</dt><dd><dl class="simple">
+<dt>gl=True<span class="classifier">5 + Np</span></dt><dd><p>Total Ee, Ei/a, Epot, Erada, Eradm, followed
+by Np-resolved density rates</p>
+</dd>
+<dt>gl=False<span class="classifier">5 + N</span></dt><dd><p>Total Ee, Ei/a, Epot, Erada, Eradm, followed
+by species-resolved density rates</p>
+</dd>
+</dl>
+</dd>
+<dt>Qres=True</dt><dd><dl class="simple">
+<dt>gl=True<span class="classifier">5*N + Np</span></dt><dd><p>Species-resolved Ee, Ei/a, Epot, Erada,
+Eradm, followed by Np-resolved density rates</p>
+</dd>
+<dt>gl=False<span class="classifier">6*N</span></dt><dd><p>Species-resolved Ee, Ei/a, Epot, Erada,
+Eradm, followed by species-resolved density
+rates</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scipy.integrate._ivp.ivp.OdeResult object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.evaluate_CRM">
+<code class="sig-name descname">evaluate_CRM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">printout</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.evaluate_CRM" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>INCOMPLETE</strong> Evaluates the current CRM  according to Greenland 2001</p>
+<p>Evaluates the separation between the minimum lifetimes and CRM
+parameters of the P-space and that of the Q-space, which need
+to be sufficiently far apart for the CRM approximation to be
+accurate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ne<span class="classifier">float</span></dt><dd><p>electron density in cm**-3</p>
+</dd>
+<dt>Ti<span class="classifier">float, optional (default: None)</span></dt><dd><p>ion temperature in eV. Default sets Ti=Te</p>
+</dd>
+<dt>ni<span class="classifier">float, optional (default: None)</span></dt><dd><p>ion density in cm**-3. Default sets ni=ne</p>
+</dd>
+<dt>E<span class="classifier">float, optional (default: E=0.1)</span></dt><dd><p>molecular energy in eV for rates</p>
+</dd>
+<dt>printout<span class="classifier">boolean, optional (default: True)</span></dt><dd><p>switch to print results (True) or return the results (False)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><em>None if printout is True</em></p></li>
+<li><p><em>maxdelta, maxnorm, tauPmin, tauQmax</em></p></li>
+<li><p><strong>maxdelta</strong> (<em>float</em>) – maximum norm of the Greenland delta-parameter</p></li>
+<li><p><strong>maxnorm</strong> (<em>float</em>) – maximum of the norm of inv(Q_t)*delta</p></li>
+<li><p><strong>tauPmin</strong> (<em>float</em>) – minimum lifetime of the P-species</p></li>
+<li><p><strong>tauQmax</strong> (<em>float</em>) – maximum lifetome of the Q-species</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.full_nt">
+<code class="sig-name descname">full_nt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">gl</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.full_nt" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>OBSOLETE</strong></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.generate_CRM">
+<code class="sig-name descname">generate_CRM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">kappa</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">epsilon</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.generate_CRM" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>INCOMPLETE</strong> Generates the optimal CRMs per Greenland 2001</p>
+<p>Algorithm for finding the optimal set of P-species for a given
+temperature and density.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>kappa</strong> (<em>float</em>) – the threshold of the algorithm, &lt;&lt;1</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – sensitivity??</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.get_rate">
+<code class="sig-name descname">get_rate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">database</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">T</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.get_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>INCOMPLETE</strong> Returns the rate of the requested reaction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.get_reaction">
+<code class="sig-name descname">get_reaction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">database</span></em>, <em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.get_reaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Reaction object for the requested reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>database</strong> (<em>string</em>) – the database where to look for the reaction</p></li>
+<li><p><strong>name</strong> (<em>string</em>) – the reaction name/handle to look for</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.gl_crm">
+<code class="sig-name descname">gl_crm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mat</span></em>, <em class="sig-param"><span class="n">ext</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">matrices</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.gl_crm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the P-space matrices according to Greenland 2001</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mat</strong> (<em>ndarray</em>) – 2D rate matrix</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – 1D external sink/source vector</p></li>
+<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
+re-association)</p></li>
+<li><p><strong>n0</strong> (<em>list of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+<li><p><strong>eigen</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – switch to return the eigenvector and eigenvalues (True)
+rather than the Greenland rate matrices (False)</p></li>
+<li><p><strong>TODO</strong> (<em>#</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>Meff, GPp, nP0p if eigen is False</em></p></li>
+<li><p><strong>Meff</strong> (<em>ndarray</em>) – the Greenland Np x Np effective rate matrix for the
+P-species</p></li>
+<li><p><strong>GPp</strong> (<em>ndarray</em>) – the Greenland Np effective external sink/source vector for
+the P-species</p></li>
+<li><p><strong>nP0p</strong> (<em>ndarray</em>) – the Greenland Np effective initial densities for the
+P-species</p></li>
+<li><p><em>eigenvectors, eigenvalues if eigen is True</em></p></li>
+<li><p><strong>eigenvectors</strong> (<em>ndarray</em>) – The eigenvectors of the supplied rate matrix</p></li>
+<li><p><strong>eigenvalues</strong> (<em>ndarray</em>) – The eigenvalues of the supplied rate matrix</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.intensity">
+<code class="sig-name descname">intensity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">'v'</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>INCOMPLETE</strong> Returns a matrix of gamma intensities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>units</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: l</em><em>)</em>) – units of the plot ordinate
+ev - power in eV/s
+v - wavenumber cm**-1
+f - frequency Hz
+l - wavelength nm
+Å - wavelength Å</p></li>
+<li><p><strong>norm</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – normalize the lines to the total as determined by units</p></li>
+<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
+re-association)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+<li><p><strong>n0</strong> (<em>list of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>intensity</strong> – A 2-by-NxN array of values of the requested units. The first
+index is atomic lines, and the second molecular lines.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.linearized">
+<code class="sig-name descname">linearized</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">mat</span></em>, <em class="sig-param"><span class="n">ext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.linearized" title="Permalink to this definition">¶</a></dt>
+<dd><p>RHS of the linearized system of ODEs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.n0">
+<code class="sig-name descname">n0</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.n0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns initial densities as specieifed in the input</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.populate">
+<code class="sig-name descname">populate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.populate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function populating and returning the rate matrix and source</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>string</em>) – Defines the type of matrix to be written according to
+‘diagnostic’ - 2D list of reaction handles
+‘R’ - rate coefficient matrix in cm**3 s**-1
+‘M’ - rate matrix in s**-1
+‘Sgl’ - energy rate matrix in eV s**-1
+‘I’ - radiation intensity matrix # TODO: check</p></li>
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
+associated with molecules. Defaults to E if Tm=0.
+‘E’ - radiation power  matrix # TODO: check</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>mat</strong> (<em>ndarray</em>) – Rate matrix containing the rates at the given
+temperature and density. A 2D list in case mode=diagnostic</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – Vector of external sinks/sources. List if mode=diagnostic</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.populate_old">
+<code class="sig-name descname">populate_old</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sind</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Iind</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.populate_old" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>REDUNDANT*</strong></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.setup_ADAS">
+<code class="sig-name descname">setup_ADAS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">rdata</span></em>, <em class="sig-param"><span class="n">rlist</span></em>, <em class="sig-param"><span class="n">plist</span></em>, <em class="sig-param"><span class="n">K</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.setup_ADAS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an ADAS reactions up to self.nmax</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.setup_APID">
+<code class="sig-name descname">setup_APID</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">rlist</span></em>, <em class="sig-param"><span class="n">plist</span></em>, <em class="sig-param"><span class="n">K</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.setup_APID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an APID-style ionization reaction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.setup_Johnson">
+<code class="sig-name descname">setup_Johnson</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">r</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.setup_Johnson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a Johnson-style relaxation reaction from state n=i</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.setup_custom">
+<code class="sig-name descname">setup_custom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span></em>, <em class="sig-param"><span class="n">database</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.setup_custom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the custom reactions defined in the input to the CRM</p>
+<p>Parses any custom input rate file defined in the input file
+and adds their Reaction objects to the CRM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>string</em>) – path to the custom rate setup file relative to Crm.path</p></li>
+<li><p><strong>database</strong> (<em>string</em>) – database handle for the rates in the custom rate file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.setup_reactions">
+<code class="sig-name descname">setup_reactions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reactionlist</span></em>, <em class="sig-param"><span class="n">rdata</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.setup_reactions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the reactions to the CRM</p>
+<p>Called by __init__, adds the reactions from reactionlist to
+self.reactions using the rates in rdata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactionlist</strong> (<em>list</em>) – <p>a list of lists for setting up the CRM reactions. Each
+element is a list of the following data
+handle : string</p>
+<blockquote>
+<div><p>database_reaction as specified in the input</p>
+</div></blockquote>
+<dl class="simple">
+<dt>reactants<span class="classifier">list of strings</span></dt><dd><p>each element is a handle of the reactants. At least one
+of the species must be a background species, and only
+two reactants are currently supported</p>
+</dd>
+<dt>products<span class="classifier">list of strings</span></dt><dd><p>each element is a handle of the products</p>
+</dd>
+<dt>K<span class="classifier">string</span></dt><dd><p>a string of the net kinetic energy transfer for the
+background reactants to the products. Presently, all
+energy is assumed to end up as ion/atom kinetic energy.
+Supports calculations in the string, e.g. ‘2*3+4’</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>rdata</strong> (<em>RateData object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – a RateData object that contains the databases and reactions
+defined in the input file reactions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.species_rate">
+<code class="sig-name descname">species_rate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">species</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.species_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total reaction  rate of a given species</p>
+<p>Returns the net reaction rate of all reactions that have
+the specified species handle as a reactant. For CRM species,
+this is analog to depletion rate, but for background species
+it is net rate of reactions involving the background species.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> (<em>string</em>) – species handle as defined in the input file</p></li>
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>totrate</strong> – the net rate of all reactions having species as a reactant</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.totmol">
+<code class="sig-name descname">totmol</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.totmol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.totparticles">
+<code class="sig-name descname">totparticles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.totparticles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total number of nuclei for a vector or matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>ndarray</em>) – array or matrix of species densities along axes=0</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>totnuclei</strong> – total number of nulclei in the system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.write_matrix">
+<code class="sig-name descname">write_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mat</span></em>, <em class="sig-param"><span class="n">ext</span></em>, <em class="sig-param"><span class="n">char</span></em>, <em class="sig-param"><span class="n">te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">ti</span></em>, <em class="sig-param"><span class="n">ni</span></em>, <em class="sig-param"><span class="n">E</span></em>, <em class="sig-param"><span class="n">form</span><span class="o">=</span><span class="default_value">'{:1.1E}'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.write_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the matrix to the logs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mat</strong> (<em>ndarray</em><em> or </em><em>2D list</em>) – square matrix or list with data to be written</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em><em> or </em><em>list</em>) – 1D vector with external data to be written</p></li>
+<li><p><strong>char</strong> (<em>string</em>) – Identifier for file to be written</p></li>
+<li><p><strong>te</strong> (<em>float</em>) – Electron temperature for header</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – Electron density for header</p></li>
+<li><p><strong>ti</strong> (<em>float</em>) – ion temperature for header</p></li>
+<li><p><strong>ni</strong> (<em>float</em>) – ion density for header</p></li>
+<li><p><strong>E</strong> (<em>float</em>) – molecule energy for header</p></li>
+<li><p><strong>form</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: ':1.1E'</em><em>)</em>) – formatting for numerical output</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Crm.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">species</span></em>, <em class="sig-param"><span class="n">bg</span></em>, <em class="sig-param"><span class="n">reactionlist</span></em>, <em class="sig-param"><span class="n">verbose</span></em>, <em class="sig-param"><span class="n">NP</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">14</span></em>, <em class="sig-param"><span class="n">nmax</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">rdata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crm.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> (<em>dict</em>) – a dictionary of species handles, each containing a dict
+defining the species initial density ‘n’ and the potential
+of the species ‘V’</p></li>
+<li><p><strong>background</strong> (<em>dict</em>) – a dictionary of the background species, each containing a
+dict of the species potential ‘V’</p></li>
+<li><p><strong>reactionlist</strong> (<em>list</em>) – <p>a list of lists for setting up the CRM reactions. Each
+element is a list of the following data
+handle : string</p>
+<blockquote>
+<div><p>database_reaction as specified in the input</p>
+</div></blockquote>
+<dl class="simple">
+<dt>reactants<span class="classifier">list of strings</span></dt><dd><p>each element is a handle of the reactants. At least one
+of the species must be a background species, and only
+two reactants are currently supported</p>
+</dd>
+<dt>products<span class="classifier">list of strings</span></dt><dd><p>each element is a handle of the products</p>
+</dd>
+<dt>K<span class="classifier">string</span></dt><dd><p>a string of the net kinetic energy transfer for the
+background reactants to the products. Presently, all
+energy is assumed to end up as ion/atom kinetic energy.
+Supports calculations in the string, e.g. ‘2*3+4’</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>verbose</strong> (<em>boolean</em>) – switch whether to print the CRM setup to the prompt: the
+same info is written to {Crm.path}/logs regardless</p></li>
+<li><p><strong>NP</strong> (<em>int</em>) – the number of P-species to be considered in the model: the
+NP first entries in species (e.g. the input file) are taken
+as the P-species. The remainder are assumed Q-species.</p></li>
+<li><p><strong>path</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: '.'</em><em>)</em>) – a path to which all subsequent paths are relative to.
+Relative or an absolute path.</p></li>
+<li><p><strong>vmax</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 14</em><em>)</em>) – number of vibrational levels to be considered for
+vibrationally dependent processes</p></li>
+<li><p><strong>nmax</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 8</em><em>)</em>) – number of electronic levels to be considered for atomic
+electron transitions</p></li>
+<li><p><strong>rdata</strong> (<em>RateData object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – a RateData object that contains the databases and reactions
+defined in the input file reactions</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id0">
+<code class="sig-name descname">setup_ADAS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">rdata</span></em>, <em class="sig-param"><span class="n">rlist</span></em>, <em class="sig-param"><span class="n">plist</span></em>, <em class="sig-param"><span class="n">K</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an ADAS reactions up to self.nmax</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id1">
+<code class="sig-name descname">setup_APID</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">rlist</span></em>, <em class="sig-param"><span class="n">plist</span></em>, <em class="sig-param"><span class="n">K</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an APID-style ionization reaction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id2">
+<code class="sig-name descname">setup_Johnson</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span></em>, <em class="sig-param"><span class="n">ID</span></em>, <em class="sig-param"><span class="n">r</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a Johnson-style relaxation reaction from state n=i</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id3">
+<code class="sig-name descname">setup_reactions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reactionlist</span></em>, <em class="sig-param"><span class="n">rdata</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the reactions to the CRM</p>
+<p>Called by __init__, adds the reactions from reactionlist to
+self.reactions using the rates in rdata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reactionlist</strong> (<em>list</em>) – <p>a list of lists for setting up the CRM reactions. Each
+element is a list of the following data
+handle : string</p>
+<blockquote>
+<div><p>database_reaction as specified in the input</p>
+</div></blockquote>
+<dl class="simple">
+<dt>reactants<span class="classifier">list of strings</span></dt><dd><p>each element is a handle of the reactants. At least one
+of the species must be a background species, and only
+two reactants are currently supported</p>
+</dd>
+<dt>products<span class="classifier">list of strings</span></dt><dd><p>each element is a handle of the products</p>
+</dd>
+<dt>K<span class="classifier">string</span></dt><dd><p>a string of the net kinetic energy transfer for the
+background reactants to the products. Presently, all
+energy is assumed to end up as ion/atom kinetic energy.
+Supports calculations in the string, e.g. ‘2*3+4’</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>rdata</strong> (<em>RateData object</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – a RateData object that contains the databases and reactions
+defined in the input file reactions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id4">
+<code class="sig-name descname">setup_custom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span></em>, <em class="sig-param"><span class="n">database</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the custom reactions defined in the input to the CRM</p>
+<p>Parses any custom input rate file defined in the input file
+and adds their Reaction objects to the CRM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>string</em>) – path to the custom rate setup file relative to Crm.path</p></li>
+<li><p><strong>database</strong> (<em>string</em>) – database handle for the rates in the custom rate file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id5">
+<code class="sig-name descname">populate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function populating and returning the rate matrix and source</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>string</em>) – Defines the type of matrix to be written according to
+‘diagnostic’ - 2D list of reaction handles
+‘R’ - rate coefficient matrix in cm**3 s**-1
+‘M’ - rate matrix in s**-1
+‘Sgl’ - energy rate matrix in eV s**-1
+‘I’ - radiation intensity matrix # TODO: check</p></li>
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
+associated with molecules. Defaults to E if Tm=0.
+‘E’ - radiation power  matrix # TODO: check</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>mat</strong> (<em>ndarray</em>) – Rate matrix containing the rates at the given
+temperature and density. A 2D list in case mode=diagnostic</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – Vector of external sinks/sources. List if mode=diagnostic</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id6">
+<code class="sig-name descname">write_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mat</span></em>, <em class="sig-param"><span class="n">ext</span></em>, <em class="sig-param"><span class="n">char</span></em>, <em class="sig-param"><span class="n">te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">ti</span></em>, <em class="sig-param"><span class="n">ni</span></em>, <em class="sig-param"><span class="n">E</span></em>, <em class="sig-param"><span class="n">form</span><span class="o">=</span><span class="default_value">'{:1.1E}'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the matrix to the logs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mat</strong> (<em>ndarray</em><em> or </em><em>2D list</em>) – square matrix or list with data to be written</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em><em> or </em><em>list</em>) – 1D vector with external data to be written</p></li>
+<li><p><strong>char</strong> (<em>string</em>) – Identifier for file to be written</p></li>
+<li><p><strong>te</strong> (<em>float</em>) – Electron temperature for header</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – Electron density for header</p></li>
+<li><p><strong>ti</strong> (<em>float</em>) – ion temperature for header</p></li>
+<li><p><strong>ni</strong> (<em>float</em>) – ion density for header</p></li>
+<li><p><strong>E</strong> (<em>float</em>) – molecule energy for header</p></li>
+<li><p><strong>form</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: ':1.1E'</em><em>)</em>) – formatting for numerical output</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id7">
+<code class="sig-name descname">DIAGNOSTIC</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a log of the diagnostic reaction matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id8">
+<code class="sig-name descname">R</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">sparse</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rate coefficients in cm**3 s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>mat, ext</em></p></li>
+<li><p><strong>mat</strong> (<em>ndarray</em>) – Rate matrix containing the rates at the given temperature
+and density in cm**3 s**-1</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – Vector of external sinks/sources in cm**3 s**-1</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id9">
+<code class="sig-name descname">M</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">sparse</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id9" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rate coefficients in cm**3 s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Defaults to ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>mat, ext</em></p></li>
+<li><p><strong>mat</strong> (<em>ndarray</em>) – Rate matrix containing the rates at the given temperature
+and density in cm**3 s**-1</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – Vector of external sinks/sources in s**-1</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id10">
+<code class="sig-name descname">Sgl</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id10" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the energy rates in eV s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Defaults to ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>mat, ext</em></p></li>
+<li><p><strong>mat</strong> (<em>ndarray</em>) – Rate matrix containing the energy rates at the given
+temperature and density in eV s**-1</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – Vector of external energy sinks/sources in eV</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id11">
+<code class="sig-name descname">I</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id11" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the photon intensity in s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Defaults to ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong># TODO</strong> (<em>remove external sources? No menaing</em>)</p></li>
+<li><p><em>[ [mata, exta], [matm, extm]]</em></p></li>
+<li><p><strong>mata</strong> (<em>ndarray</em>) – Intensity of atomic lines between the row- and column
+species</p></li>
+<li><p><strong>exta</strong> (<em>ndarray</em>) – Intensity of atomic lines from external source</p></li>
+<li><p><strong>matm</strong> (<em>ndarray</em>) – Intensity of molecular lines between the row- and column
+species</p></li>
+<li><p><strong>extm</strong> (<em>ndarray</em>) – Intensity of molecular lines from external source</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id12">
+<code class="sig-name descname">E</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id12" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the photon power in eV s**-1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Defaults to Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Defaults to ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>sparse</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Switch to use sparse arrays (True) or not (False)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong># TODO</strong> (<em>remove external sources? No menaing</em>)</p></li>
+<li><p><em>[ [mata, exta], [matm, extm]]</em></p></li>
+<li><p><strong>mata</strong> (<em>ndarray</em>) – Power of atomic lines between the row- and column
+species</p></li>
+<li><p><strong>exta</strong> (<em>ndarray</em>) – Power of atomic lines from external source</p></li>
+<li><p><strong>matm</strong> (<em>ndarray</em>) – Power of molecular lines between the row- and column
+species</p></li>
+<li><p><strong>extm</strong> (<em>ndarray</em>) – Power of molecular lines from external source</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id13">
+<code class="sig-name descname">ddt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">densonly</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id13" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the time-evolution of the CRM system at given T and n</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em>) – end-time of simulation in s</p></li>
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
+re-association)</p></li>
+<li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
+associated with molecules. Defaults to E if Tm=0.</p></li>
+<li><p><strong>gl</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – switch determining wheter to evaluate the Np x Np
+Greenland CRM (True) or solve the full NxN system of
+ODEs (False)</p></li>
+<li><p><strong>n0</strong> (<em>list of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+<li><p><strong>Qres</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch determining whether to resolve the Q-species energy
+transfer or return the net energy transfer divided into
+processes.</p></li>
+<li><p><strong>densonly</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Only returns density rates if True, otherwise evaluates
+both density and energy rates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The solution of the IVP ODE problem up to time t. A function
+that interpolates the solution in the interval [0,t] is
+accessed by the method sol().
+The solution dimensionality along axis=0 is determined by
+the CRM setup and along axis=1 by the time-resolution
+according to the following:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>density=True</dt><dd><dl class="simple">
+<dt>Qres=False<span class="classifier">Np</span></dt><dd><p>Data ordered according to input species list</p>
+</dd>
+<dt>Qres=True<span class="classifier">N (requires gl=False)</span></dt><dd><p>Data ordered according to input species list</p>
+</dd>
+</dl>
+</dd>
+<dt>density=False</dt><dd><dl class="simple">
+<dt>Qres=False</dt><dd><dl class="simple">
+<dt>gl=True<span class="classifier">5 + Np</span></dt><dd><p>Total Ee, Ei/a, Epot, Erada, Eradm, followed
+by Np-resolved density rates</p>
+</dd>
+<dt>gl=False<span class="classifier">5 + N</span></dt><dd><p>Total Ee, Ei/a, Epot, Erada, Eradm, followed
+by species-resolved density rates</p>
+</dd>
+</dl>
+</dd>
+<dt>Qres=True</dt><dd><dl class="simple">
+<dt>gl=True<span class="classifier">5*N + Np</span></dt><dd><p>Species-resolved Ee, Ei/a, Epot, Erada,
+Eradm, followed by Np-resolved density rates</p>
+</dd>
+<dt>gl=False<span class="classifier">6*N</span></dt><dd><p>Species-resolved Ee, Ei/a, Epot, Erada,
+Eradm, followed by species-resolved density
+rates</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scipy.integrate._ivp.ivp.OdeResult object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id14">
+<code class="sig-name descname">gl_crm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mat</span></em>, <em class="sig-param"><span class="n">ext</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">matrices</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id14" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the P-space matrices according to Greenland 2001</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mat</strong> (<em>ndarray</em>) – 2D rate matrix</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em>) – 1D external sink/source vector</p></li>
+<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
+re-association)</p></li>
+<li><p><strong>n0</strong> (<em>list of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+<li><p><strong>eigen</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – switch to return the eigenvector and eigenvalues (True)
+rather than the Greenland rate matrices (False)</p></li>
+<li><p><strong>TODO</strong> (<em>#</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>Meff, GPp, nP0p if eigen is False</em></p></li>
+<li><p><strong>Meff</strong> (<em>ndarray</em>) – the Greenland Np x Np effective rate matrix for the
+P-species</p></li>
+<li><p><strong>GPp</strong> (<em>ndarray</em>) – the Greenland Np effective external sink/source vector for
+the P-species</p></li>
+<li><p><strong>nP0p</strong> (<em>ndarray</em>) – the Greenland Np effective initial densities for the
+P-species</p></li>
+<li><p><em>eigenvectors, eigenvalues if eigen is True</em></p></li>
+<li><p><strong>eigenvectors</strong> (<em>ndarray</em>) – The eigenvectors of the supplied rate matrix</p></li>
+<li><p><strong>eigenvalues</strong> (<em>ndarray</em>) – The eigenvalues of the supplied rate matrix</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id15">
+<code class="sig-name descname">linearized</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">mat</span></em>, <em class="sig-param"><span class="n">ext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id15" title="Permalink to this definition">¶</a></dt>
+<dd><p>RHS of the linearized system of ODEs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id16">
+<code class="sig-name descname">evaluate_CRM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">printout</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id16" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>INCOMPLETE</strong> Evaluates the current CRM  according to Greenland 2001</p>
+<p>Evaluates the separation between the minimum lifetimes and CRM
+parameters of the P-space and that of the Q-space, which need
+to be sufficiently far apart for the CRM approximation to be
+accurate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ne<span class="classifier">float</span></dt><dd><p>electron density in cm**-3</p>
+</dd>
+<dt>Ti<span class="classifier">float, optional (default: None)</span></dt><dd><p>ion temperature in eV. Default sets Ti=Te</p>
+</dd>
+<dt>ni<span class="classifier">float, optional (default: None)</span></dt><dd><p>ion density in cm**-3. Default sets ni=ne</p>
+</dd>
+<dt>E<span class="classifier">float, optional (default: E=0.1)</span></dt><dd><p>molecular energy in eV for rates</p>
+</dd>
+<dt>printout<span class="classifier">boolean, optional (default: True)</span></dt><dd><p>switch to print results (True) or return the results (False)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><em>None if printout is True</em></p></li>
+<li><p><em>maxdelta, maxnorm, tauPmin, tauQmax</em></p></li>
+<li><p><strong>maxdelta</strong> (<em>float</em>) – maximum norm of the Greenland delta-parameter</p></li>
+<li><p><strong>maxnorm</strong> (<em>float</em>) – maximum of the norm of inv(Q_t)*delta</p></li>
+<li><p><strong>tauPmin</strong> (<em>float</em>) – minimum lifetime of the P-species</p></li>
+<li><p><strong>tauQmax</strong> (<em>float</em>) – maximum lifetome of the Q-species</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id17">
+<code class="sig-name descname">generate_CRM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">kappa</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">epsilon</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id17" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>INCOMPLETE</strong> Generates the optimal CRMs per Greenland 2001</p>
+<p>Algorithm for finding the optimal set of P-species for a given
+temperature and density.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>kappa</strong> (<em>float</em>) – the threshold of the algorithm, &lt;&lt;1</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – sensitivity??</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id18">
+<code class="sig-name descname">intensity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">'v'</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id18" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>INCOMPLETE</strong> Returns a matrix of gamma intensities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+<li><p><strong>units</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: l</em><em>)</em>) – units of the plot ordinate
+ev - power in eV/s
+v - wavenumber cm**-1
+f - frequency Hz
+l - wavelength nm
+Å - wavelength Å</p></li>
+<li><p><strong>norm</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – normalize the lines to the total as determined by units</p></li>
+<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
+re-association)</p></li>
+<li><p><strong>write</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch for writing the R-matrix to the logs</p></li>
+<li><p><strong>n0</strong> (<em>list of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>intensity</strong> – A 2-by-NxN array of values of the requested units. The first
+index is atomic lines, and the second molecular lines.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id19">
+<code class="sig-name descname">species_rate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">species</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id19" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total reaction  rate of a given species</p>
+<p>Returns the net reaction rate of all reactions that have
+the specified species handle as a reactant. For CRM species,
+this is analog to depletion rate, but for background species
+it is net rate of reactions involving the background species.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> (<em>string</em>) – species handle as defined in the input file</p></li>
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
+<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
+<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>totrate</strong> – the net rate of all reactions having species as a reactant</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id20">
+<code class="sig-name descname">n0</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id20" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns initial densities as specieifed in the input</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id21">
+<code class="sig-name descname">get_reaction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">database</span></em>, <em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id21" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Reaction object for the requested reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>database</strong> (<em>string</em>) – the database where to look for the reaction</p></li>
+<li><p><strong>name</strong> (<em>string</em>) – the reaction name/handle to look for</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id22">
+<code class="sig-name descname">get_rate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">database</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">T</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id22" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>INCOMPLETE</strong> Returns the rate of the requested reaction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id23">
+<code class="sig-name descname">totparticles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id23" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total number of nuclei for a vector or matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>ndarray</em>) – array or matrix of species densities along axes=0</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>totnuclei</strong> – total number of nulclei in the system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id24">
+<code class="sig-name descname">totmol</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id24" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="id25">
+<code class="sig-name descname">populate_old</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sind</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Iind</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id25" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>REDUNDANT*</strong></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id26">
+<code class="sig-name descname">S</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id26" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>OBSOLETE</strong></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id27">
+<code class="sig-name descname">full_nt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">gl</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id27" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>OBSOLETE</strong></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id28">
+<code class="sig-name descname">dEdt_old</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id28" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>OBSOLETE</strong></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">CRUMPET</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=holm10&repo=CRUMPET&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../input.html">The CRUMPET input file</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Crumpet.html">Crumpet</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Crm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.RateData.html">RateData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Reaction.html">Reaction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Tools.html">Tools</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../documentation.html">Documentation</a><ul>
+      <li>Previous: <a href="CRUMPET.Crumpet.html" title="previous chapter">Crumpet</a></li>
+      <li>Next: <a href="CRUMPET.RateData.html" title="next chapter">RateData</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Andreas Holm.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/doc/CRUMPET.Crm.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

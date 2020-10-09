@@ -1,0 +1,41 @@
+Crumpet
+=======
+
+.. currentmodule:: CRUMPET.main
+
+.. autoclass:: Crumpet
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Crumpet.calc_ue_erate
+      ~Crumpet.calc_ue_nrate
+      ~Crumpet.lifetimes
+      ~Crumpet.plot_crm
+      ~Crumpet.plot_depletion
+      ~Crumpet.plot_ue_erate
+      ~Crumpet.plot_ue_nrate
+      ~Crumpet.plotrate
+      ~Crumpet.read_ue_crumpet
+      ~Crumpet.solve_crm
+      ~Crumpet.spectrum
+      ~Crumpet.steady_state
+      ~Crumpet.write_ue_rates
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: calc_ue_erate
+   .. automethod:: calc_ue_nrate
+   .. automethod:: lifetimes
+   .. automethod:: plot_crm
+   .. automethod:: plot_depletion
+   .. automethod:: plot_ue_erate
+   .. automethod:: plot_ue_nrate
+   .. automethod:: plotrate
+   .. automethod:: read_ue_crumpet
+   .. automethod:: solve_crm
+   .. automethod:: spectrum
+   .. automethod:: steady_state
+   .. automethod:: write_ue_rates

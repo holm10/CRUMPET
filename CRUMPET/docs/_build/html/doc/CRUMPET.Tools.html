@@ -1,0 +1,553 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tools &#8212; CRUMPET 0.2rc1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Reaction" href="CRUMPET.Reaction.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tools">
+<h1>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="CRUMPET.Tools">
+<em class="property">class </em><code class="sig-prename descclassname">CRUMPET.</code><code class="sig-name descname">Tools</code><a class="headerlink" href="#CRUMPET.Tools" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Object with funcitons commonly used by several CRUMPET objects</p>
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="CRUMPET.Tools.XY2num"><code class="xref py py-obj docutils literal notranslate"><span class="pre">XY2num</span></code></a>(string[, X, Y])</p></td>
+<td><p>Replaces ‘X’ and/or ‘Y’ by numbers</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id1" title="CRUMPET.Tools.file2list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">file2list</span></code></a>(path, fname)</p></td>
+<td><p>Parses input file to a list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="CRUMPET.Tools.getdecade"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getdecade</span></code></a>(x)</p></td>
+<td><p>Returns data divided by greatest power-of-ten and power</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id2" title="CRUMPET.Tools.pickplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickplot</span></code></a>(ax, pl)</p></td>
+<td><p>Returns a plot-function from pyplot based on pl</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id7" title="CRUMPET.Tools.plotEerror"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotEerror</span></code></a>(ax, x, y[, plot, linewidth, …])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id5" title="CRUMPET.Tools.plotax"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotax</span></code></a>(ax, x, y[, plot, nuclei, linewidth, …])</p></td>
+<td><p>Plots x and y on ax</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id6" title="CRUMPET.Tools.plotparterror"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotparterror</span></code></a>(ax, x, y[, plot, linewidth, …])</p></td>
+<td><p>Plots the particle conservation of y</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id8" title="CRUMPET.Tools.plottotpart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plottotpart</span></code></a>(ax, x)</p></td>
+<td><p>Adds a black vertical line to ax for the initial # parts</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id9" title="CRUMPET.Tools.setgrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setgrid</span></code></a>(fig)</p></td>
+<td><p>Adds a grid to all Axes of matplotlib.pyplot.figure</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id4" title="CRUMPET.Tools.setkwargs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setkwargs</span></code></a>(ax, x, y, tot, **kwargs)</p></td>
+<td><p>Sets the most common plot-specific kwargs</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt id="CRUMPET.Tools.XY2num">
+<code class="sig-name descname">XY2num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em>, <em class="sig-param"><span class="n">X</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.XY2num" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces ‘X’ and/or ‘Y’ by numbers</p>
+<p>Replaces ‘X’ or ‘Y’ with X and Y, respectively - or both, i
+depending on which is defined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>string</strong> (<em>str</em>) – string to be modified</p></li>
+<li><p><strong>X</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘X’ with: cast to string</p></li>
+<li><p><strong>Y</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘Y’ with: cast to string</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>Modified string, or input string if no replacements are</em></p></li>
+<li><p><em>possible</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.file2list">
+<code class="sig-name descname">file2list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">fname</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.file2list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses input file to a list</p>
+<p>Returns a list of lines based on fname with comment and
+empty lines removed as well as the card and subcard
+locations in a list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – relative directory for fname</p></li>
+<li><p><strong>fname</strong> (<em>str</em>) – name of file to be parsed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>ret,cards,subcards</strong> –</p>
+<dl class="simple">
+<dt>ret<span class="classifier">str</span></dt><dd><p>data input line as elements</p>
+</dd>
+<dt>cards<span class="classifier">int</span></dt><dd><p>index of card headers in ret as elements</p>
+</dd>
+<dt>subcards<span class="classifier">int</span></dt><dd><p>index of subcard headers in ret as elements</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list,list,list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.getdecade">
+<code class="sig-name descname">getdecade</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.getdecade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns data divided by greatest power-of-ten and power</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.pickplot">
+<code class="sig-name descname">pickplot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">pl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.pickplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a plot-function from pyplot based on pl</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes object</em>) – Axes where to plot</p></li>
+<li><p><strong>pl</strong> (<em>string</em>) – string specifying the plot function to be returned:
+‘plot’ - Axes.plot
+‘semilogy’ - Axes.semilogy
+‘semilogx’ - Axes.semilogx
+‘loglog’  - Axes.loglog</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib.pyplot.Axes.plotfunc</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.plotEerror">
+<code class="sig-name descname">plotEerror</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'plot'</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'r'</span></em>, <em class="sig-param"><span class="n">ylabel</span><span class="o">=</span><span class="default_value">'[$ 10^{{{}}}$]'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.plotEerror" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.plotax">
+<code class="sig-name descname">plotax</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'plot'</span></em>, <em class="sig-param"><span class="n">nuclei</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">plottot</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ylabel</span><span class="o">=</span><span class="default_value">'[$ 10^{{{}}}$]'</span></em>, <em class="sig-param"><span class="n">totlabel</span><span class="o">=</span><span class="default_value">'Total'</span></em>, <em class="sig-param"><span class="n">plotmax</span><span class="o">=</span><span class="default_value">1000.0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.plotax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots x and y on ax</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes object</em>) – Axes where to plot</p></li>
+<li><p><strong>x</strong> (<em>ndarray</em>) – abcissa values</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em>) – ordinate values</p></li>
+<li><p><strong>plot</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'plot'</em><em>)</em>) – string specifying the plot function to be returned:
+‘plot’ - Axes.plot
+‘semilogy’ - Axes.semilogy
+‘semilogx’ - Axes.semilogx
+‘loglog’  - Axes.loglog</p></li>
+<li><p><strong>nuclei</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for using the total number of particles (False) or
+nuclei (True) as the total of the system: only relevant when
+plotting densities</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em>) – default linewidth of plot</p></li>
+<li><p><strong>plottot</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – show the total along axis=0</p></li>
+<li><p><strong>ylabel</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: r'</em><em>[</em><em>$ 10^{{{}}}$</em><em>]</em><em>'</em><em>)</em>) – the y-axis label: attempts to format the decade into the
+ylabel</p></li>
+<li><p><strong>totlabel</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'Total'</em><em>)</em>) – Label for the total-line, if plotted</p></li>
+<li><p><strong>plotmax</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em>) – the maximum numbers of sets from y to be plotted</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.plotparterror">
+<code class="sig-name descname">plotparterror</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'plot'</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'r'</span></em>, <em class="sig-param"><span class="n">ylabel</span><span class="o">=</span><span class="default_value">'[$ 10^{{{}}}$]'</span></em>, <em class="sig-param"><span class="n">right</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.plotparterror" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the particle conservation of y</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes object</em>) – Axes where to plot</p></li>
+<li><p><strong>x</strong> (<em>ndarray</em>) – abcissa values</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em>) – ordinate values</p></li>
+<li><p><strong>plot</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'plot'</em><em>)</em>) – string specifying the plot function to be returned:
+‘plot’ - Axes.plot
+‘semilogy’ - Axes.semilogy
+‘semilogx’ - Axes.semilogx
+‘loglog’  - Axes.loglog</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em>) – default linewidth of plot</p></li>
+<li><p><strong>ylabel</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: r'</em><em>[</em><em>$ 10^{{{}}}$</em><em>]</em><em>'</em><em>)</em>) – the y-axis label: attempts to format the decade into the
+ylabel</p></li>
+<li><p><strong>color</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'r'</em><em>)</em>) – color of the particle conservation</p></li>
+<li><p><strong>right</strong> (<em>boolean</em><em>, </em><em>otpional</em><em> (</em><em>default: False</em><em>)</em>) – plots on the right twin-axis</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.plottotpart">
+<code class="sig-name descname">plottotpart</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.plottotpart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a black vertical line to ax for the initial # parts</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.setgrid">
+<code class="sig-name descname">setgrid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fig</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.setgrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a grid to all Axes of matplotlib.pyplot.figure</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="CRUMPET.Tools.setkwargs">
+<code class="sig-name descname">setkwargs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">tot</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.setkwargs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the most common plot-specific kwargs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes object</em>) – Axes where to plot</p></li>
+<li><p><strong>x</strong> (<em>ndarray</em>) – abcissa values</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em>) – ordinate values</p></li>
+<li><p><strong>tot</strong> (<em>ndarrya</em>) – sum of ordinate values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id0">
+<code class="sig-name descname">XY2num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em>, <em class="sig-param"><span class="n">X</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces ‘X’ and/or ‘Y’ by numbers</p>
+<p>Replaces ‘X’ or ‘Y’ with X and Y, respectively - or both, i
+depending on which is defined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>string</strong> (<em>str</em>) – string to be modified</p></li>
+<li><p><strong>X</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘X’ with: cast to string</p></li>
+<li><p><strong>Y</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘Y’ with: cast to string</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>Modified string, or input string if no replacements are</em></p></li>
+<li><p><em>possible</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id1">
+<code class="sig-name descname">file2list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">fname</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses input file to a list</p>
+<p>Returns a list of lines based on fname with comment and
+empty lines removed as well as the card and subcard
+locations in a list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – relative directory for fname</p></li>
+<li><p><strong>fname</strong> (<em>str</em>) – name of file to be parsed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>ret,cards,subcards</strong> –</p>
+<dl class="simple">
+<dt>ret<span class="classifier">str</span></dt><dd><p>data input line as elements</p>
+</dd>
+<dt>cards<span class="classifier">int</span></dt><dd><p>index of card headers in ret as elements</p>
+</dd>
+<dt>subcards<span class="classifier">int</span></dt><dd><p>index of subcard headers in ret as elements</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list,list,list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id2">
+<code class="sig-name descname">pickplot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">pl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a plot-function from pyplot based on pl</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes object</em>) – Axes where to plot</p></li>
+<li><p><strong>pl</strong> (<em>string</em>) – string specifying the plot function to be returned:
+‘plot’ - Axes.plot
+‘semilogy’ - Axes.semilogy
+‘semilogx’ - Axes.semilogx
+‘loglog’  - Axes.loglog</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib.pyplot.Axes.plotfunc</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id3">
+<code class="sig-name descname">getdecade</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns data divided by greatest power-of-ten and power</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id4">
+<code class="sig-name descname">setkwargs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">tot</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the most common plot-specific kwargs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes object</em>) – Axes where to plot</p></li>
+<li><p><strong>x</strong> (<em>ndarray</em>) – abcissa values</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em>) – ordinate values</p></li>
+<li><p><strong>tot</strong> (<em>ndarrya</em>) – sum of ordinate values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id5">
+<code class="sig-name descname">plotax</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'plot'</span></em>, <em class="sig-param"><span class="n">nuclei</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">plottot</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ylabel</span><span class="o">=</span><span class="default_value">'[$ 10^{{{}}}$]'</span></em>, <em class="sig-param"><span class="n">totlabel</span><span class="o">=</span><span class="default_value">'Total'</span></em>, <em class="sig-param"><span class="n">plotmax</span><span class="o">=</span><span class="default_value">1000.0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots x and y on ax</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes object</em>) – Axes where to plot</p></li>
+<li><p><strong>x</strong> (<em>ndarray</em>) – abcissa values</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em>) – ordinate values</p></li>
+<li><p><strong>plot</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'plot'</em><em>)</em>) – string specifying the plot function to be returned:
+‘plot’ - Axes.plot
+‘semilogy’ - Axes.semilogy
+‘semilogx’ - Axes.semilogx
+‘loglog’  - Axes.loglog</p></li>
+<li><p><strong>nuclei</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for using the total number of particles (False) or
+nuclei (True) as the total of the system: only relevant when
+plotting densities</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em>) – default linewidth of plot</p></li>
+<li><p><strong>plottot</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – show the total along axis=0</p></li>
+<li><p><strong>ylabel</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: r'</em><em>[</em><em>$ 10^{{{}}}$</em><em>]</em><em>'</em><em>)</em>) – the y-axis label: attempts to format the decade into the
+ylabel</p></li>
+<li><p><strong>totlabel</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'Total'</em><em>)</em>) – Label for the total-line, if plotted</p></li>
+<li><p><strong>plotmax</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em>) – the maximum numbers of sets from y to be plotted</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id6">
+<code class="sig-name descname">plotparterror</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'plot'</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'r'</span></em>, <em class="sig-param"><span class="n">ylabel</span><span class="o">=</span><span class="default_value">'[$ 10^{{{}}}$]'</span></em>, <em class="sig-param"><span class="n">right</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the particle conservation of y</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes object</em>) – Axes where to plot</p></li>
+<li><p><strong>x</strong> (<em>ndarray</em>) – abcissa values</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em>) – ordinate values</p></li>
+<li><p><strong>plot</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'plot'</em><em>)</em>) – string specifying the plot function to be returned:
+‘plot’ - Axes.plot
+‘semilogy’ - Axes.semilogy
+‘semilogx’ - Axes.semilogx
+‘loglog’  - Axes.loglog</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em>) – default linewidth of plot</p></li>
+<li><p><strong>ylabel</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: r'</em><em>[</em><em>$ 10^{{{}}}$</em><em>]</em><em>'</em><em>)</em>) – the y-axis label: attempts to format the decade into the
+ylabel</p></li>
+<li><p><strong>color</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'r'</em><em>)</em>) – color of the particle conservation</p></li>
+<li><p><strong>right</strong> (<em>boolean</em><em>, </em><em>otpional</em><em> (</em><em>default: False</em><em>)</em>) – plots on the right twin-axis</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id7">
+<code class="sig-name descname">plotEerror</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'plot'</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'r'</span></em>, <em class="sig-param"><span class="n">ylabel</span><span class="o">=</span><span class="default_value">'[$ 10^{{{}}}$]'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="id8">
+<code class="sig-name descname">plottotpart</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ax</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a black vertical line to ax for the initial # parts</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id9">
+<code class="sig-name descname">setgrid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fig</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id9" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a grid to all Axes of matplotlib.pyplot.figure</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">CRUMPET</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=holm10&repo=CRUMPET&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../input.html">The CRUMPET input file</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Crumpet.html">Crumpet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Crm.html">Crm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.RateData.html">RateData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Reaction.html">Reaction</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tools</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../documentation.html">Documentation</a><ul>
+      <li>Previous: <a href="CRUMPET.Reaction.html" title="previous chapter">Reaction</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Andreas Holm.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/doc/CRUMPET.Tools.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
