@@ -88,6 +88,9 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../input/input.html">The CRUMPET input file</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../input/species.html">Species</a><ul class="simple">
 </ul>
@@ -117,6 +120,20 @@
 <li class="toctree-l2"><a class="reference internal" href="CRUMPET.RateData.html">RateData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CRUMPET.Reaction.html">Reaction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CRUMPET.Tools.html">Tools</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developments.html">Future developments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../LICENSE.html">Crumpet license</a><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -192,7 +209,7 @@
 <h1>Crumpet<a class="headerlink" href="#crumpet" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="CRUMPET.Crumpet">
-<em class="property">class </em><code class="sig-prename descclassname">CRUMPET.</code><code class="sig-name descname">Crumpet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">'input/CRUMPET.dat'</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">14</span></em>, <em class="sig-param"><span class="n">nmax</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">NP</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">CRUMPET.</code><code class="sig-name descname">Crumpet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">'input/CRUMPET.dat'</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">14</span></em>, <em class="sig-param"><span class="n">nmax</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">NP</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">isotope</span><span class="o">=</span><span class="default_value">'H'</span></em>, <em class="sig-param"><span class="n">mass</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CRUMPET.crm.Crm</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CRUMPET.ratedata.RateData</span></code></p>
 <p>CRUMPET container object for collsional-radiative models</p>
 <p>This class is used to read and parse the input file, the parts
@@ -217,43 +234,43 @@ Inherits the classes Crm and RateData.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id7" title="CRUMPET.Crumpet.calc_ue_erate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_ue_erate</span></code></a>(Te, ne, E, Tm)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id6" title="CRUMPET.Crumpet.calc_ue_erate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_ue_erate</span></code></a>(Te, ne, E, Tm)</p></td>
 <td><p><strong>INCOMPLETE</strong> Calculates the Greenland CRM energy rate coefficients</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id6" title="CRUMPET.Crumpet.calc_ue_nrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_ue_nrate</span></code></a>(Te, ne, E, Tm)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#id5" title="CRUMPET.Crumpet.calc_ue_nrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_ue_nrate</span></code></a>(Te, ne, E, Tm)</p></td>
 <td><p><strong>INCOMPLETE</strong> Calculates the Greenland CRM particle rate coefficients</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id12" title="CRUMPET.Crumpet.lifetimes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetimes</span></code></a>(Te, ne[, E, Ti, ni, Sext, n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id10" title="CRUMPET.Crumpet.lifetimes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lifetimes</span></code></a>(Te, ne[, E, Ti, ni, Sext, n])</p></td>
 <td><p><strong>INCOMPLETE</strong> Species lifetimes perturbation from equilibrium</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id3" title="CRUMPET.Crumpet.plot_crm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_crm</span></code></a>(t, Te, ne[, E, Ti, ni, Sext, Qres, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#id2" title="CRUMPET.Crumpet.plot_crm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_crm</span></code></a>(t, Te, ne[, E, Ti, ni, Sext, Qres, …])</p></td>
 <td><p>Plots the CRM results for neutrals in a static background plasma</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#id1" title="CRUMPET.Crumpet.plot_depletion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_depletion</span></code></a>(key, n, Te[, Ti, color, ax, …])</p></td>
 <td><p>Plots the depletion rate for a given species</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id8" title="CRUMPET.Crumpet.plot_ue_erate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_ue_erate</span></code></a>(ratefile, Te, ne[, fig, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#id7" title="CRUMPET.Crumpet.plot_ue_erate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_ue_erate</span></code></a>(ratefile, Te, ne[, fig, …])</p></td>
 <td><p><strong>INCOMPLETE</strong> Plots the energy rate coefficients read from a crumpet rate file</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id5" title="CRUMPET.Crumpet.plot_ue_nrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_ue_nrate</span></code></a>(ratefile, Te, ne[, fig, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id4" title="CRUMPET.Crumpet.plot_ue_nrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_ue_nrate</span></code></a>(ratefile, Te, ne[, fig, …])</p></td>
 <td><p><strong>INCOMPLETE</strong> Plots the density rate coefficients read from a crumpet rate file</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id10" title="CRUMPET.Crumpet.plotrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotrate</span></code></a>(database, name, T, n[, E, logx, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#id9" title="CRUMPET.Crumpet.plotrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plotrate</span></code></a>(database, name, T, n[, E, logx, …])</p></td>
 <td><p>Plots the rate of the requested reaction</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id4" title="CRUMPET.Crumpet.read_ue_crumpet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_ue_crumpet</span></code></a>(nratefile, eratefile)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="CRUMPET.Crumpet.read_ue_crumpet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_ue_crumpet</span></code></a>(nratefile, eratefile)</p></td>
 <td><p><strong>INCOMPLETE</strong> Reads a CRUMPET UEDGE rate file and returns the rates</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id2" title="CRUMPET.Crumpet.solve_crm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve_crm</span></code></a>(t, Te, ne[, Ti, ni, E, Tm, Sext, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#CRUMPET.Crumpet.solve_crm" title="CRUMPET.Crumpet.solve_crm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve_crm</span></code></a>(t, Te, ne[, Ti, ni, E, Tm, Sext, …])</p></td>
 <td><p>Solves the time-evolution of the CRM system at given T and n</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id9" title="CRUMPET.Crumpet.spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spectrum</span></code></a>(Te, ne[, E, Ti, ni, fig, units, …])</p></td>
-<td><p><strong>INCOMPLETE</strong> Plots atomic and molecular spectra</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id8" title="CRUMPET.Crumpet.spectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spectrum</span></code></a>(Te, ne, vol[, E, Ti, ni, Sext, n0, …])</p></td>
+<td><p>Plots atomic and molecular spectra</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id11" title="CRUMPET.Crumpet.steady_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">steady_state</span></code></a>(Te, ne, na, nm, diva, divm, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#CRUMPET.Crumpet.steady_state" title="CRUMPET.Crumpet.steady_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">steady_state</span></code></a>(Te, ne, vol[, E, Ti, ni, Sext, …])</p></td>
 <td><p>Solves the steady-state population of atoms and molecules</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="CRUMPET.Crumpet.write_ue_rates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_ue_rates</span></code></a>([fname, E, Sext, Tm, h0h2])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="CRUMPET.Crumpet.write_ue_rates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_ue_rates</span></code></a>([fname, E, Sext, Tm, groundstate])</p></td>
 <td><p>Writes UEDGE-compatible tab-delimited rate files</p></td>
 </tr>
 </tbody>
@@ -423,7 +440,8 @@ recombination/ionization gains/losses</p></li>
 <p>Plots a curve or a set of curves for the depletion rate of the
 species specified by key. If both n and Te are lists, a set of
 T-dependent rate curves are plotted. If either n or Te is a
-float, a plot of as a function of the list is created</p>
+float, a plot of as a function of the list is created. The
+abcissa is Te regardless whether Ti is defined or not</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -638,7 +656,7 @@ and the energy rates (internal and external)</p>
 
 <dl class="py method">
 <dt id="CRUMPET.Crumpet.solve_crm">
-<code class="sig-name descname">solve_crm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">densonly</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.solve_crm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">solve_crm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">densonly</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.solve_crm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solves the time-evolution of the CRM system at given T and n</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -668,11 +686,12 @@ both density and energy rates</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p><strong>solution</strong> – The solution of the IVP ODE problem up to time t. A function
+<dd class="field-even"><p><p>The solution of the IVP ODE problem up to time t. A function
 that interpolates the solution in the interval [0,t] is
-accessed by the method sol(). The solution dimensionality
-along axis=0 is determined by the CRM setup and along axis=1
-by the time-resolution according to the following:</p>
+accessed by the method sol().
+The solution dimensionality along axis=0 is determined by
+the CRM setup and along axis=1 by the time-resolution
+according to the following:</p>
 <blockquote>
 <div><dl class="simple">
 <dt>density=True</dt><dd><dl class="simple">
@@ -716,18 +735,32 @@ rates</p>
 
 <dl class="py method">
 <dt id="CRUMPET.Crumpet.spectrum">
-<code class="sig-name descname">spectrum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">'l'</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">10, 6.180343664189791</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">split</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.spectrum" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>INCOMPLETE</strong> Plots atomic and molecular spectra</p>
+<code class="sig-name descname">spectrum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">vol</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ext</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ioniz</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">'l'</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">10, 6.180343664189791</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">split</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots atomic and molecular spectra</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
 <li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>vol</strong> (<em>float</em>) – volume of the domain in cm**3</p></li>
 <li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
 <li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
 <li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
-<li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
-associated with molecules. Defaults to E if Tm=0.</p></li>
+<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
+re-association)</p></li>
+<li><p><strong>n0</strong> (<em>ndarray</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – External sinks and sources for the species, not considered
+in CRUMPET, including transport, artificial sinks and
+sources, etc. Must be of length Nx1, as defined by the input
+species. Defaults to zeros, given in cm**-3 s**-1</p></li>
+<li><p><strong>ioniz</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Additional ionization source (&lt;0) to applied to the first
+species. Necessary for evaluating CRM-transport code
+couplings where ionization is handled by the auxilliary
+code, and not included in the CRUMPET model. Given in
+cm**-3 s**-1</p></li>
 <li><p><strong>fig</strong> (<em>matplotlib.pyplot.figure</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – figure which to plot on. By default creates a new figure and
 returns the figure handle</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em><em> (</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>optional</em><em> (</em><em>default:</em><em> (</em><em>14</em><em>, </em><em>8.33</em><em>)</em><em>)</em>) – size of the created figure</p></li>
@@ -755,55 +788,54 @@ l - wavelength nm
 
 <dl class="py method">
 <dt id="CRUMPET.Crumpet.steady_state">
-<code class="sig-name descname">steady_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">na</span></em>, <em class="sig-param"><span class="n">nm</span></em>, <em class="sig-param"><span class="n">diva</span></em>, <em class="sig-param"><span class="n">divm</span></em>, <em class="sig-param"><span class="n">srca</span></em>, <em class="sig-param"><span class="n">srcm</span></em>, <em class="sig-param"><span class="n">bga</span></em>, <em class="sig-param"><span class="n">bgm</span></em>, <em class="sig-param"><span class="n">psor</span></em>, <em class="sig-param"><span class="n">psorgc</span></em>, <em class="sig-param"><span class="n">vol</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.steady_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">steady_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">vol</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ext</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ioniz</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.steady_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solves the steady-state population of atoms and molecules</p>
 <p>Returns the ground state atom, molecule, and total vibrationally
 excited molecule populations. Assumes the reactions defined for
-in Crm and the external sinks and sources defined and simulates
-the population for 10s, assuming steady-staten to be achieved by
-that time.</p>
+in Crm and the external sinks and sources specified and solves
+the steady-state system.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in J</p></li>
-<li><p><strong>ne</strong> (<em>float</em>) – electron density in m**-3</p></li>
-<li><p><strong>na</strong> (<em>float</em>) – initial guess for atom density in m**-3</p></li>
-<li><p><strong>nm</strong> (<em>float</em>) – initial guess for molecule density in m**-3</p></li>
-<li><p><strong>diva</strong> (<em>float</em>) – atom divergence of domain (transport in/out) in s**-1</p></li>
-<li><p><strong>divm</strong> (<em>float</em>) – molecule divergence of domain (transport in/out) in s**-1</p></li>
-<li><p><strong>srca</strong> (<em>float</em>) – atom particle source in domain in s**-1</p></li>
-<li><p><strong>srcm</strong> (<em>float</em>) – molecule particle source in domain in s**-1</p></li>
-<li><p><strong>bga</strong> (<em>float</em>) – atom background source in domain in s**-1</p></li>
-<li><p><strong>bgm</strong> (<em>float</em>) – molecule background source in domain in s**-1</p></li>
-<li><p><strong>psor</strong> (<em>float</em>) – ionization sink in domain in s**-1</p></li>
-<li><p><strong>psorgc</strong> (<em>float</em>) – recombination source in domain in s**-1</p></li>
-<li><p><strong>vol</strong> (<em>float</em>) – volume of the domain in m**3</p></li>
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>vol</strong> (<em>float</em>) – volume of the domain in cm**3</p></li>
 <li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
 <li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
 <li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
 <li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
 re-association)</p></li>
 <li><p><strong>gl</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – switch determining wheter to evaluate the Np x Np
-Greenland CRM (True) or solve the full NxN system of ODEs (False)</p></li>
+Greenland CRM (True) or solve the full NxN system of ODEs
+(False)</p></li>
 <li><p><strong>plot</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – show a plot of the 10s time-evolution</p></li>
+<li><p><strong>n0</strong> (<em>ndarray</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – External sinks and sources for the species, not considered
+in CRUMPET, including transport, artificial sinks and
+sources, etc. Must be of length Nx1, as defined by the input
+species. Defaults to zeros, given in cm**-3 s**-1</p></li>
+<li><p><strong>ioniz</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Additional ionization source (&lt;0) to applied to the first
+species. Necessary for evaluating CRM-transport code
+couplings where ionization is handled by the auxilliary
+code, and not included in the CRUMPET model. Given in
+cm**-3 s**-1</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>na, nm, nmvib</em></p></li>
-<li><p><strong>na</strong> (<em>float</em>) – steady-state atom density in m**-3</p></li>
-<li><p><strong>nm</strong> (<em>float</em>) – steady-state atom density in m**-3</p></li>
-<li><p><em>nmvib - float</em> – total density of all vibrationally excited molecular species
-in m**-3</p></li>
-</ul>
-</p>
+<dd class="field-even"><p><strong>n_ss</strong> – steady-state populations</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="CRUMPET.Crumpet.write_ue_rates">
-<code class="sig-name descname">write_ue_rates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">'crumpet'</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">h0h2</span><span class="o">=</span><span class="default_value">['H(n=1)', 'H2(v=0)']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.write_ue_rates" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write_ue_rates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">'crumpet'</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">groundstate</span><span class="o">=</span><span class="default_value">['(n=1)', '(v=0)']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.write_ue_rates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes UEDGE-compatible tab-delimited rate files</p>
 <p>This script creates rates for H2 dissociation and H creation due
 to H2. The units are s**-1: hence, the particle balance is
@@ -825,9 +857,10 @@ included are presently possible.</p>
 re-association)</p></li>
 <li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
 associated with molecules. Defaults to E if Tm=0.</p></li>
-<li><p><strong>h0h2</strong> (<em>list of strings</em><em>, </em><em>optional</em><em> (</em><em>default=</em><em>[</em><em>'H</em><em>(</em><em>n=1</em><em>)</em><em>'</em><em>, </em><em>'H2</em><em>(</em><em>v=0</em><em>)</em><em>'</em><em>]</em><em>)</em>) – handles for the atomic and molecular species, in the order
-[atom, molecule]. Used to identify the reactions associated
-with the atomic and molecular species.</p></li>
+<li><p><strong>groundstate</strong> (<em>lst of str</em><em>, </em><em>optional</em><em> (</em><em>default=</em><em>[</em><em>'</em><em>(</em><em>n=1</em><em>)</em><em>'</em><em>, </em><em>'</em><em>(</em><em>v=0</em><em>)</em><em>'</em><em>]</em><em>)</em>) – handles for the atomic and molecular species ground state
+identifier, in the order [atom, molecule]. Used to identify
+the reactions associated with the atomic and molecular
+ground states, in combination with Crm.isotope.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -841,7 +874,7 @@ with the atomic and molecular species.</p></li>
 
 <dl class="py method">
 <dt id="CRUMPET.Crumpet.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">'input/CRUMPET.dat'</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">14</span></em>, <em class="sig-param"><span class="n">nmax</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">NP</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">'input/CRUMPET.dat'</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">14</span></em>, <em class="sig-param"><span class="n">nmax</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">NP</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">isotope</span><span class="o">=</span><span class="default_value">'H'</span></em>, <em class="sig-param"><span class="n">mass</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Crumpet.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -852,6 +885,11 @@ with the atomic and molecular species.</p></li>
 <li><p><strong>verbose</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – displays progress to prompt (written to a log-file too)</p></li>
 <li><p><strong>NP</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 2</em><em>)</em>) – P-space size, chosen as the first NP entries of the species
 card</p></li>
+<li><p><strong>isotope</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'H'</em><em>)</em>) – The handle for the isotope being used. Used to identify
+atomic and molecular species: molecules are taken to be
+{isotope}2{groundstatemol} and atoms to be
+{isotope}{groundstateatom}</p></li>
+<li><p><strong>mass</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1</em><em>)</em>) – The isotope mass in AMU, used for calculations in Crm</p></li>
 </ul>
 </dd>
 </dl>
@@ -859,7 +897,7 @@ card</p></li>
 
 <dl class="py method">
 <dt id="id0">
-<code class="sig-name descname">write_ue_rates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">'crumpet'</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">h0h2</span><span class="o">=</span><span class="default_value">['H(n=1)', 'H2(v=0)']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write_ue_rates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">'crumpet'</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">groundstate</span><span class="o">=</span><span class="default_value">['(n=1)', '(v=0)']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes UEDGE-compatible tab-delimited rate files</p>
 <p>This script creates rates for H2 dissociation and H creation due
 to H2. The units are s**-1: hence, the particle balance is
@@ -881,9 +919,10 @@ included are presently possible.</p>
 re-association)</p></li>
 <li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
 associated with molecules. Defaults to E if Tm=0.</p></li>
-<li><p><strong>h0h2</strong> (<em>list of strings</em><em>, </em><em>optional</em><em> (</em><em>default=</em><em>[</em><em>'H</em><em>(</em><em>n=1</em><em>)</em><em>'</em><em>, </em><em>'H2</em><em>(</em><em>v=0</em><em>)</em><em>'</em><em>]</em><em>)</em>) – handles for the atomic and molecular species, in the order
-[atom, molecule]. Used to identify the reactions associated
-with the atomic and molecular species.</p></li>
+<li><p><strong>groundstate</strong> (<em>lst of str</em><em>, </em><em>optional</em><em> (</em><em>default=</em><em>[</em><em>'</em><em>(</em><em>n=1</em><em>)</em><em>'</em><em>, </em><em>'</em><em>(</em><em>v=0</em><em>)</em><em>'</em><em>]</em><em>)</em>) – handles for the atomic and molecular species ground state
+identifier, in the order [atom, molecule]. Used to identify
+the reactions associated with the atomic and molecular
+ground states, in combination with Crm.isotope.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -902,7 +941,8 @@ with the atomic and molecular species.</p></li>
 <p>Plots a curve or a set of curves for the depletion rate of the
 species specified by key. If both n and Te are lists, a set of
 T-dependent rate curves are plotted. If either n or Te is a
-float, a plot of as a function of the list is created</p>
+float, a plot of as a function of the list is created. The
+abcissa is Te regardless whether Ti is defined or not</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -929,85 +969,7 @@ Te. If None, Ti=Te is assumed</p></li>
 
 <dl class="py method">
 <dt id="id2">
-<code class="sig-name descname">solve_crm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">densonly</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Solves the time-evolution of the CRM system at given T and n</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> (<em>float</em>) – end-time of simulation in s</p></li>
-<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
-<li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
-<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
-<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
-<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
-<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
-re-association)</p></li>
-<li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
-associated with molecules. Defaults to E if Tm=0.</p></li>
-<li><p><strong>gl</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – switch determining wheter to evaluate the Np x Np
-Greenland CRM (True) or solve the full NxN system of
-ODEs (False)</p></li>
-<li><p><strong>n0</strong> (<em>list of floats</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
-input. List must be of the same length as the species list,
-and the order is determined by the input file. Defaults to
-the initial densities defined in the input if n0 is None.</p></li>
-<li><p><strong>Qres</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – Switch determining whether to resolve the Q-species energy
-transfer or return the net energy transfer divided into
-processes.</p></li>
-<li><p><strong>densonly</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – Only returns density rates if True, otherwise evaluates
-both density and energy rates</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p><strong>solution</strong> – The solution of the IVP ODE problem up to time t. A function
-that interpolates the solution in the interval [0,t] is
-accessed by the method sol(). The solution dimensionality
-along axis=0 is determined by the CRM setup and along axis=1
-by the time-resolution according to the following:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>density=True</dt><dd><dl class="simple">
-<dt>Qres=False<span class="classifier">Np</span></dt><dd><p>Data ordered according to input species list</p>
-</dd>
-<dt>Qres=True<span class="classifier">N (requires gl=False)</span></dt><dd><p>Data ordered according to input species list</p>
-</dd>
-</dl>
-</dd>
-<dt>density=False</dt><dd><dl class="simple">
-<dt>Qres=False</dt><dd><dl class="simple">
-<dt>gl=True<span class="classifier">5 + Np</span></dt><dd><p>Total Ee, Ei/a, Epot, Erada, Eradm, followed
-by Np-resolved density rates</p>
-</dd>
-<dt>gl=False<span class="classifier">5 + N</span></dt><dd><p>Total Ee, Ei/a, Epot, Erada, Eradm, followed
-by species-resolved density rates</p>
-</dd>
-</dl>
-</dd>
-<dt>Qres=True</dt><dd><dl class="simple">
-<dt>gl=True<span class="classifier">5*N + Np</span></dt><dd><p>Species-resolved Ee, Ei/a, Epot, Erada,
-Eradm, followed by Np-resolved density rates</p>
-</dd>
-<dt>gl=False<span class="classifier">6*N</span></dt><dd><p>Species-resolved Ee, Ei/a, Epot, Erada,
-Eradm, followed by species-resolved density
-rates</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-</dl>
-</div></blockquote>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>scipy.integrate._ivp.ivp.OdeResult object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="id3">
-<code class="sig-name descname">plot_crm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">density</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">14, 8.326231</span></em>, <em class="sig-param"><span class="n">savename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figtype</span><span class="o">=</span><span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">conservation</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_crm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">Qres</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">density</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">14, 8.326231</span></em>, <em class="sig-param"><span class="n">savename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figtype</span><span class="o">=</span><span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">conservation</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plots the CRM results for neutrals in a static background plasma</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1058,8 +1020,8 @@ recombination/ionization gains/losses</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id4">
-<code class="sig-name descname">read_ue_crumpet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nratefile</span></em>, <em class="sig-param"><span class="n">eratefile</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dt id="id3">
+<code class="sig-name descname">read_ue_crumpet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nratefile</span></em>, <em class="sig-param"><span class="n">eratefile</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>INCOMPLETE</strong> Reads a CRUMPET UEDGE rate file and returns the rates</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1079,8 +1041,8 @@ and the energy rates (internal and external)</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id5">
-<code class="sig-name descname">plot_ue_nrate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ratefile</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">10, 6.180343664189791</span></em>, <em class="sig-param"><span class="n">linestyle</span><span class="o">=</span><span class="default_value">'-'</span></em>, <em class="sig-param"><span class="n">ylim</span><span class="o">=</span><span class="default_value">0.1, 10000000.0</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">labelapp</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">savename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pretitle</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">figtype</span><span class="o">=</span><span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'k'</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'loglog'</span></em>, <em class="sig-param"><span class="n">idx</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ncol</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">fac</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<dt id="id4">
+<code class="sig-name descname">plot_ue_nrate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ratefile</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">10, 6.180343664189791</span></em>, <em class="sig-param"><span class="n">linestyle</span><span class="o">=</span><span class="default_value">'-'</span></em>, <em class="sig-param"><span class="n">ylim</span><span class="o">=</span><span class="default_value">0.1, 10000000.0</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">labelapp</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">savename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pretitle</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">figtype</span><span class="o">=</span><span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'k'</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'loglog'</span></em>, <em class="sig-param"><span class="n">idx</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ncol</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">fac</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>INCOMPLETE</strong> Plots the density rate coefficients read from a crumpet rate file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1130,8 +1092,8 @@ for options</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id6">
-<code class="sig-name descname">calc_ue_nrate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span></em>, <em class="sig-param"><span class="n">Tm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<dt id="id5">
+<code class="sig-name descname">calc_ue_nrate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span></em>, <em class="sig-param"><span class="n">Tm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>INCOMPLETE</strong> Calculates the Greenland CRM particle rate coefficients</p>
 <p>Includes external sources</p>
 <dl class="field-list simple">
@@ -1161,8 +1123,8 @@ H2_ext - external (re-association) molecule sink</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id7">
-<code class="sig-name descname">calc_ue_erate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span></em>, <em class="sig-param"><span class="n">Tm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
+<dt id="id6">
+<code class="sig-name descname">calc_ue_erate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span></em>, <em class="sig-param"><span class="n">Tm</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>INCOMPLETE</strong> Calculates the Greenland CRM energy rate coefficients</p>
 <p>Includes external sources</p>
 <dl class="field-list simple">
@@ -1201,8 +1163,8 @@ extgm - external molecular line radiation power</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id8">
-<code class="sig-name descname">plot_ue_erate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ratefile</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">origUE</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">idx</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">12, 8.034446763446727</span></em>, <em class="sig-param"><span class="n">linestyle</span><span class="o">=</span><span class="default_value">'-'</span></em>, <em class="sig-param"><span class="n">ylim</span><span class="o">=</span><span class="default_value">1e-17, 1e-11</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">labelapp</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">savename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pretitle</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">figtype</span><span class="o">=</span><span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'loglog'</span></em>, <em class="sig-param"><span class="n">ncol</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">colors</span><span class="o">=</span><span class="default_value">['darkcyan', 'b', 'm', 'r']</span></em>, <em class="sig-param"><span class="n">eion</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">ediss</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id8" title="Permalink to this definition">¶</a></dt>
+<dt id="id7">
+<code class="sig-name descname">plot_ue_erate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ratefile</span></em>, <em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">origUE</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">idx</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">12, 8.034446763446727</span></em>, <em class="sig-param"><span class="n">linestyle</span><span class="o">=</span><span class="default_value">'-'</span></em>, <em class="sig-param"><span class="n">ylim</span><span class="o">=</span><span class="default_value">1e-17, 1e-11</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">labelapp</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">savename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pretitle</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">figtype</span><span class="o">=</span><span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">'loglog'</span></em>, <em class="sig-param"><span class="n">ncol</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">colors</span><span class="o">=</span><span class="default_value">['darkcyan', 'b', 'm', 'r']</span></em>, <em class="sig-param"><span class="n">eion</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">ediss</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>INCOMPLETE</strong> Plots the energy rate coefficients read from a crumpet rate file</p>
 <p>Plots the energy rate coefficients for the process with idx, as
 explained below. Reads a CRUMPET energy rate file if origUE is
@@ -1273,19 +1235,33 @@ List of colors to be used in the plots</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id9">
-<code class="sig-name descname">spectrum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">'l'</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">10, 6.180343664189791</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">split</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">Tm</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id9" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>INCOMPLETE</strong> Plots atomic and molecular spectra</p>
+<dt id="id8">
+<code class="sig-name descname">spectrum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">vol</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ext</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ioniz</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">'l'</span></em>, <em class="sig-param"><span class="n">write</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">10, 6.180343664189791</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">split</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots atomic and molecular spectra</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
 <li><p><strong>ne</strong> (<em>float</em>) – electron density in cm**-3</p></li>
+<li><p><strong>vol</strong> (<em>float</em>) – volume of the domain in cm**3</p></li>
 <li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
 <li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
 <li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
-<li><p><strong>Tm</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – local molecular temperature for calculating energy losses
-associated with molecules. Defaults to E if Tm=0.</p></li>
+<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
+re-association)</p></li>
+<li><p><strong>n0</strong> (<em>ndarray</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Initial density distribution of the species defined in the
+input. List must be of the same length as the species list,
+and the order is determined by the input file. Defaults to
+the initial densities defined in the input if n0 is None.</p></li>
+<li><p><strong>ext</strong> (<em>ndarray</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – External sinks and sources for the species, not considered
+in CRUMPET, including transport, artificial sinks and
+sources, etc. Must be of length Nx1, as defined by the input
+species. Defaults to zeros, given in cm**-3 s**-1</p></li>
+<li><p><strong>ioniz</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – Additional ionization source (&lt;0) to applied to the first
+species. Necessary for evaluating CRM-transport code
+couplings where ionization is handled by the auxilliary
+code, and not included in the CRUMPET model. Given in
+cm**-3 s**-1</p></li>
 <li><p><strong>fig</strong> (<em>matplotlib.pyplot.figure</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – figure which to plot on. By default creates a new figure and
 returns the figure handle</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em><em> (</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>optional</em><em> (</em><em>default:</em><em> (</em><em>14</em><em>, </em><em>8.33</em><em>)</em><em>)</em>) – size of the created figure</p></li>
@@ -1312,8 +1288,8 @@ l - wavelength nm
 </dd></dl>
 
 <dl class="py method">
-<dt id="id10">
-<code class="sig-name descname">plotrate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">database</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">T</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">logx</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">logy</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">res</span><span class="o">=</span><span class="default_value">200</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'k'</span></em>, <em class="sig-param"><span class="n">linestyle</span><span class="o">=</span><span class="default_value">'-'</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">12, 8.034446763446727</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">ylim</span><span class="o">=</span><span class="default_value">[1e-14, 1e-06]</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">savename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figtype</span><span class="o">=</span><span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ncol</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id10" title="Permalink to this definition">¶</a></dt>
+<dt id="id9">
+<code class="sig-name descname">plotrate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">database</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">T</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">logx</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">logy</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">res</span><span class="o">=</span><span class="default_value">200</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'k'</span></em>, <em class="sig-param"><span class="n">linestyle</span><span class="o">=</span><span class="default_value">'-'</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">12, 8.034446763446727</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">ylim</span><span class="o">=</span><span class="default_value">[1e-14, 1e-06]</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">savename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figtype</span><span class="o">=</span><span class="default_value">'png'</span></em>, <em class="sig-param"><span class="n">xlim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ncol</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id9" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plots the rate of the requested reaction</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1356,56 +1332,8 @@ for options</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id11">
-<code class="sig-name descname">steady_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">na</span></em>, <em class="sig-param"><span class="n">nm</span></em>, <em class="sig-param"><span class="n">diva</span></em>, <em class="sig-param"><span class="n">divm</span></em>, <em class="sig-param"><span class="n">srca</span></em>, <em class="sig-param"><span class="n">srcm</span></em>, <em class="sig-param"><span class="n">bga</span></em>, <em class="sig-param"><span class="n">bgm</span></em>, <em class="sig-param"><span class="n">psor</span></em>, <em class="sig-param"><span class="n">psorgc</span></em>, <em class="sig-param"><span class="n">vol</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">gl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id11" title="Permalink to this definition">¶</a></dt>
-<dd><p>Solves the steady-state population of atoms and molecules</p>
-<p>Returns the ground state atom, molecule, and total vibrationally
-excited molecule populations. Assumes the reactions defined for
-in Crm and the external sinks and sources defined and simulates
-the population for 10s, assuming steady-staten to be achieved by
-that time.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in J</p></li>
-<li><p><strong>ne</strong> (<em>float</em>) – electron density in m**-3</p></li>
-<li><p><strong>na</strong> (<em>float</em>) – initial guess for atom density in m**-3</p></li>
-<li><p><strong>nm</strong> (<em>float</em>) – initial guess for molecule density in m**-3</p></li>
-<li><p><strong>diva</strong> (<em>float</em>) – atom divergence of domain (transport in/out) in s**-1</p></li>
-<li><p><strong>divm</strong> (<em>float</em>) – molecule divergence of domain (transport in/out) in s**-1</p></li>
-<li><p><strong>srca</strong> (<em>float</em>) – atom particle source in domain in s**-1</p></li>
-<li><p><strong>srcm</strong> (<em>float</em>) – molecule particle source in domain in s**-1</p></li>
-<li><p><strong>bga</strong> (<em>float</em>) – atom background source in domain in s**-1</p></li>
-<li><p><strong>bgm</strong> (<em>float</em>) – molecule background source in domain in s**-1</p></li>
-<li><p><strong>psor</strong> (<em>float</em>) – ionization sink in domain in s**-1</p></li>
-<li><p><strong>psorgc</strong> (<em>float</em>) – recombination source in domain in s**-1</p></li>
-<li><p><strong>vol</strong> (<em>float</em>) – volume of the domain in m**3</p></li>
-<li><p><strong>Ti</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion temperature in eV. Default sets Ti=Te</p></li>
-<li><p><strong>ni</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – ion density in cm**-3. Default sets ni=ne</p></li>
-<li><p><strong>E</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: E=0.1</em><em>)</em>) – molecular energy in eV for rates</p></li>
-<li><p><strong>Sext</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: True</em><em>)</em>) – switch for considering ‘external’ sinks/sources (e.g.
-re-association)</p></li>
-<li><p><strong>gl</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – switch determining wheter to evaluate the Np x Np
-Greenland CRM (True) or solve the full NxN system of ODEs (False)</p></li>
-<li><p><strong>plot</strong> (<em>boolean</em><em>, </em><em>optional</em><em> (</em><em>default: False</em><em>)</em>) – show a plot of the 10s time-evolution</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>na, nm, nmvib</em></p></li>
-<li><p><strong>na</strong> (<em>float</em>) – steady-state atom density in m**-3</p></li>
-<li><p><strong>nm</strong> (<em>float</em>) – steady-state atom density in m**-3</p></li>
-<li><p><em>nmvib - float</em> – total density of all vibrationally excited molecular species
-in m**-3</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="id12">
-<code class="sig-name descname">lifetimes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id12" title="Permalink to this definition">¶</a></dt>
+<dt id="id10">
+<code class="sig-name descname">lifetimes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Te</span></em>, <em class="sig-param"><span class="n">ne</span></em>, <em class="sig-param"><span class="n">E</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">Ti</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ni</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Sext</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id10" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>INCOMPLETE</strong> Species lifetimes perturbation from equilibrium</p>
 <p>Retrurns a ordered list (according to the input file species) of
 the species lifetimes. The species lifetimes are calculated by

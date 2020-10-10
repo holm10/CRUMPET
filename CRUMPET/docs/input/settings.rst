@@ -3,4 +3,6 @@ Settings
 ========
 
 .. toctree::
+
+.. toctree::
     :hidden:

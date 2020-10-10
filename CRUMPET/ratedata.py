@@ -67,25 +67,27 @@ class RateData:
                 'ADAS': {} }
         # For each data point, add the reactions to the appropriate dictionary
         for rate in ['AMJUEL', 'H2VIBR', 'HYDHEL']:
+            if self.reactions[rate]['path'] is not None:
+                try:
+                    self.read_EIRENE(self.reactions[rate]['path'],
+                            self.reactions[rate], 
+                            self.reactions[rate]['settings'], path=path)
+                except:
+                    print(  'Database {} not found in {}/{}. Omitting'
+                            ''.format(rate, path, 
+                            self.reactions[rate]['path']))
+        if ADAS is not None:
             try:
-                self.read_EIRENE(self.reactions[rate]['path'],
-                        self.reactions[rate], self.reactions[rate]['settings'],
-                        path=path)
+                self.read_ADAS(ADAS, self.reactions['ADAS'], path=path)
             except:
-                print(  'Database {} not found in {}/{}. Omitting'
-                        ''.format(rate, path, reactions[-1]))
-
-        try:
-            self.read_ADAS(ADAS, self.reactions['ADAS'], path=path)
-        except:
-            print(  'Database ADAS not found in {}/{}. Omitting'
-                    ''.format(rate, path, reactions[-1]))
-        
-        try:
-            self.read_UE(UE,self.reactions['UE'],path=path)
-        except:
-            print(  'Database UE not found in {}/{}. Omitting'
-                    ''.format(rate, path, reactions[-1]))
+                print(  'Database ADAS not found in {}/{}. Omitting'
+                        ''.format(path, ADAS))
+        if UE is not None: 
+            try:
+                self.read_UE(UE,self.reactions['UE'],path=path)
+            except:
+                print(  'Database UE not found in {}/{}. Omitting'
+                        ''.format(path, UE))
 
 
     def read_EIRENE(self, fname, reactions, settings, path='.'):

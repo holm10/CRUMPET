@@ -21,9 +21,10 @@ class Crm(Tools):
         Each entry is a dictionary containing information on the 
         initial density and potential level of the CRM  species. The 
         dictionary keys are used to identify the species
-    reactions : list of Reaction objects
-        A list that contains all the reactions specified in the input,
-        each reaction having its own Reaction Class 
+    reactions : dict with databases and Reaction objects included
+        A dict of databases, each database consisting of a dict of
+        reaction names/handles, which contains the Reaction object: e.g
+        reactions[database][reactionname]
     bg : dict
         As for 'species', but for the plasma background
     NP : int (default 2)
@@ -63,18 +64,19 @@ class Crm(Tools):
         background : dict
             a dictionary of the background species, each containing a 
             dict of the species potential 'V'
-        reactionlist : list
-            a list of lists for setting up the CRM reactions. Each 
-            element is a list of the following data
-            handle : string
-                database_reaction as specified in the input
-            reactants : list of strings
+
+        reactionlist : dict with databases and reactions
+            A dict of databases, each database consisting of a dict of
+            reaction names/handles, which contains the reaction data.
+            The reactions[database][reactionname] dict requires three
+            keys:
+            'reactants' : list of strings
                 each element is a handle of the reactants. At least one
                 of the species must be a background species, and only
                 two reactants are currently supported
-            products : list of strings
+            'products' : list of strings
                 each element is a handle of the products
-            K : string
+            'K' : string
                 a string of the net kinetic energy transfer for the 
                 background reactants to the products. Presently, all
                 energy is assumed to end up as ion/atom kinetic energy.
@@ -118,10 +120,11 @@ class Crm(Tools):
         self.verbose = verbose
         self.Np = NP
         self.path = path
-        self.reactions = []
+        self.reactions = {} 
         self.vmax = vmax
         self.nmax = nmax
         self.setup_reactions(reactionlist ,rdata)
+
         # Define reactions for UEDGE raditation
         #self.ionizrad=Reaction('IONIZRAD','UE',
                 #self.get_coeff('UE','IONIZRAD'),'UE',['','',''],bg,species,
@@ -141,8 +144,9 @@ class Crm(Tools):
             for i in self.slist:
                 f.write('    {}\n'.format(i))
             f.write('Defined reactions:\n')
-            for r in self.reactions:
-                f.write('{}\n'.format(r.print_reaction()))
+            for dkey, database in self.reactions.items():
+                for rkey, reaction in database.items():
+                    f.write('{}\n'.format(reaction.print_reaction(dkey, rkey)))
         # Output to stdout if run verbosely
         if self.verbose:
             with open('logs/setup.log', 'rt') as f:
@@ -153,7 +157,7 @@ class Crm(Tools):
         self.DIAGNOSTIC()
 
 # %%%%%%%%%%%%%% INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
-    def setup_ADAS(self, x, ID, rdata, rlist, plist, K):
+    def setup_ADAS(self, x, ID, rdata, data):
         ''' Adds an ADAS reactions up to self.nmax'''
         from CRUMPET.reactions import Reaction
 
@@ -172,19 +176,18 @@ class Crm(Tools):
                 _name = '{}_{}-{}'.format(ID, x, y)
                 #Get coefficients
                 _ratecoeff = rdata['ADAS']['{}-{}'.format(x, y)] 
-                self.reactions.append(Reaction(_name, 'ADAS', _ratecoeff, fit,
-                        [rlist, plist, K], bg, species, Tarr, self.isotope,
-                        self.mass))
+                self.reactions['ADAS'][_name] = Reaction('ADAS',
+                        _ratecoeff, fit, data, bg, species, 
+                        self.isotope, self.mass, Tarr)
             except:
                 pass
 
 
-    def setup_APID(self, x, ID, rlist, plist, K):
+    def setup_APID(self, x, ID, rdata):
         ''' Adds an APID-style ionization reaction '''
         from CRUMPET.reactions import Reaction
-        self.reactions.append(Reaction(self.XY2num(ID, x), 'APID', x, 'APID',
-                [rlist,plist,K], self.bg, self.species, self.isotope,
-                self.mass))
+        self.reactions['APID'][self.XY2num(ID,x)] = Reaction('APID', x, 'APID',
+                rdata, self.bg, self.species, self.isotope, self.mass)
 
 
     def setup_Johnson(self, i, ID, r):
@@ -209,15 +212,15 @@ class Crm(Tools):
         e = 4.80274e-10
         I = (me*e**4)/(2*h**2)
         for f in range(1, i):
+            buff = r.copy()
             res = (2**6 * e**2 * I**2)/(3**1.5*pi*me*c**3 * h**2)
             freq = (1/f**2 - 1/i**2)
             Afac = (res*g(i, f))/(freq*(i**5)*(f**3))
-            rlist = [self.XY2num(a, i, f) for a in r[1]]  # Reactants 
-            plist = [self.XY2num(a, i, f) for a in r[2]]  # Fragments
-            _rlist = [rlist, plist, r[-1]]
-            self.reactions.append(Reaction(self.XY2num(ID, i, f), 'JOHNSON',
-                    Afac, 'COEFFICIENT', _rlist, self.bg, self.species,
-                    self.isotope, self.mass))
+            for label in ['reactants','fragments']:
+                buff[label] =  [self.XY2num(a, i, f) for a in buff[label]]
+            self.reactions['JOHNSON'][self.XY2num(ID, i, f)] = Reaction(
+                    'JOHNSON', Afac, 'COEFFICIENT', buff, self.bg, 
+                    self.species, self.isotope, self.mass)
 
 
     def setup_reactions(self, reactionlist, rdata):
@@ -252,76 +255,78 @@ class Crm(Tools):
         -------
         None
         '''
-        print(reactionlist)
-        # TODO: Change list to dictionary for improved lookup!
         from CRUMPET.reactions import Reaction
         from numpy import zeros, pi
         
         ''' LOOP OVER ALL THE DEFINED ReactionS '''
-        for r in reactionlist:
-            # Split the definitions into names and databases
-            database = r[0].split('_')[0].upper()
+        for database, reaction in reactionlist.items():
+            # Create database if not already created
             try:
-                ID = r[0].split('_')[1].upper()
-                spec = ''.join(r[1] + r[2]).upper()
+                self.reactions[database]
             except:
-                ID = 'CUSTOM'
-                spec = ''
-            # Loop through states, if necessary. Dynamicallt set boundaries
-            # according to electronic or vibrational transitions
-            for x in range('N=$' in spec,
-                    1 + ('V=$' in spec)*self.vmax + ('N=$' in spec)*self.nmax):
-                # Vibrational/electronic dependence present
-                if '$' in ID:
-                    # Substitute state into reactants and product strings 
-                    rlist = [self.XY2num(i, x) for i in r[1]]  # Reactants 
-                    plist = [self.XY2num(i, x) for i in r[2]]  # Fragments
-                    # %%% ADAS rates detected %%%
-                    if database == 'ADAS':
-                        self.setup_ADAS(x, ID, rdata, rlist, plist, r[-1])
-                    # %%% APID rates detected %%%
-                    elif database == 'APID':
-                        self.setup_APID(x, ID, rlist, plist, r[-1])
-                    # %%% APID rates detected %%%
-                    elif database == 'JOHNSON':
-                        self.setup_Johnson(x, ID, r)
-                    # %%% Neither of the above: rate for transitions %%%
+                self.reactions[database] = {}
+            for ID, data in reaction.items():
+                # Split the definitions into names and databases
+                ndep = ('N=$' in ''.join(data['reactants'] + 
+                        data['fragments']).upper())
+                vdep = ('V=$' in ''.join(data['reactants'] + 
+                        data['fragments']).upper())
+                # Loop through states, if necessary. Dynamicallt set boundaries
+                # according to electronic or vibrational transitions
+                for x in range(ndep, 1 + vdep*self.vmax + ndep*self.nmax):
+                    # Vibrational/electronic dependence present
+                    if '$' in ID:
+                        buff = data.copy()
+                        # Substitute state into reactants and product strings 
+                        for label in ['reactants', 'fragments']:
+                            buff[label] = [self.XY2num(i, x) for i in 
+                                    buff[label]]
+                        # %%% ADAS rates detected %%%
+                        if database == 'ADAS':
+                            self.setup_ADAS(x, ID, rdata, rlist, plist, 
+                                    data['K'])
+                        # %%% APID rates detected %%%
+                        elif database == 'APID':
+                            self.setup_APID(x, ID, buff)
+                        # %%% APID rates detected %%%
+                        elif database == 'JOHNSON':
+                            self.setup_Johnson(x, ID, buff)
+                        # %%% Neither of the above: rate for transitions %%%
+                        else:
+                            # Assume ladder-like vibrational transitions (+/-1)
+                            for y in range(-1*('&' in ID), 2, 2):
+                                # Limit transitions to [0,vmax]
+                                if x + y in range(self.vmax + 1):
+                                    rebuff = buff.copy()
+                                    # Retain intial and final states in name
+                                    vID = self.XY2num(ID, x, x + y) 
+                                    for label in ['reactants', 'fragments']:
+                                        rebuff[label] = [self.XY2num(i, x, 
+                                                x + y) for i in rebuff[label]]
+                                    _name = vID
+                                    _database = database
+                                    _ratecoeff = rdata[database][vID] 
+                                    _rtype = 'RATE'
+                                    _rlist = rebuff
+                                    self.reactions[_database][_name] = \
+                                            Reaction(_database, _ratecoeff, 
+                                            _rtype, _rlist, self.bg, 
+                                            self.species, self.isotope, 
+                                            self.mass)
+                    #%%%%% Read custom rates %%%%%
+                    elif database == 'CUSTOM':
+                        self.setup_custom(ID.strip(), database)
+                    #%%% EIRENE/UEDGE-DEGAS rates %%%
+                    elif database in ['HYDHEL', 'AMJUEL', 'H2VIBR', 'UE']:
+                        self.reactions[database][ID] = Reaction(database,
+                                rdata[database][ID], 'RATE'*(database != 'UE') + 
+                                'UE'*(database == 'UE'), data, self.bg, 
+                                self.species, self.isotope, self.mass)
+                    #%%% Fell through loop %%%
                     else:
-                        # Assume ladder-like vibrational transitions (+/-1) only
-                        for y in range(-1*('&' in ID), 2, 2):
-                            # Limit transitions to [0,vmax]
-                            if x + y in range(self.vmax + 1):
-                                # Retain intial and final states in name
-                                vID = self.XY2num(ID, x, x + y) 
-                                # List of reactants with initial states
-                                rlist = [self.XY2num(i, x, x + y) for 
-                                        i in r[1]]
-                                # List of products with final states
-                                plist = [self.XY2num(i, x, x + y) for
-                                        i in r[2]]
-                                _name = vID
-                                _database = database
-                                _ratecoeff = rdata[database][vID] 
-                                _rtype = 'RATE'
-                                _rlist = [rlist, plist, r[-1]]
-                                self.reactions.append(Reaction(
-                                        _name, _database, _ratecoeff, _rtype,
-                                        _rlist, self.bg, self.species, 
-                                        self.isotope, self.mass))
-                #%%%%% Read custom rates %%%%%
-                elif database == 'CUSTOM':
-                    self.setup_custom(r[1].strip(), database)
-                #%%% EIRENE/UEDGE-DEGAS rates %%%
-                elif database in ['HYDHEL', 'AMJUEL', 'H2VIBR', 'UE']:
-                    self.reactions.append(Reaction(ID, database,
-                            rdata[database][ID], 'RATE'*(database != 'UE') + 
-                            'UE'*(database == 'UE'), [r[1], r[2], r[-1]],
-                            self.bg, self.species, self.isotope, self.mass))
-                #%%% Fell through loop %%%
-                else:
-                    print(  'Database "{}" not recognized!\n'
-                            'Aborting.'.format(database))
-                    return
+                        print(  'Database "{}" not recognized!\n'
+                                'Aborting.'.format(database))
+                        return
 
 
     def setup_custom(self, fname, database):
@@ -346,43 +351,47 @@ class Crm(Tools):
         # Parse the custom rate file into a list and retain subcards
         data, _, subcards = self.file2list(self.path, fname)
         _database = data[0].strip() # Database is defined at fist line
+        try:
+            self.reactions[_database]
+        except:
+            self.reactions[_database] = {}
         # Loop through the rates, each a separate subcard
         for i in range(len(subcards) - 1):
             subc = subcards[i] # Helper index
             # Rate typy, first subcard entry
             fit = data[subc].split()[1].upper() 
             name = data[subc].split()[2] # Name/ID of reacrtion - second entry
-            reactants, fragments=data[subc + 1].split(' > ') # Reactants and 
-                                    # fragments are defined on the second line
-            K = '0' # Kinetic energy exchange in reaction is 0 unless defined
+            rdata = {
+                    'reactants': data[subc + 1].split(' > ')[0],
+                    'fragments': data[subc + 1].split(' > ')[1],
+                    'K': '0',
+                    }
             # Execute if no vib dependence, loop if vibr. dep. process
             for j in range(1 + ('$' in name)*self.vmax):
+                buff = rdata.copy()
                 # %%% Vibrationally dependent process %%%
                 if '$' in name:
                     # Read kinetic energy for each process
-                    for k in range(0, 100):
-                        if data[k][0] == 'K': 
-                            K = data[k].strip().split('=')[-1]
-                        elif data[k][0] == 'v':
-                            m = k
+                    for m in range(0, 100):
+                        if data[m][0] == 'K': 
+                            buff['K'] = data[m].strip().split('=')[-1]
+                        elif data[m][0] == 'v':
                             break
                     # Write data
                     _name = self.XY2num(name, j)
-                    # Reactants w/ v-level number
-                    rlist = self.XY2num(reactants, j).strip().split(' + ') 
-                    # Products w/ v-level number
-                    plist = self.XY2num(fragments, j).strip().split(' + ') 
+                    for label in ['reactants', 'fragments']:
+                        buff[label] = self.XY2num(buff[label], 
+                                j).strip().split(' + ') 
                     # Coefficients for v-level
                     _ratecoeff = [float(x) for x in 
                             data[subc + m+  j*2].split()] 
                 # %%% Specified rate %%%
                 else:
                     # Read the kinetic energy of the process
-                    for k in range(2, 100):
-                        if data[subc + k][0] == 'K': 
-                            K = data[subc + m].strip().split('=')[-1]
+                    for m in range(2, 100):
+                        if data[subc + m][0] == 'K': 
+                            buff['K'] = data[subc + m].strip().split('=')[-1]
                         else:
-                            m = k
                             break
                     # Cross-section as defined in SAWADA 95 has special form
                     if fit == 'SIGMA': 
@@ -392,12 +401,12 @@ class Crm(Tools):
                         _ratecoeff = float(data[subc + m])
                     # Write data
                     _name = name
-                    rlist = reactants.strip().split(' + ') # Reactants
-                    plist = fragments.strip().split(' + ') # Fragments
+                    for label in ['reactants', 'fragments']:
+                        buff[label] = buff[label].strip().split(' + ') 
                 # Store reaction
-                self.reactions.append(Reaction(_name, _database, _ratecoeff,
-                        fit, [rlist, plist, K], self.bg, self.species,
-                        self.isotope, self.mass))
+                self.reactions[_database][_name] = Reaction(_database,
+                        _ratecoeff, fit, buff, self.bg, self.species,
+                        self.isotope, self.mass)
 
 # %%%%%%%%%%%%%% ENF OF INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
 
@@ -412,7 +421,10 @@ class Crm(Tools):
             'R' - rate coefficient matrix in cm**3 s**-1
             'M' - rate matrix in s**-1
             'Sgl' - energy rate matrix in eV s**-1
-            'I' - radiation intensity matrix # TODO: check
+            'I' -   gamma count matrix, marking gammas s**-1 for
+                    off-diagonal transitions  
+            'E' -   gamma energy matrix, marking the gamma energies
+                    for the off-diagonal transitions in eV
         Te : float
             electron temperature in eV
         ne : float
@@ -426,7 +438,6 @@ class Crm(Tools):
         Tm : float, optional (default: 0)
             local molecular temperature for calculating energy losses 
             associated with molecules. Defaults to E if Tm=0.
-            'E' - radiation power  matrix # TODO: check
 
         Returns
         -------
@@ -453,100 +464,102 @@ class Crm(Tools):
             ext_source = zeros(N)
         for i in range(len(self.species)):
             #%%% Walk through each row (species) %%%
-            for r in self.reactions:
-                #%%% Sort the species of each reaction into %%%
-                #%%%  the appropriate column %%%
-                Sgl = r.getS(Te, Ti, Tm, E)
-                # TODO: what if three-particle reaction?
-                bg = r.e*ne + r.p*ni # Specify density for reactions
-                if mode == 'R':
-                    bgm = r.rate(Te, Ti, E=E, ne=ne)
-                    bg = r.rate(Te, Ti, E=E, ne=ne)
+            for dkey, database in self.reactions.items():
+                for rkey, r in database.items():
+                    #%%% Sort the species of each reaction into %%%
+                    #%%%  the appropriate column %%%
+                    Sgl = r.getS(Te, Ti, Tm, E)
+                    # TODO: what if three-particle reaction?
+                    bg = r.e*ne + r.p*ni # Specify density for reactions
                     ext = 0
-                elif mode in ['M']:#,'Sgl']:
-                    # Specify density for external source
-                    bgm = (r.e*ne)*(r.p*ni)*r.rate(Te, Ti, E=E, ne=ne) 
-                    # Assure that auto-processes are considered
-                    bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)    
-                    ext = 0
-                elif mode == 'Sgl':
-                    # Specify density for external source
-                    bgm = (r.e*ne)*(r.p*ni)*r.rate(Te, Ti, E=E, ne=ne)*Sgl[:,0] 
-                    # Assure that auto-processes are considered
-                    bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)*Sgl[:,0]    
-                    ext = Sgl[:,1]
-                elif mode == 'I':
-                    # Specify density for external source
-                    bgm = (r.e*ne)*(r.p*ni)*r.rate(Te, Ti, E=E, ne=ne)*Sgl[-2:,0] 
-                    # Assure that auto-processes are considered
-                    bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)*(abs(Sgl[-2:,0]) > 0)    
-                    ext = 0
-                elif mode == 'E':
-                    bgm = Sgl[-2:,0] # Specify density for external source
-                    # Assure that auto-processes are considered
-                    bg = Sgl[-2:,0]  
-                    ext = 0
-                j = None # Set flag to identify external sources
-                # Loop through each reaction defined in the CRM
-                for rea in range(len(r.reactants)):
-                    # Find the column into which the fragments goes: 
-                    # if background mark external
-                    try:
-                        # Get the product species index of the correct column
-                        j = self.slist.index(r.reactants[rea])  
-                    except:
-                        continue
-                    # If the species (row index) is a reactant, r is a 
-                    # depletion process 
-                    if self.slist[i] == r.reactants[rea]:   
-                        ''' DEPLETION '''
-                        if mode == 'diagnostic':
-                            ''' Diagnostic matrix '''
-                            # Print the rate to the correct element
-                            ret[i][i].append('-' + str(r.r_mult[rea]) + '*' + 
-                                    r.database + '_' + r.name + bg)   
-                        elif mode in ['R','M']:
-                            ''' Rate coefficient matrix '''
-                            # Calculate the Rate coefficient and store 
-                            # appropriately
-                            ret[i,i]-=r.r_mult[rea]*bg 
-                # Loop through the reaction fragments
-                for frag in range(len(r.fragments)):    
-                    ''' SOURCE '''
-                    # Do nothing if background fragment
-                 #   if r.fragments[frag] not in self.slist: 
-                 #       continue
-                    # If fragment enters row, add in appropriate column as
-                    # defined by reactant
-                    if (r.fragments[frag] in self.slist) and (
-                            self.slist.index(r.fragments[frag]) == i):
-                        multiplier = r.f_mult[frag]**(mode not in 
-                                ['Sgl', 'I', 'E'])   # Fragment multiplier
-                        # External flag triggered, store to external source
-                        if j is None: 
-                            ''' EXTERNAL SOURCE '''
+                    if mode != 'diagnostic':
+                        bgm = (r.e*ne) * (r.p*ni)
+                    if mode == 'R':
+                        bgm = r.rate(Te, Ti, E=E, ne=ne)
+                        bg = r.rate(Te, Ti, E=E, ne=ne)
+                    elif mode in ['M']:#,'Sgl']:
+                        # Specify density for external source
+                        bgm = bgm*r.rate(Te, Ti, E=E, ne=ne) 
+                        # Assure that auto-processes are considered
+                        bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)    
+                    elif mode == 'Sgl':
+                        # Specify density for external source
+                        bgm = bgm*r.rate(Te, Ti, E=E, ne=ne)*Sgl[:,0] 
+                        # Assure that auto-processes are considered
+                        bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)*Sgl[:,0]
+                        ext = Sgl[:,1]
+                    elif mode == 'I':
+                        # Specify density for external source
+                        bgm = bgm*r.rate(Te, Ti, E=E, ne=ne)*Sgl[-2:,0] 
+                        # Assure that auto-processes are considered
+                        bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)*\
+                                (abs(Sgl[-2:,0]) > 0)    
+                    elif mode == 'E':
+                        bgm = Sgl[-2:,0] # Specify density for external source
+                        # Assure that auto-processes are considered
+                        bg = Sgl[-2:,0]  
+                    j = None # Set flag to identify external sources
+                    # Loop through each reaction defined in the CRM
+                    for rea in range(len(r.reactants)):
+                        # Find the column into which the fragments goes: 
+                        # if background mark external
+                        try:
+                            # Get the product species index of the 
+                            # correct column
+                            j = self.slist.index(r.reactants[rea])  
+                        except:
+                            continue
+                        # If the species (row index) is a reactant, r is a 
+                        # depletion process 
+                        if self.slist[i] == r.reactants[rea]:   
+                            ''' DEPLETION '''
                             if mode == 'diagnostic':
                                 ''' Diagnostic matrix '''
-                                ext_source[i].append('+' + str(multiplier) + 
-                                        '*' + r.database + '_' + r.name + bg)
-                            else:
-                                try:
-                                    ext_source[i] += multiplier*bgm + ext
-                                except:
-                                    ext_source[i,:] += multiplier*bgm + ext
-                        # No trigger of external source, store to appropriate
-                        # location in matrix
-                        else: 
-                            ''' INTERNAL SOURCE '''
-                            if mode == 'diagnostic':
-                                ''' Diagnostic matrix '''
-                                ret[i][j].append('+' + str(multiplier) + '*' + 
-                                        r.database+'_' + r.name + bg)
-                            else:
-                                try:
-                                    ret[i,j] += multiplier*bg + ext
-                                except:
-                                    ret[i,j,:] += multiplier*bg + ext
+                                # Print the rate to the correct element
+                                ret[i][i].append('-{}*{}_{}{}'.format(
+                                        r.r_mult[rea], dkey, rkey, bg))
+                            elif mode in ['R','M']:
+                                ''' Rate coefficient matrix '''
+                                # Calculate the Rate coefficient and store 
+                                # appropriately
+                                ret[i,i]-=r.r_mult[rea]*bg 
+                    # Loop through the reaction fragments
+                    for frag in range(len(r.fragments)):    
+                        ''' SOURCE '''
+                        # Do nothing if background fragment
+                     #   if r.fragments[frag] not in self.slist: 
+                     #       continue
+                        # If fragment enters row, add in appropriate column as
+                        # defined by reactant
+                        if (r.fragments[frag] in self.slist) and (
+                                self.slist.index(r.fragments[frag]) == i):
+                            multiplier = r.f_mult[frag]**(mode not in 
+                                    ['Sgl', 'I', 'E'])   # Fragment multiplier
+                            # External flag triggered, store to external source
+                            if j is None: 
+                                ''' EXTERNAL SOURCE '''
+                                if mode == 'diagnostic':
+                                    ''' Diagnostic matrix '''
+                                    ext_source[i].append('+{}*{}_{}{}'.format(
+                                            multiplier, dkey, rkey, bg))
+                                else:
+                                    try:
+                                        ext_source[i] += multiplier*bgm + ext
+                                    except:
+                                        ext_source[i,:] += multiplier*bgm + ext
+                            # No trigger of external source, store to 
+                            # appropriate location in matrix
+                            else: 
+                                ''' INTERNAL SOURCE '''
+                                if mode == 'diagnostic':
+                                    ''' Diagnostic matrix '''
+                                    ret[i][i].append('+{}*{}_{}{}'.format(
+                                            multiplier, dkey, rkey, bg))
+                                else:
+                                    try:
+                                        ret[i,j] += multiplier*bg + ext
+                                    except:
+                                        ret[i,j,:] += multiplier*bg + ext
         return ret, ext_source
 
         
@@ -922,7 +935,7 @@ class Crm(Tools):
         return  [[mat[:,:,0], ext[:,0]], [mat[:,:,1], ext[:,1]]]
 
  
-    def ddt(self, t, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, Sext=True, gl=True,
+    def solve_crm(self, t, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, Sext=True, gl=True,
             n=None, Qres=True, densonly=False, write=False):
         ''' Solves the time-evolution of the CRM system at given T and n
 
@@ -999,8 +1012,6 @@ class Crm(Tools):
         from  numpy.linalg import inv
         from scipy.integrate import solve_ivp
 
-        #densonly=False
-        # TODO: Combine with full_nt  
         N = len(self.species)
         Np = self.Np
         if n is None:
@@ -1052,11 +1063,113 @@ class Crm(Tools):
             mat = M
             ext = G
             n = n0
-        return solve_ivp(lambda x, y: self.linearized(x, y, mat, ext), (0, t),
+        return solve_ivp(lambda x, y: self.ddt(x, y, mat, ext), (0, t),
                 n, 'LSODA', dense_output=True)
 
 
-    def gl_crm(self, mat, ext, Sext=True, n0=None, matrices=False):
+    def steady_state(
+            self, Te, ne, vol, E=0.1, Ti=None, ni=None, Sext=True, 
+            gl=False, plot=False, n0=None, ext=None, ioniz=0):
+        ''' Solves the steady-state population of atoms and molecules
+
+        Returns the ground state atom, molecule, and total vibrationally
+        excited molecule populations. Assumes the reactions defined for 
+        in Crm and the external sinks and sources specified and solves
+        the steady-state system.
+
+        Parameters
+        ----------
+        Te : float
+            electron temperature in eV
+        ne : float
+            electron density in cm**-3
+        vol : float
+            volume of the domain in cm**3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates
+        Sext : boolean, optional (default: True)
+            switch for considering 'external' sinks/sources (e.g. 
+            re-association)
+        gl : boolean, optional (default: False)
+            switch determining wheter to evaluate the Np x Np 
+            Greenland CRM (True) or solve the full NxN system of ODEs 
+            (False)
+        plot : boolean, optional (default: False)
+            show a plot of the 10s time-evolution
+        n0 : ndarray, optional (default: None)
+            Initial density distribution of the species defined in the 
+            input. List must be of the same length as the species list,
+            and the order is determined by the input file. Defaults to 
+            the initial densities defined in the input if n0 is None.
+        ext : ndarray, optional (default: None)
+            External sinks and sources for the species, not considered 
+            in CRUMPET, including transport, artificial sinks and 
+            sources, etc. Must be of length Nx1, as defined by the input
+            species. Defaults to zeros, given in cm**-3 s**-1
+        ioniz : float, optional (default: None)
+            Additional ionization source (<0) to applied to the first 
+            species. Necessary for evaluating CRM-transport code 
+            couplings where ionization is handled by the auxilliary
+            code, and not included in the CRUMPET model. Given in 
+            cm**-3 s**-1
+
+        Returns
+        -------
+        n_ss : ndarray
+            steady-state populations
+        '''
+        from numpy import log, ones, matmul, polyfit, zeros, exp, sum
+        from numpy.linalg import solve
+        from scipy.optimize import fsolve, minimize
+        from scipy.linalg import norm
+        from scipy.integrate import solve_ivp
+        from matplotlib.pyplot import figure
+
+        if n0 is None:
+            n0 = self.n0()
+        if ext is None:
+            ext = zeros((len(n0),))
+        #Te /= 1.602e-19
+        #ne /= 1e6
+        # Set volume to be cm**3
+        #vol *= 1e6
+        # Set initial density in [1/cm**3]
+        # Get the rate matrices 
+        mat, extm = self.M(Te, ne, Ti, ni, E, write=True) 
+        ext += extm
+        if gl is True:
+            # Get matrices and eigenvalues
+            mat, ext, n = self.gl_crm(mat, ext, n=n) 
+        # Set external sources to be [1/cm**3/s]
+#        ext[0] = (psorgc + diva + srca + bga)/vol
+#        ext[1] = (divm + srcm + bgm)/vol
+        # Normalize ionzation rate to UEDGE values 
+#        mat[0,0] = (psor/ne)/vol
+        mat[0,0] += ioniz
+        if plot is True:
+            # Simulate to SS
+            ss_sol = solve_ivp(lambda x,y: self.ddt(x, y, mat, ext), (0, 10), 
+                    n0, 'LSODA', dense_output=True)
+            f = figure(figsize = (7,7))
+            ax = f.add_subplot(111)
+            for i in range(len(n0)):
+                line = '-' + '-'*('H2' in self.slist[i])
+                ax.semilogx(ss_sol.t, ss_sol.y[i,:], line, label=self.slist[i])
+                if i == 0:
+                    ax.semilogx(ss_sol.t, ss_sol.y[i,:], 'k.', 
+                            label=self.slist[i]) 
+            ax.legend(ncol=3)
+            ax.set_xlabel('Time [s]')
+            ax.set_ylabel('Density [cm**-3]')
+            f.show()
+        return solve(mat,-ext)  
+
+
+    def gl_crm(self, mat, ext, Sext=True, n0=None):
         ''' Returns the P-space matrices according to Greenland 2001
 
         Parameters
@@ -1073,9 +1186,6 @@ class Crm(Tools):
             input. List must be of the same length as the species list,
             and the order is determined by the input file. Defaults to 
             the initial densities defined in the input if n0 is None.
-        eigen : boolean, optional (default: False)
-            switch to return the eigenvector and eigenvalues (True) 
-            rather than the Greenland rate matrices (False)
 
         # TODO: Eigenvalues into its own function!
         Returns 
@@ -1111,8 +1221,6 @@ class Crm(Tools):
         Meff = (MP - matmul(matmul(H, inv(MQ)), V))
         # Diagonalize M
         eigs, T = eig(mat)
-        if eigen is True:
-            return T, real(eigs)
         # Order the eigenvalues and vectors in increasing magnitude
         # TODO should this be done for all the eigenvectors or separately   
         # between the Q and P space??
@@ -1142,7 +1250,7 @@ class Crm(Tools):
         return Meff, GPp, nP0p
 
   
-    def linearized(self, t, n, mat, ext):
+    def ddt(self, t, n, mat, ext):
         ''' RHS of the linearized system of ODEs ''' 
         from numpy import matmul
 
@@ -1289,139 +1397,73 @@ class Crm(Tools):
             print('Minimum rejected maxnorm={:.2E}'.format(min(rej)))
 
         
-    def intensity(self, Te, ne, Ti=None, ni=None, E=0.1, units='v', norm=True,
-                  write=False, Sext=True, n=None):
-        ''' **INCOMPLETE** Returns a matrix of gamma intensities
-        
+    def intensity(
+            self, Te, ne, vol, E=0.1, Ti=None, ni=None, Sext=True, n0=None, 
+            ext=None, ioniz=0, units='l',write=False, norm=False):
+        ''' Returns energy and gammas and the respective counts at SS
+
         Parameters
         ----------
         Te : float
             electron temperature in eV
         ne : float
             electron density in cm**-3
+        vol : float
+            volume of the domain in cm**3
         Ti : float, optional (default: None)
             ion temperature in eV. Default sets Ti=Te
         ni : float, optional (default: None)
             ion density in cm**-3. Default sets ni=ne
         E : float, optional (default: E=0.1)
-            molecular energy in eV for rates       
-        units : string, optional (default: l)
+            molecular energy in eV for rates
+        Sext : boolean, optional (default: True)
+            switch for considering 'external' sinks/sources (e.g. 
+            re-association)
+        n0 : ndarray, optional (default: None)
+            Initial density distribution of the species defined in the 
+            input. List must be of the same length as the species list,
+            and the order is determined by the input file. Defaults to 
+            the initial densities defined in the input if n0 is None.
+        ext : ndarray, optional (default: None)
+            External sinks and sources for the species, not considered 
+            in CRUMPET, including transport, artificial sinks and 
+            sources, etc. Must be of length Nx1, as defined by the input
+            species. Defaults to zeros, given in cm**-3 s**-1
+        ioniz : float, optional (default: None)
+            Additional ionization source (<0) to applied to the first 
+            species. Necessary for evaluating CRM-transport code 
+            couplings where ionization is handled by the auxilliary
+            code, and not included in the CRUMPET model. Given in 
+            cm**-3 s**-1
+        units : string, optional (default: 'l')
             units of the plot ordinate
             ev - power in eV/s
             v - wavenumber cm**-1
             f - frequency Hz
             l - wavelength nm
             Å - wavelength Å
+        write : boolean, optional (default: False)
+            write intensity matrices to logs
         norm : boolean, optional (default: False)
             normalize the lines to the total as determined by units
-        Sext : boolean, optional (default: True)
-            switch for considering 'external' sinks/sources (e.g. 
-            re-association)
-        write : boolean, optional (default: True)
-            Switch for writing the R-matrix to the logs
-        n0 : list of floats, optional (default: None)
-            Initial density distribution of the species defined in the 
-            input. List must be of the same length as the species list,
-            and the order is determined by the input file. Defaults to 
-            the initial densities defined in the input if n0 is None.
 
         Returns
         -------
-        intensity : ndarray
-            A 2-by-NxN array of values of the requested units. The first
-            index is atomic lines, and the second molecular lines.
-        '''
-        # TODO: Solve steady state from dn/dt=0!
+        intensities : len-2 tuple of ndarray
+            the first ndarray contains atomic line intensities, and the
+            second molecular line intensities. The first entry along
+            axis=0 is are the gamma energies in the units requested, and 
+            the second are counts in s**-1
+        ''' 
         from numpy import reshape, zeros, multiply, where
         from numpy import transpose, matmul, array, mean, all, diag
         from scipy.optimize import minimize
         from scipy.integrate import solve_ivp
         from matplotlib.pyplot import figure
 
-        '''
-        def dt(t,n,mat,ext):
-            m=matmul(mat,n)
-            ext[0]=-m[0]
-            return matmul(mat,n)+ext
 
-
-
-        if n is None: n=self.n0() 
-        # Use input n0 as default unless explict n0 requested
-        NN=len(self.species)*len(self.species)
-
-        mat,ext=self.M(Te,ne,Ti,ni,E,write=False) # Get the full rate matrix
-       
-        # Supply molecules to achieve SS
-        ext[1]=sum(n)/2
-        # Simulate to SS
-        ss_sol=solve_ivp(lambda x,y: dt(x,y,mat,ext),(0,10),n,'LSODA',
-                dense_output=True)
-
-        ss_sol=diag(ss_sol.y[:,-1])
-        '''
-
-        def dt(t, n, mat, ext, n0):
-            '''
-            ntot=self.totparticles(n)
-            dn=self.totparticles(n)-self.totparticles(n0)
-            ext[1]=-dn*fac
-            '''
-            #fac=0*1e3#-1e-2
-            '''ext[0]=-(matmul(mat,n))[0]'''
-            
-            #ext[1]=-0.5*ext[0]
-            #ext[1]=-ext[0]*0.1
-            #ext[0]=-fac*n[0]
-            #ext[1]=-0.99*self.totpart(ext)
-            #ext[1]=-0.5*ext[0]
-            return matmul(mat, n) + ext
-
-        def ss(t, Y):
-            global ss_n 
-            if norm(Y - ss_n) < 7e5:
-                return 0
-            else:
-                return 1
-        ss.terminal = True
-
-        def findfac(fac, n, mat, ext, n0):
-            nend_sum = self.totparticles(solve_ivp(lambda x, y: dt(x, y, mat,
-                    ext, n, fac), (0, 1), n, 'LSODA', 
-                    dense_output=True).y[:,-1])
-            return abs(self.totparticles(n0) - nend_sum)
-
-        if n is None: 
-            n=self.n0() # Use input n0 as default unless explict n0 requested
-        NN = len(self.species)*len(self.species)
-        # Get the full rate matrix
-        mat, ext = self.M(Te, ne, Ti, ni, E, write=False) 
-        ''' Assume re-association to achieve SS 
-        mat[0,0]=-reassociation
-        mat[1,0]=-mat[0,0]*0.5 # Conserve nucleii
-        fac=minimize(findfac,5e4,(n,mat,ext,n))
-        psor=-4.119965e20 
-        psorgc=3.26090e20
-        n[0]=4.846e13
-        n[1]=2.925e13
-        ext[0]=psorgc*1e-6-8.552e14
-        ext[1]=6.33578e14   
-        mat[0,0]=(psor*1e-6)/ne
-        '''
-        # Supply molecules to achieve SS
-        '''ext[1]=sum(n)/0.2'''
-        # Simulate to SS
-        ss_sol = diag(solve_ivp(lambda x, y: dt(x, y, mat, ext, n), (0, 1), n,
-                'LSODA', dense_output=True).y[:,-1])
-        #def ss(n,mat):
-        #    return matmul(mat,n)
-        #if n is None: n=self.n0() 
-        # Use input n0 as default unless explict n0 requested
-        #NN=len(self.species)*len(self.species)
-        #mat,ext=self.M(Te,ne,Ti,ni,E,write=write) # Get the full rate matrix
-        # Take 2 'time-steps' for initial guess
-        #for i in range(2):
-        #    n=n+(matmul(mat,n)+ext*(Sext is True))*1e-9
+        n_ss = self.steady_state(Te, ne, vol, E, Ti, ni, Sext, False, False, 
+                n0, ext, ioniz)
         x = self.E(Te, ne, Ti, Te, E, write=False)
         y = self.I(Te, ne, Ti, Te, E, write=False)
         if write:
@@ -1430,13 +1472,12 @@ class Crm(Tools):
             self.write_matrix(y[1][0], n, 'Im', Te, ne, Ti, ni, E,
                     form='{:1.2E}')
         ret = []
-        #ss_sol=diag((fsolve(ss,n,(mat))))
         for i in range(2):
-            arr = zeros((NN, 2))
+            arr = zeros((len(n_ss)**2, 2))
             # Use the steady-state solution to find transitions 
-            Y = matmul(y[i][0], ss_sol)
-            arr[:,0] = reshape(x[i][0], (1, NN))
-            arr[:,1] = reshape(Y, (1, NN))
+            Y = matmul(y[i][0], diag(n_ss))
+            arr[:,0] = reshape(x[i][0], (1, len(n_ss)**2))
+            arr[:,1] = reshape(Y, (1, len(n_ss)**2))
             # Drop non-radiative entries
             arr = transpose(arr[~all(abs(arr) < 1e-8, axis=1)])
             if units == 'ev':     
@@ -1492,12 +1533,13 @@ class Crm(Tools):
         if ni is None: 
             ni = ne
         ret = 0
-        for r in self.reactions:
+        for dkey, database in self.reactions.items():
             mult = 1
-            if species in r.reactants:
-                if r.type == 'COEFFICIENT':
-                    mult = 1/ne
-                ret += r.rate(Te, Ti, E, ne)*mult
+            for rkey, r in database.items():
+                if species in r.reactants:
+                    if r.type == 'COEFFICIENT':
+                        mult = 1/ne
+                    ret += r.rate(Te, Ti, E=E, ne=ne)*mult
         return ret
 
 
@@ -1523,11 +1565,8 @@ class Crm(Tools):
         name : string
             the reaction name/handle to look for
         '''
-        for r in self.reactions:
-            if name == r.name:
-                if r.database == database:
-                    return r        
-        return None
+         
+        return self.reactions[database][name]
 
 
     def get_rate(self, database, name, T, n, E=0.1):
@@ -1548,7 +1587,6 @@ class Crm(Tools):
         totnuclei : float
             total number of nulclei in the system
         '''
-        # TODO: Generalize to allow for any element as handle
         from numpy import zeros
 
         try:    # If matrix 
@@ -1786,7 +1824,7 @@ class Crm(Tools):
 
         ext=(Sext is True)*ext  # Set source strength
         # Solve and return
-        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),
+        return solve_ivp(lambda x,y: self.solve_crm(x,y,mat,ext),
                                             (0,t),n,method='LSODA') 
 
 
@@ -1800,7 +1838,6 @@ class Crm(Tools):
         from scipy.integrate import solve_ivp
 
 
-        # TODO: Combine with full_nt  
         N=len(self.species)
         Np=self.Np
         Nq=N-Np  
@@ -1895,7 +1932,7 @@ class Crm(Tools):
                             sum(U[2][1],axis=0), sum(U[3][1],axis=0), 
                             sum(U[4][1],axis=0), G                      ])
 
-        return solve_ivp(lambda x,y: self.ddt(x,y,mat,ext),(0,t),
+        return solve_ivp(lambda x,y: self.solve_crm(x,y,mat,ext),(0,t),
                                             n,'LSODA',dense_output=True)
 
         

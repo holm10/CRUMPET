@@ -6,6 +6,8 @@ The CRUMPET input file consists of a number of subards, defining the CRM
 setup:
 
 .. toctree::
+ 
+.. toctree::
     
     species
     background

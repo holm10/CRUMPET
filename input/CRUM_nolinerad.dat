@@ -179,8 +179,8 @@ rates/sawada_greenland.dat # Use a custom databse for Sawada and Greenland data
 AMJUEL  rates/amjuel.tex # Inline comments now work too!
 HYDHEL  rates/hydhel.tex
 H2VIBR  rates/h2vibr.tex
-UE      rates/ehr2.dat
-ADAS    rates/ich0-1.dat
+# UE      rates/ehr2.dat
+# ADAS    rates/ich0-1.dat
 
 
 ** SETTINGS

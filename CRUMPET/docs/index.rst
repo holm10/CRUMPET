@@ -5,16 +5,40 @@
 
 .. toctree::
     :hidden:
+
+    theory
+
+.. toctree::
+    :hidden:
     :maxdepth: 3
    
     input/input 
 
 .. toctree::
     :hidden:
-    :glob:
     :maxdepth: 3
 
     documentation
+
+.. toctree::
+    :hidden:
+
+    examples
+
+.. toctree::
+    :hidden:
+
+    developments
+
+.. toctree::
+    :hidden:
+
+    changelog
+
+.. toctree::
+    :hidden:
+
+    Crumpet license <LICENSE>
 
 .. include:: README.rst
 
@@ -25,5 +49,4 @@
     * :ref:`modindex`
     * :ref:`search`
 
-.. include:: LICENSE
 

@@ -37,6 +37,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CRUMPET examples" href="../examples.html" />
     <link rel="prev" title="Reaction" href="CRUMPET.Reaction.html" /> 
 </head>
 
@@ -87,6 +88,9 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../input/input.html">The CRUMPET input file</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../input/species.html">Species</a><ul class="simple">
 </ul>
@@ -116,6 +120,20 @@
 <li class="toctree-l2"><a class="reference internal" href="CRUMPET.RateData.html">RateData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CRUMPET.Reaction.html">Reaction</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Tools</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developments.html">Future developments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../LICENSE.html">Crumpet license</a><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -202,7 +220,7 @@
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="CRUMPET.Tools.XY2num"><code class="xref py py-obj docutils literal notranslate"><span class="pre">XY2num</span></code></a>(string[, X, Y])</p></td>
-<td><p>Replaces ‘X’ and/or ‘Y’ by numbers</p></td>
+<td><p>Replaces ‘$’ and/or ‘&amp;’ by numbers</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#id1" title="CRUMPET.Tools.file2list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">file2list</span></code></a>(path, fname)</p></td>
 <td><p>Parses input file to a list</p></td>
@@ -237,15 +255,15 @@
 <dl class="py method">
 <dt id="CRUMPET.Tools.XY2num">
 <code class="sig-name descname">XY2num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em>, <em class="sig-param"><span class="n">X</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Tools.XY2num" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replaces ‘X’ and/or ‘Y’ by numbers</p>
-<p>Replaces ‘X’ or ‘Y’ with X and Y, respectively - or both, i
+<dd><p>Replaces ‘$’ and/or ‘&amp;’ by numbers</p>
+<p>Replaces ‘$’ or ‘&amp;’ with X and Y, respectively - or both, i
 depending on which is defined.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>string</strong> (<em>str</em>) – string to be modified</p></li>
-<li><p><strong>X</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘X’ with: cast to string</p></li>
-<li><p><strong>Y</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘Y’ with: cast to string</p></li>
+<li><p><strong>X</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘$’ with: cast to string</p></li>
+<li><p><strong>Y</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘&amp;’ with: cast to string</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -428,15 +446,15 @@ ylabel</p></li>
 <dl class="py method">
 <dt id="id0">
 <code class="sig-name descname">XY2num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em>, <em class="sig-param"><span class="n">X</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">Y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replaces ‘X’ and/or ‘Y’ by numbers</p>
-<p>Replaces ‘X’ or ‘Y’ with X and Y, respectively - or both, i
+<dd><p>Replaces ‘$’ and/or ‘&amp;’ by numbers</p>
+<p>Replaces ‘$’ or ‘&amp;’ with X and Y, respectively - or both, i
 depending on which is defined.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>string</strong> (<em>str</em>) – string to be modified</p></li>
-<li><p><strong>X</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘X’ with: cast to string</p></li>
-<li><p><strong>Y</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘Y’ with: cast to string</p></li>
+<li><p><strong>X</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘$’ with: cast to string</p></li>
+<li><p><strong>Y</strong> (<em>int/float/str</em><em>, </em><em>optional</em><em> (</em><em>default: None</em><em>)</em>) – value to replace ‘&amp;’ with: cast to string</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -627,6 +645,8 @@ ylabel</p></li>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../examples.html" class="btn btn-neutral float-right" title="CRUMPET examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="CRUMPET.Reaction.html" class="btn btn-neutral float-left" title="Reaction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

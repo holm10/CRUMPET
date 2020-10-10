@@ -2,6 +2,7 @@
 CUSTOM
 ======
 
+.. toctree::
 
 .. toctree::
     :hidden:

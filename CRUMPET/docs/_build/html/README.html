@@ -86,6 +86,9 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Collisional-Radiative theory</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="input/input.html">The CRUMPET input file</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="input/species.html">Species</a><ul class="simple">
 </ul>
@@ -115,6 +118,20 @@
 <li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.RateData.html">RateData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Reaction.html">Reaction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Tools.html">Tools</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">CRUMPET examples</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="developments.html">Future developments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">Crumpet license</a><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -186,20 +203,56 @@
             
   <div class="section" id="the-collisional-radiative-uedge-model-for-plasma-edge-theory-crumpet">
 <h1>The Collisional-Radiative UEDGE Model for Plasma-Edge Theory (CRUMPET)<a class="headerlink" href="#the-collisional-radiative-uedge-model-for-plasma-edge-theory-crumpet" title="Permalink to this headline">¶</a></h1>
-<div class="admonition-todo admonition" id="id1">
-<p class="admonition-title">Todo</p>
-<p>Write all of this!</p>
-</div>
 <div class="section" id="what-is-crumpet">
 <h2>What is CRUMPET?<a class="headerlink" href="#what-is-crumpet" title="Permalink to this headline">¶</a></h2>
+<p>CRUMPET is a versatile Python script for creating collisional-radiative models, originally developed for fusion plasma application, with the multi-fluid plasma-edge code UEDGE [1]. CRUMPET adds the capability to consider molecular-assisted processes, such as recombination, dissociation, and ionization (MAR, MAD, and MAI, respectively) as well as Franck-Condon and potential energy sinks/sources and molecular and atomic line radiation.</p>
+<p>Neutral dynamics involve a large set of electronically, vibrationally, and rotationally excited species, and a number of reactions associated with each such species. This creates a large number of species, and transitions if each species are to be tracked time-dependently. However, a large number of the species are so-called “conduit” species: their lifetimes are too short for any significant population to survive in the plasma. Rather, such conduit species mediate further reactions yielding more stable particles, which exist in significant populations in the plasma. Simulating all species and reactions, including conduit-species, time-dependently requires vast computational resources. Instead, a collisional-radiative model can be applied to the system, yielding effective reaction rates for only a subset of species which are to be simulated time-dependently.</p>
+<p>Atomic CRMs have been widely applied to fusion plasmas for the last decades as they are straightforward to formulate. However, molecular CRMs impose additional conditions on the formulation of the CRM compared to atomic CRMs. These conditions are outlined in [2], and have been implemented in CRUMPET in order to create molecular collisional-radiative models.</p>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Versatile creation of collisonal-radiative models</p></li>
+<li><p>CRM formulations only dependent on data supplied to the model</p></li>
+<li><p>Not bound to a specific element or isotope</p></li>
+<li><p>Capability to read rate data from ADAS and EIRENE data files</p></li>
+<li><p>Capability to use custom rate data</p></li>
+<li><p>Solve the full system of ODEs</p></li>
+<li><p>Create a Greenland-style CRM [2] without any underlying assumptions of the background plasma</p></li>
+<li><p>Solve the energy sinks and sources for a number of processes</p></li>
+<li><p>Write rate coefficients to tabulated data files</p></li>
+<li><p>Assess the accuracy of the current CRM</p></li>
+<li><p>Use Greenland’s algorithm [2] to find the optimal CRM for a given plasmas temperature and density</p></li>
+<li><p>Solve the steady-state CRM populations using external sinks and sources (e.g. from transport codes)</p></li>
+<li><p>Create synthetic spectra for steady-state plasmas, which can be used for post-processing plasma-edge simulations</p></li>
+</ul>
+</div>
 <div class="section" id="how-is-it-used">
-<h3>How is it used?<a class="headerlink" href="#how-is-it-used" title="Permalink to this headline">¶</a></h3>
-<p>Support?</p>
-<p>Contributions?</p>
-<p>Installation?</p>
+<h2>How is it used?<a class="headerlink" href="#how-is-it-used" title="Permalink to this headline">¶</a></h2>
+<p>Crumpet reads a CRUMPET-specific input file where the CRM is set up. The CRM species, background species, and time-dependent/conduit species are defined in the input file, as are the reactions to be considered. The reactions use rate data supplied by the user: a nnumber of standard A&amp;M databases, such as ADAS and EIRENE can also be read in. A number of options and settings can also be used to control the behavior and setup of the CRM.</p>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>CRUMPET is installed by downloading the git repository to either a location that is listed in PYTHONPATH, or by adding the path to the downloaded repository to PYTHONPATH.</p>
+</div>
+<div class="section" id="support">
+<h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
+<p>If you have issues, or would like to use CRUMPET for a certain task and need assistance, you can reach the author via andreas.holm{at}aalto.fi.</p>
+</div>
+<div class="section" id="contributions">
+<h2>Contributions<a class="headerlink" href="#contributions" title="Permalink to this headline">¶</a></h2>
+<p>Anyone is free to contribute to CRUMPET via github using personal forks or branches with a merge-request.
+- Issue tracker: github.com/holm10/CRUMPET/issues
+- Source code: github.com/holm10/CRUMPET</p>
+</div>
 <div class="section" id="license">
-<h4>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h4>
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
 <p>CRUMPET is licensed under the MIT License</p>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line">[1] T. D. Rognlien and M. E. Rensink, “Users manual for the UEDGE edge-plasma transport code”, LLNL Report, 2017. <a class="reference external" href="https://github.com/LLNL/UEDGE">https://github.com/LLNL/UEDGE</a></div>
+<div class="line">[2] P. T. Greenland, “Collisional–radiative models with molecules,” Proc. R. Soc. Lond. A, vol. 457, pp. 1821–1839, 2001.</div>
 </div>
 </div>
 </div>

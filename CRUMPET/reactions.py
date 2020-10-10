@@ -113,8 +113,8 @@ class Reaction:
     '''
 
 
-    def __init__(self, name, database, coeffs, typ, S, bg, species, 
-            Tarr=0, isotope='H', mass=1):
+    def __init__(self, database, coeffs, typ, data, bg, species, 
+            isotope='H', mass=1, Tarr=0):
         ''' 
         Parameters 
         ----------
@@ -135,13 +135,14 @@ class Reaction:
             'SIGMA' : Sawada 1995-type cross-section fit
             'APID' : APID-type ionization rate
             'UE' : UEDGE-type interpolation
-        S : list
-            list of the reaction information [reactants, fragments, K]
-            reactants : list of strings
+        S : dict
+            dict containing the reaction information, requiring the 
+            following keys:
+            'reactants' : list of strings
                 reactant handles
-            fragments : list of strings
+            'fragments' : list of strings
                 fragment handles
-            K : string
+            'K' : string
                 string of kinetic energy information
         bg : dict
             Crm.bg, dict of background species and potentials
@@ -157,13 +158,10 @@ class Reaction:
         '''
         from scipy.interpolate import interp2d, interp1d
         from numpy import array
-        # TODO: unpack S earlier
-        self.database = database
+
+        self.parseS(data, bg, species, database, isotope)
         self.isotope = isotope
         self.mass = mass
-        self.parseS(*S, bg, species)
-        # Store the data required to generate the reaction rates
-        self.name = name
         self.coeffs = coeffs
         self.coeffs = array(coeffs)
         self.type = typ
@@ -171,7 +169,7 @@ class Reaction:
         self.rate = self.pick_rate()
 
 
-    def parseS(self, r, p, K, bg, species):
+    def parseS(self, data, bg, species, database, isotope):
         ''' Derives the reaction information
         
         Assigns the majority of the object attributes, including
@@ -195,6 +193,10 @@ class Reaction:
         None
         '''
         from numpy import ones
+
+        r = data['reactants']
+        p = data['fragments']
+        K = data['K']
         self.r_mult = ones((len(r),))
         self.f_mult = ones((len(p),))
         self.reactants = r
@@ -288,6 +290,7 @@ class Reaction:
         else:
             self.S_e = self.ret0
         # Create energy matrix in order to only evaluate conditionals once
+
         # TODO: Verify external energy change - when is it relevant
         Sl = [self.S_r, self.S_V, self.S_g]
         self.Smat = []
@@ -300,8 +303,7 @@ class Reaction:
             ext = self.ret0
             if (i != 2):
                 self.Smat.append([Sl[i], ext])
-            # TODO: better way to distinguish between atom/molecule radiation
-            elif (i == 2)*(self.database not in ['ADAS','JOHNSON']):
+            elif (i == 2)*('{}2'.format(isotope) in ''.join(self.reactants)):
                 self.Smat.append([self.ret0, self.ret0])
                 self.Smat.append([Sl[i], ext])
             else:
@@ -385,9 +387,9 @@ class Reaction:
         return Te
 
     
-    def print_reaction(self):
+    def print_reaction(self, database, name):
         ''' Returns formatted a string with the reaction '''
-        ret = '{}_{}: '.format(self.database,self.name) # Append reaction ID
+        ret = '{}_{}: '.format(database, name) # Append reaction ID
         for i in range(len(self.reactants)):    # Loop through all reactants
             ret += (self.r_mult[i] != 1)*'{}*'.format(self.r_mult[i])\
                     + '{}'.format(self.reactants[i])\
@@ -510,7 +512,7 @@ class Reaction:
         from scipy.integrate import quad
         T = Te*self.e + Ti*self.p
         # TODO Extend to general species?
-        mm = self.mass*1.6735575e-27 # Assume H2 is reactant 1
+        mm = self.mass*2*1.6735575e-27 
         me = 9.10938356e-31   # Assume electron is reactant 2
         ev = 1.602e-19        # Helper
         #VH2=sqrt((2*E*ev)/mm)  # Get the H2 velocity

@@ -1,4 +1,7 @@
 MIT License
+===========
+
+.. toctree::
 
 Copyright (c) 2020-present Andreas Holm
 

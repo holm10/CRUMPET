@@ -2,13 +2,13 @@
 
 class Tools:
     ''' Object with funcitons commonly used by several CRUMPET objects
-     '''
+    '''
 
 
     def XY2num(self, string, X=None, Y=None):
-        '''Replaces 'X' and/or 'Y' by numbers
+        '''Replaces '$' and/or '&' by numbers
 
-        Replaces 'X' or 'Y' with X and Y, respectively - or both, i
+        Replaces '$' or '&' with X and Y, respectively - or both, i
         depending on which is defined.
 
         Parameters
@@ -16,9 +16,9 @@ class Tools:
         string : str 
             string to be modified
         X : int/float/str, optional (default: None)
-            value to replace 'X' with: cast to string
+            value to replace '$' with: cast to string
         Y : int/float/str, optional (default: None)
-            value to replace 'Y' with: cast to string
+            value to replace '&' with: cast to string
     
         Returns
         -------
@@ -209,7 +209,7 @@ class Tools:
         '''
         from numpy import sum, exp
 
-        y, expi = self.getdecade(y)
+        y, exp10 = self.getdecade(y)
         tot = nuclei*self.totparticles(y) + sum(y, axis=0)*(not nuclei)
         if plottot is True:
             self.pickplot(ax, plot)(x, tot, 'k', linewidth=linewidth, 
@@ -217,7 +217,7 @@ class Tools:
         for i in range(int(min(plotmax, len(y)))):
             self.pickplot(ax, plot)(x, y[i,:], linewidth=linewidth,
                     label=self.slist[i])
-        ax.set_ylabel(ylabel.format(exp))
+        ax.set_ylabel(ylabel.format(exp10))
         self.setkwargs(ax, x, y, tot*plottot, **kwargs)
 
 
