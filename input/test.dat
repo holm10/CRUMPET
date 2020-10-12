@@ -4,37 +4,15 @@
 # Comments marked by '#'. input cards started by '** ', subcards by '* '
 
 ** SPECIES
-H(n=1)
-H2(v=0)
-H2+
-H2(v=1)
-H2(v=2)
-H2(v=3)
-H2(v=4)
-H2(v=5)
-H2(v=6)
-H2(v=7)
-H2(v=8)
-H2(v=9)
-H2(v=10)
-H2(v=11)
-H2(v=12)
-H2(v=13)
-H2(v=14)
-H(n=2)
-H(n=3)
-H(n=4)
-H(n=5)
-H(n=6)
-H(n=7)
-H(n=8)
-H2(n=B)
-H2(n=C)
-H2(n=EF)
-H2(n=a)
-H2(n=c)
-H-
+* H(n=1)
+	V 2.375
 
+** BACKGROUND
+* e
+	V 0
+* p
+	V 15.975
+	
 ** REACTIONS
 # The reactions to be considered from AMJUEL/HYDHEL/H2VIBR listed below.
 # The form of the data must be the following
@@ -42,47 +20,35 @@ H-
 # Reactant1 + Reactant 2 > Fragment1 + Fragment 2 - multiple fragments are marked by multiplier N as N*Fragment
 # 
 
-
-* HYDHEL_2.2.5
-e + H2(v=0) > e + H2(n=a)
-
-S_r=-(H2a-H2v0)
-S_H2(v=0)=-Tm
-S_H2(n=a)=Tm
-S_g=0
-S_V=H2a-H2v0
+* AMJUEL_2.1.5USE
+e + H(n=1) > 2*e + p
 
 
 ** RATES
 # Define the files for the standard inputs
-AMJUEL  rates/amjuel.tex # Inline comments now work too!
+AMJUEL  rates/amjuel_edit.tex # Inline comments now work too!
 HYDHEL  rates/hydhel.tex
 H2VIBR  rates/h2vibr.tex
 UE      rates/ehr2.dat
 ADAS    rates/ich0-1.dat
-
-** ENERGIES
-# Define the file with energies and handles to be used in energy calculation
-rates/energy_keys.dat
 
 
 ** SETTINGS
 # Define the most central parameters to the simulations
 
 # Maximum number of molecular vibrational levels to be considered
-* vmax      14
+* vmax      0
 # Maximum number of atomic excited levels to be considered
-* nmax      8
+* nmax      0
 # P-space size: P-space is built on the NW corner of the rate matrix.. 
 # Thus, the first Np entries of species are considered to belong to the P-space.
 # The Q-space is taken as the inverse intersect of N and P spaces
-* Np        2
+* Np        1
 
 # Initial densities
 # Species without specified densities are assumed to be zero at t=0
 * n0
 H(n=1)      0e12
-H2(v=0)     1e10
 * verbose   0   # Show verbose output
 
 

@@ -3,10 +3,19 @@
 # Jan 27 2020
 # Comment lines started by '#'. input cards started by '** ', reactions by '* '
 
-** SPECIES
-H(n=1)
-H2(v=0)
 
+** SPECIES
+* H(n=1)
+	V 2.375
+* H2(v=0)
+	V 0.27504
+
+
+** BACKGROUND
+* e
+	V 0
+* p
+	V 15.975
 
 ** REACTIONS
 # The reactions to be considered from AMJUEL/HYDHEL/H2VIBR listed below.
@@ -19,12 +28,6 @@ H2(v=0)
 * HYDHEL_2.2.5
 e + H2(v=0) > e + 2*H(n=1)
 
-S_r=-(H2diss+2*3)
-S_H2(v=0)=-Tm
-S_H=Tm+2*3
-S_g=0
-S_V=H2diss
-
 
 ** RATES
 # Define the files for the standard inputs
@@ -34,10 +37,6 @@ H2VIBR  rates/h2vibr.tex
 UE      rates/ehr2.dat
 ADAS    rates/ich0-1.dat
 
-
-** ENERGIES
-# Define the file with energies and handles to be used in energy calculation
-rates/energy_keys.dat
 
 ** SETTINGS
 # Define the most central parameters to the simulations
