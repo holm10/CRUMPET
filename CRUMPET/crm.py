@@ -350,7 +350,8 @@ class Crm(Tools):
         from numpy import zeros, pi
         # Parse the custom rate file into a list and retain subcards
         data, _, subcards = self.file2list(self.path, fname)
-        _database = data[0].strip() # Database is defined at fist line
+        subcards = subcards[1:]
+        _database = data[0].split()[1].strip() # Database is defined as card
         try:
             self.reactions[_database]
         except:
@@ -373,9 +374,9 @@ class Crm(Tools):
                 if '$' in name:
                     # Read kinetic energy for each process
                     for m in range(0, 100):
-                        if data[m][0] == 'K': 
+                        if data[m][0].upper() == 'K': 
                             buff['K'] = data[m].strip().split('=')[-1]
-                        elif data[m][0] == 'v':
+                        elif data[m][0].upper() == 'V':
                             break
                     # Write data
                     _name = self.XY2num(name, j)
@@ -1245,8 +1246,10 @@ class Crm(Tools):
         # Calculate P-space CRM
         GPp = real((Sext is True)*ext[:self.Np] - matmul(matmul(Delta,
                 inv(TQ)), ext[self.Np:]))
+        # TODO: Use n0 instead of nP0P?
         nP0p = real(n0[:self.Np] - matmul(matmul(Delta, inv(TQ)), 
                 n0[self.Np:])) 
+        #nP0p = n0[:self.Np]
         return Meff, GPp, nP0p
 
   

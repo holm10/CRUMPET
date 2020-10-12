@@ -1,5 +1,5 @@
 # SAWADA/GREENLAND DATA: database named SAWADA
-SAWADA
+** SAWADA
 # If vibrationally resolved data, 'X' must be part of the reaction name
 # Excitation to the B-level from ground state, vibrationally resolved. Taken from Greenland's JUEL-3858 p.46
 * RATE $-B

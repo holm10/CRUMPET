@@ -22,8 +22,8 @@ copyright = '2020, Andreas Holm'
 author = 'Andreas Holm'
 
 # The full version, including alpha/beta/rc tags
-version = '0.2'
-release = '0.2rc1'
+version = '1.0'
+release = '1.0'
 
 
 
@@ -35,7 +35,7 @@ release = '0.2rc1'
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 
         'sphinx.ext.napoleon','sphinx.ext.autosummary',
         'sphinx_automodapi.automodapi','sphinx.ext.todo',
-        'sphinx_rtd_theme']
+        'sphinx_rtd_theme', 'sphinx.ext.imgmath']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

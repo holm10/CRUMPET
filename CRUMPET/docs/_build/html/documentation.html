@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CRUMPET Classes &mdash; CRUMPET 0.2rc1 documentation</title>
+  <title>CRUMPET Classes &mdash; CRUMPET 1.0 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.2
+                1.0
               </div>
             
           
@@ -88,7 +88,18 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="theory.html">Collisional-Radiative theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Collisional-Radiative theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#the-greenland-crm-equation">The Greenland CRM equation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="theory.html#model-limitations-assumptions">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#the-cr-energy-rates">The CR energy rates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="theory.html#id1">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#references">References</a></li>
+</ul>
+</li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="input/input.html">The CRUMPET input file</a><ul>
@@ -99,7 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="input/reactions.html">Reactions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="input/custom.html">CUSTOM</a><ul class="simple">
+<li class="toctree-l3"><a class="reference internal" href="input/custom.html">CUSTOM rate files</a><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -124,7 +135,14 @@
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">CRUMPET examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">CRUMPET examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-input-file">Example input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-custom-reactions">Example custom reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#generate-a-crm-form-the-input-file">Generate a CRM form the input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#time-dependently-evolve-the-initial-distribution">Time-dependently evolve the initial distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#plot-a-synthetic-spectra">Plot a synthetic spectra</a></li>
+</ul>
+</li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="developments.html">Future developments</a></li>
@@ -212,7 +230,7 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="objects/CRUMPET.Crumpet.html#CRUMPET.Crumpet" title="CRUMPET.Crumpet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Crumpet</span></code></a>([fname, path, vmax, nmax, verbose, NP])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="objects/CRUMPET.Crumpet.html#CRUMPET.Crumpet" title="CRUMPET.Crumpet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Crumpet</span></code></a>([fname, path, vmax, nmax, verbose, …])</p></td>
 <td><p>CRUMPET container object for collsional-radiative models</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="objects/CRUMPET.Crm.html#CRUMPET.Crm" title="CRUMPET.Crm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Crm</span></code></a>(species, bg, reactionlist, verbose, NP)</p></td>
@@ -221,7 +239,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="objects/CRUMPET.RateData.html#CRUMPET.RateData" title="CRUMPET.RateData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RateData</span></code></a>([amjuel, hydhel, h2vibr, ADAS, UE, …])</p></td>
 <td><p>Class containing data stored in the default databases</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="objects/CRUMPET.Reaction.html#CRUMPET.Reaction" title="CRUMPET.Reaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Reaction</span></code></a>(name, database, coeffs, typ, S, bg, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="objects/CRUMPET.Reaction.html#CRUMPET.Reaction" title="CRUMPET.Reaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Reaction</span></code></a>(database, coeffs, typ, data, bg, …)</p></td>
 <td><p>Class containing reaction data</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="objects/CRUMPET.Tools.html#CRUMPET.Tools" title="CRUMPET.Tools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tools</span></code></a>()</p></td>

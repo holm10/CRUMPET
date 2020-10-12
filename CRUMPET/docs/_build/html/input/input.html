@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The CRUMPET input file &mdash; CRUMPET 0.2rc1 documentation</title>
+  <title>The CRUMPET input file &mdash; CRUMPET 1.0 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.2
+                1.0
               </div>
             
           
@@ -88,7 +88,18 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-greenland-crm-equation">The Greenland CRM equation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#model-limitations-assumptions">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-cr-energy-rates">The CR energy rates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#id1">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#references">References</a></li>
+</ul>
+</li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">The CRUMPET input file</a><ul>
@@ -99,7 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reactions.html">Reactions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="custom.html">CUSTOM</a><ul class="simple">
+<li class="toctree-l3"><a class="reference internal" href="custom.html">CUSTOM rate files</a><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -124,7 +135,14 @@
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-input-file">Example input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-custom-reactions">Example custom reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#generate-a-crm-form-the-input-file">Generate a CRM form the input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#time-dependently-evolve-the-initial-distribution">Time-dependently evolve the initial distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#plot-a-synthetic-spectra">Plot a synthetic spectra</a></li>
+</ul>
+</li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../developments.html">Future developments</a></li>
@@ -205,8 +223,14 @@
             
   <div class="section" id="the-crumpet-input-file">
 <h1>The CRUMPET input file<a class="headerlink" href="#the-crumpet-input-file" title="Permalink to this headline">¶</a></h1>
-<p>The CRUMPET input file consists of a number of subards, defining the CRM
-setup:</p>
+<p>Crumpet uses an input file using a custom syntax, outlined here. The CRUMPET input file consists of a number of “cards”, setting up the main parts of the code, followed by a number of “subcards”, setting up the cards. The cards are the top-level entries, and are marked by <a href="#id1"><span class="problematic" id="id2">``</span></a>** <a href="#id3"><span class="problematic" id="id4">``</span></a>, whereas the cards are marked by <a href="#id5"><span class="problematic" id="id6">``</span></a>* <a href="#id7"><span class="problematic" id="id8">``</span></a>, both followed by a space and the appropriate entry. The setup of each subcard is explained in detail below. The following are universally true for CRUMPET:</p>
+<ul class="simple">
+<li><p>Case insensitive syntax</p></li>
+<li><p><cite>#</cite> mark comments</p></li>
+<li><p>Indentation levels are not used</p></li>
+<li><p>The input file is read line-by-line</p></li>
+</ul>
+<p>The CRUMPET input file consists of a number of subards, defining the CRM setup:</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -220,7 +244,6 @@ setup:</p>
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
 </ul>
 </div>
-<p>More text here</p>
 </div>
 
 

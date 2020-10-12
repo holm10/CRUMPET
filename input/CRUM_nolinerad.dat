@@ -67,7 +67,6 @@
 
 ** BACKGROUND
 * e
-	V 0
 * p
 	V 15.975
 	
@@ -140,7 +139,7 @@ p + H2(v=0) > p + H2+ + e
 
 * HYDHEL_3.2.6
 p + H2+ > 2*p + H(n=1)
-	K=2*4.5
+	K=2*4. # TODO: Not sure how this one is evaluated in my model!
 
 * HYDHEL_7.1.1
 e + H- > 2*e + H(n=1)
@@ -194,6 +193,8 @@ H2VIBR  rates/h2vibr.tex
 # Thus, the first Np entries of species are considered to belong to the P-space.
 # The Q-space is taken as the inverse intersect of N and P spaces
 * Np        2
+* Isotope	H
+* Mass		1
 
 # Initial densities
 # Species without specified densities are assumed to be zero at t=0

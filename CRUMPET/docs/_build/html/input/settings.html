@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Settings &mdash; CRUMPET 0.2rc1 documentation</title>
+  <title>Settings &mdash; CRUMPET 1.0 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.2
+                1.0
               </div>
             
           
@@ -88,7 +88,18 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-greenland-crm-equation">The Greenland CRM equation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#model-limitations-assumptions">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-cr-energy-rates">The CR energy rates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#id1">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#references">References</a></li>
+</ul>
+</li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="input.html">The CRUMPET input file</a><ul class="current">
@@ -99,7 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reactions.html">Reactions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="custom.html">CUSTOM</a><ul class="simple">
+<li class="toctree-l3"><a class="reference internal" href="custom.html">CUSTOM rate files</a><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -124,7 +135,14 @@
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-input-file">Example input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-custom-reactions">Example custom reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#generate-a-crm-form-the-input-file">Generate a CRM form the input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#time-dependently-evolve-the-initial-distribution">Time-dependently evolve the initial distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#plot-a-synthetic-spectra">Plot a synthetic spectra</a></li>
+</ul>
+</li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../developments.html">Future developments</a></li>
@@ -207,6 +225,59 @@
             
   <div class="section" id="settings">
 <h1>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>settings</strong> card sets up the CRM. <strong>settings</strong> can be given the following subcards:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>NP: The P-space dimension. The P-species are chosen as the NP first species defined in <strong>species</strong></dt><dd><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">*</span> <span class="pre">NP</span> <span class="pre">X</span></code>, where X is an integer (default: 2)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>ISOTOPE: The character or string sequence identifying the CRM isotope. See <strong>species</strong> for further information</dt><dd><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">*</span> <span class="pre">ISOTOPE</span> <span class="pre">X</span></code>, where X is a string (default: H)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>MASS: The isotope mass in AMU. Presently only used for the custom rate SIGMA</dt><dd><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">*</span> <span class="pre">MASS</span> <span class="pre">X</span></code>, where X is a float (default: 1)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>VMAX: The maximum vibrational level of molecules to be considered. Considers vibrational levels in the interval [0,VMAX]</dt><dd><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">*</span> <span class="pre">VMAX</span> <span class="pre">X</span></code>, where X is an integer (default: 14)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>NMAX: The maximum electronic level of atoms to be cosidered. Considers electronic levels in the interval [1,NMAX]</dt><dd><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">*</span> <span class="pre">NMAX</span> <span class="pre">X</span></code>, where X is an integer (default: 8)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>VERBOSE: Switch whether to output the CRM creation diagnostic to the prompt.</dt><dd><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">*</span> <span class="pre">VERBOSE</span> <span class="pre">X</span></code>, where X is 0/1 or True/False (default: False)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>N0: The initial distribution of the CRM species <code class="code docutils literal notranslate"><span class="pre">*</span> <span class="pre">ISOTOPE</span></code> followed by handles and densities</dt><dd><ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">handle</span> <span class="pre">X</span></code>, where <code class="code docutils literal notranslate"><span class="pre">handle</span></code> is one of the handles defined in <strong>species</strong> and <code class="code docutils literal notranslate"><span class="pre">X</span></code> is a float of the density in cm**-3</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>An example of a SETTING card is given below:</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Reactions &mdash; CRUMPET 0.2rc1 documentation</title>
+  <title>Reactions &mdash; CRUMPET 1.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="CUSTOM" href="custom.html" />
+    <link rel="next" title="CUSTOM rate files" href="custom.html" />
     <link rel="prev" title="Background" href="background.html" /> 
 </head>
 
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.2
+                1.0
               </div>
             
           
@@ -88,7 +88,18 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-greenland-crm-equation">The Greenland CRM equation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#model-limitations-assumptions">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-cr-energy-rates">The CR energy rates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#id1">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#references">References</a></li>
+</ul>
+</li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="input.html">The CRUMPET input file</a><ul class="current">
@@ -99,7 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Reactions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="custom.html">CUSTOM</a><ul class="simple">
+<li class="toctree-l3"><a class="reference internal" href="custom.html">CUSTOM rate files</a><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -124,7 +135,14 @@
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-input-file">Example input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-custom-reactions">Example custom reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#generate-a-crm-form-the-input-file">Generate a CRM form the input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#time-dependently-evolve-the-initial-distribution">Time-dependently evolve the initial distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#plot-a-synthetic-spectra">Plot a synthetic spectra</a></li>
+</ul>
+</li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../developments.html">Future developments</a></li>
@@ -207,7 +225,26 @@
             
   <div class="section" id="reactions">
 <h1>Reactions<a class="headerlink" href="#reactions" title="Permalink to this headline">¶</a></h1>
-<p>Reaction input deck</p>
+<p>The reaction card defines reactions included in the CRM that are read from one of the default databases defined under the <strong>rates</strong> card. The subcards define the database where to look for the reaction, and the reaction name/number/id, separated by an underscore: <code class="code docutils literal notranslate"><span class="pre">database_ID</span></code>. Here, <code class="code docutils literal notranslate"><span class="pre">database</span></code> is one of the databases defined in <strong>rates</strong>, and <code class="code docutils literal notranslate"><span class="pre">ID</span></code> is one of the reactions available in the database. The following built-in databases are also available to the user, without setting up them in <strong>rates</strong>: for these database, ID is only an identifying handle.</p>
+<ul class="simple">
+<li><p>JOHNSON: Einstein A-coefficients between electronic levels in hydrogen atoms. ioffe.ru/astro/QC/CMBR/dscrpt.pdf</p></li>
+<li><p>APID: Ionization rates from electronically excited atom levels. R. K. Janev and J. J. Smith, Cross Sections for Collisions Processes of Hydrogen Atoms with Electrons, Protons and Multiply Charged Ions, vol. 4. Vienna: International Atomic Energy Agency, 1993.</p></li>
+</ul>
+<p>The Following line <strong>must</strong> define the reaction using the handles defined in <strong>species</strong> and <strong>background</strong>. The syntax is <code class="code docutils literal notranslate"><span class="pre">R1</span> <span class="pre">+</span> <span class="pre">R2</span> <span class="pre">&gt;</span> <span class="pre">X*P1</span> <span class="pre">+</span> <span class="pre">Y*P2</span> <span class="pre">+</span> <span class="pre">...</span></code>. Here, :code:` &gt; ` separates the reactants (LHS) from the products/fragments (RHS). <code class="code docutils literal notranslate"><span class="pre">R1</span></code> and <code class="code docutils literal notranslate"><span class="pre">R2</span></code> are the reactant labels, one of which belongs to <strong>background</strong>, and one of which belongs to <strong>species</strong>: a maximum of two reactants can be specified in the present implementation, but only one reactant is possible (decay, etc). <code class="code docutils literal notranslate"><span class="pre">P1</span></code>, <code class="code docutils literal notranslate"><span class="pre">P2</span></code>, … defines the products: there are no limitations on the reaction products. Here, the multipliers <code class="code docutils literal notranslate"><span class="pre">X</span></code> and <code class="code docutils literal notranslate"><span class="pre">Y</span></code> are used as shorthand notations: they do not have to be integers, in order to allow for statistical distributions. However, it is up to the user to supply reactions that conserve particles. Note that only collisional reactions with one background species and one CRM species on the LHS can be defined.</p>
+<p>Each reaction subcard can also be assigned the mean kinetic energy of the products on the following lines. By default, the mean kinetic energy of the products is 0. The syntax for the mean energy of the products is <code class="code docutils literal notranslate"><span class="pre">K=X</span></code>, where “X” is either a float, but can also be an expression of simple binary operators, e.g. <code class="code docutils literal notranslate"><span class="pre">2*3+4</span></code>. The mean kinetic energy is extracted from the background reactant (electron or ion/atom) and given to the products: in case of proton-impact reactions, the kinetic energy is given to the electrons. The mean kinetic energy can also contain the strings “Te”, “Ti”, or “Tm”: this substitutes the local electron, ion, or molecular temperature, respectively, as the kinetic energy of the products. This way, the electrons in an ionization reaction can be defined to be heated to the local electron temperature by the reactant.</p>
+<p>The special characters <code class="code docutils literal notranslate"><span class="pre">$</span></code> and <code class="code docutils literal notranslate"><span class="pre">&amp;</span></code> can be utilized in excitation/de-excitation reactions for the electronic and vibrational levels. Here, the electronic or vibrational levels, up to <code class="code docutils literal notranslate"><span class="pre">nmax</span></code> or <code class="code docutils literal notranslate"><span class="pre">vmax</span></code> as defined in <strong>settings</strong> if the strings “n=” or “v=” are included in the species labels, respectively. The same substiution is made in <code class="code docutils literal notranslate"><span class="pre">ID</span></code>, so the same symbols must be included in <code class="code docutils literal notranslate"><span class="pre">ID</span></code> in order to create electronically/vibrationally dependent rates. Here, the hierarchy between <code class="code docutils literal notranslate"><span class="pre">$</span></code> and <code class="code docutils literal notranslate"><span class="pre">&amp;</span></code> is such, that <code class="code docutils literal notranslate"><span class="pre">$</span></code> is always evaluated first, and <code class="code docutils literal notranslate"><span class="pre">&amp;</span></code> is only evaluated if <code class="code docutils literal notranslate"><span class="pre">$</span></code> is called. Note that, presently, both <code class="code docutils literal notranslate"><span class="pre">$</span></code> and <code class="code docutils literal notranslate"><span class="pre">&amp;</span></code> must be applied to the same processe, i.e. either electronic or vibrational processee, but not separately to each.</p>
+<p>The special subcard <code class="code docutils literal notranslate"><span class="pre">*</span> <span class="pre">CUSTOM</span></code> can be used to define a set of user-specified rates, as explained in <strong>custom</strong>. Instead of a reaction, <code class="code docutils literal notranslate"><span class="pre">CUSTOM</span></code> reactions must be followed by the relative path to the custom rate data file, relative to Crm.path.</p>
+<p>An example definition of the REACTION card:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>** REACTIONS
+* HYDHEL_2.2.12
+e + H2+ &gt; e + p + H(n=1)
+        K=2*4.3
+* H2VIBR_2.$v&amp;
+e + H2(v=$) &gt; e + H2(v=&amp;)
+* CUSTOM
+rates/custom.dat
+</pre></div>
+</div>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -222,7 +259,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="custom.html" class="btn btn-neutral float-right" title="CUSTOM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="custom.html" class="btn btn-neutral float-right" title="CUSTOM rate files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="background.html" class="btn btn-neutral float-left" title="Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

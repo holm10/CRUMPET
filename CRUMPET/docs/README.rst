@@ -1,10 +1,10 @@
-The Collisional-Radiative UEDGE Model for Plasma-Edge Theory (CRUMPET)
+CRUMPET: Collisional-Radiative UEDGE Model for Plasma-Edge Theory
 ======================================================================
 
 
 What is CRUMPET?
 ----------------
-CRUMPET is a versatile Python script for creating collisional-radiative models, originally developed for fusion plasma application, with the multi-fluid plasma-edge code UEDGE [1]. CRUMPET adds the capability to consider molecular-assisted processes, such as recombination, dissociation, and ionization (MAR, MAD, and MAI, respectively) as well as Franck-Condon and potential energy sinks/sources and molecular and atomic line radiation.
+CRUMPET is a versatile Python script for creating collisional-radiative models, originally developed for fusion plasma application, with the multi-fluid plasma-edge code UEDGE [1]. Collisional-radiative models are necessary under conditions where a system is under neither Saha/LT equilibrium, nor Coronal equilibrium. Under such conditions, the collisional and radiative processes of the system are competing, and the net effect of all such processes, which are often competing, need to be carefully evaluated. CRUMPET has the capability to consider molecular-assisted processes, such as recombination, dissociation, and ionization (MAR, MAD, and MAI, respectively) as well as Franck-Condon and potential energy sinks/sources and molecular and atomic line radiation.
 
 Neutral dynamics involve a large set of electronically, vibrationally, and rotationally excited species, and a number of reactions associated with each such species. This creates a large number of species, and transitions if each species are to be tracked time-dependently. However, a large number of the species are so-called "conduit" species: their lifetimes are too short for any significant population to survive in the plasma. Rather, such conduit species mediate further reactions yielding more stable particles, which exist in significant populations in the plasma. Simulating all species and reactions, including conduit-species, time-dependently requires vast computational resources. Instead, a collisional-radiative model can be applied to the system, yielding effective reaction rates for only a subset of species which are to be simulated time-dependently. 
 
