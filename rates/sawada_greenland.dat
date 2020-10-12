@@ -1,9 +1,10 @@
 # SAWADA/GREENLAND DATA: database named SAWADA
-SAWADA
+** SAWADA
 # If vibrationally resolved data, 'X' must be part of the reaction name
 # Excitation to the B-level from ground state, vibrationally resolved. Taken from Greenland's JUEL-3858 p.46
-* RATE X-B
-e + H2(v=X) > e + H2(n=B)
+* RATE $-B
+e + H2(v=$) > e + H2(n=B)
+
 #			b0				b1				b2				b3				b4				b5				b6				b7				b8
 v= 0
 -0.2880946E+02	0.9541977E+01	-0.3966258E+01	0.1080775E+01	-0.2065085E+00	0.2690762E-01	-0.2253846E-02	0.1086306E-03	-0.2279712E-05
@@ -37,8 +38,9 @@ v= 14
 -0.2542487E+02	0.6270535E+01	-0.1908366E+01	0.1817239E+00	0.4856512E-01	-0.1807688E-01	0.2474441E-02	-0.1619281E-03	0.4199320E-05
 
 # Excitation to the C-level from ground state, vibrationally resolved. Taken from Greenland's JUEL-3858 p.48
-* RATE X-C
-e + H2(v=X) > e + H2(n=C)
+* RATE $-C
+e + H2(v=$) > e + H2(n=C)
+
 #			b0				b1				b2				b3				b4				b5				b6				b7				b8
 v= 0
 -0.2857195E+02	0.5632497E+01	0.7977110E+00	-0.1490994E+01	0.5577894E+00	-0.1065450E+00	0.1139347E-01	-0.6482104E-03	0.1530057E-04
@@ -74,85 +76,114 @@ v= 14
 # Relaxation coefficient from EF level to B level. Vibrationally unresolved. Taken from Sawada 1995
 * COEFFICIENT EF-B
 H2(n=EF) > H2(n=B)
+
 6.7E+06
 
 # Relaxation coefficient from a level to b level. Vibrationally unresolved. Taken from Sawada 1995 (9.1E+07) or Fantz 2006 (1.0912E+08)
-* COEFFICIENT a-b
-H2(n=a) > H2(n=b)
+# Taken as H2(n=a) > H2(n=b) > 2*H(n=1)
+* COEFFICIENT a-diss
+H2(n=a) > 2*H(n=1)
+
 9.1E+07
 
 # Relaxation coefficient from c level to a level. Listed as allowed in Fantz 2006, lifetime given as 40 micro-seconds in Fantz' 2001 report: assume A=1e5 /s for now
-* COEFFICIENT c-a
-H2(n=c) > H2(n=a)
+* COEFFICIENT c-diss
+H2(n=c) > 2*H(n=1)
+
 1E+05
 
 # Relaxation coefficient from B level to X level, vibrationally resolved. Taken from Greenland's JUEL-3858 p.44
-* COEFFICIENT B-X
-H2(n=B) > H2(v=X)
+* COEFFICIENT B-$
+H2(n=B) > H2(v=$)
+
 # v 	coefficient
-0		8.2772736E+07
-1		7.5957320E+07
-2		6.8873384E+07
-3		6.7167080E+07
-4		6.3768032E+07
-5		6.3601840E+07
-6		5.9270400E+07
-7		5.7115708E+07
-8		5.3714124E+07
-9		5.1850780E+07
-10		4.8581508E+07
-11		4.6469164E+07
-12		4.4187192E+07
-13		3.8139332E+07
-14		2.2083192E+07
+v= 0		
+8.2772736E+07
+v= 1		
+7.5957320E+07
+v= 2		
+6.8873384E+07
+v= 3		
+6.7167080E+07
+v= 4		
+6.3768032E+07
+v= 5		
+6.3601840E+07
+v= 6		
+5.9270400E+07
+v= 7		
+5.7115708E+07
+v= 8		
+5.3714124E+07
+v= 9		
+5.1850780E+07
+v= 10		
+4.8581508E+07
+v= 11		
+4.6469164E+07
+v= 12		
+4.4187192E+07
+v= 13		
+3.8139332E+07
+v= 14		
+2.2083192E+07
 
 
 # Relaxation coefficient from C level to X level, vibrationally resolved. Taken from Greenland's JUEL-3858 p.44
-* COEFFICIENT C-X
-H2(n=C) > H2(v=X)
+* COEFFICIENT C-$
+H2(n=C) > H2(v=$)
+
 # v 	coefficient
-0		1.0298930E+08
-1		8.5425808E+07
-2		6.4538444E+07
-3		6.0403508E+07
-4		6.3656576E+07
-5		6.0684180E+07
-6		5.9209288E+07
-7		6.1643808E+07
-8		6.1465744E+07
-9		6.2449096E+07
-10		6.5405168E+07
-11		6.7786120E+07
-12		6.9719520E+07
-13		6.8034384E+07
-14		4.8494500E+07
+v= 0
+1.0298930E+08
+v= 1		
+8.5425808E+07
+v= 2		
+6.4538444E+07
+v= 3		
+6.0403508E+07
+v= 4		
+6.3656576E+07
+v= 5		
+6.0684180E+07
+v= 6		
+5.9209288E+07
+v= 7		
+6.1643808E+07
+v= 8		
+6.1465744E+07
+v= 9		
+6.2449096E+07
+v= 10		
+6.5405168E+07
+v= 11		
+6.7786120E+07
+v= 12		
+6.9719520E+07
+v= 13		
+6.8034384E+07
+v= 14		
+4.8494500E+07
 
 # Relaxation coefficient from B level to X state continuum. Taken from Greenland's JUEL-3858 p.44
 * COEFFICIENT B-diss
 H2(n=B) > 2*H(n=1)
+
 2.8110592E+08
 
 # Relaxation coefficient from C level to X state continuum. Taken from Greenland's JUEL-3858 p.44
 * COEFFICIENT C-diss
 H2(n=C) > 2*H(n=1)
+
 1.0094800E+08
 
 # Cross-section for X,v=0 > c based on A1 in Sawada 1995
 * SIGMA X-c
 e + H2(v=0) > e + H2(n=c)
+
 # Eth		q0			A 		Omega	W 			gamma   nu
 11.88882	6.514E-14	0.24	3		3.67138		3       0
 # W based on Fantz 2006: 15.56-11.88862=3.67138
-
-
-# Decay from repulsive b-state to two atoms - assume large rate
-* COEFFICIENT b-diss
-H2(n=b) > 2*H(n=1)
-1e10
-
-
-
-
 
 
 

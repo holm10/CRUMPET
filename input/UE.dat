@@ -19,12 +19,30 @@ H2(v=0)
 * HYDHEL_2.2.5
 e + H2(v=0) > e + 2*H(n=1)
 
+S_r=-(H2diss+2*3)
+S_H2(v=0)=-Tm
+S_H=Tm+2*3
+S_g=0
+S_V=H2diss
+
+
 * UE_IONIZ
 e + H(n=1) > 2*e + p
+
+S_r=-Ry-erl1
+S_H(n=1)=-Ta
+S_p=Ta
+S_g=erl1
+S_V=Ry
 
 * UE_REC
 e + p > H(n=1)
 
+S_r=-Te-erl2+Ry
+S_p=-Ti
+S_H=Ti+Te
+S_g=erl2
+S_V=-Ry
 
 
 ** RATES
@@ -35,6 +53,10 @@ H2VIBR  rates/h2vibr.tex
 UE      rates/ehr2.dat
 ADAS    rates/ich0-1.dat
 
+
+** ENERGIES
+# Define the file with energies and handles to be used in energy calculation
+rates/energy_keys.dat
 
 ** SETTINGS
 # Define the most central parameters to the simulations
@@ -52,7 +74,7 @@ ADAS    rates/ich0-1.dat
 # Species without specified densities are assumed to be zero at t=0
 * n0
 H(n=1)      0e12
-H2(v=0)     1e12
+H2(v=0)     1e10
 # Show verbose output
 * verbose   0
 
