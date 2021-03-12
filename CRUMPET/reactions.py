@@ -493,6 +493,7 @@ class Reaction:
 
     def UE_rate(self, Te, *args, E=None, ne=None, **kwargs):
         ''' Function returning the UEDGE rate for T and n '''
+        from numpy import log10
         # Turn the temperature and density into log-log variables, 
         # bounded to the limits
         jt = max(0,min(10*(log10(Te + 1e-99)+1.2), 60))
@@ -502,8 +503,8 @@ class Reaction:
         # If the density is being extrapolated, scale accordingly!
         # c=1
         # if self.name in ['RECRAD','IONIZRAD']: c=6.242e11
-        return self.interpolation(jn, jt)[0]*\
-                (6.242e11**(self.name in ['RECRAD', 'IONIZRAD']))
+        return self.interpolation(jn, jt)[0]#*\
+        #        (6.242e11**(self.name in ['RECRAD', 'IONIZRAD']))
 
 
     def SAWADASIGMA_rate(self, Te, Ti, **kwargs):

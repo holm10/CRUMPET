@@ -170,7 +170,7 @@ class Tools:
 
     def plotax( self, ax, x, y, plot='plot', nuclei=True, linewidth=2,
                 plottot=True, ylabel=r'[$ 10^{{{}}}$]', totlabel='Total',
-                plotmax=1e3, **kwargs):
+                plotmax=1e3, legend=None, **kwargs):
         ''' Plots x and y on ax
 
         Parameters
@@ -209,6 +209,9 @@ class Tools:
         '''
         from numpy import sum, exp
 
+        if legend is None:
+            legend=self.slist
+
         y, exp10 = self.getdecade(y)
         tot = nuclei*self.totparticles(y) + sum(y, axis=0)*(not nuclei)
         if plottot is True:
@@ -216,7 +219,7 @@ class Tools:
                     label=totlabel)
         for i in range(int(min(plotmax, len(y)))):
             self.pickplot(ax, plot)(x, y[i,:], linewidth=linewidth,
-                    label=self.slist[i])
+                    label=legend[i])
         ax.set_ylabel(ylabel.format(exp10))
         self.setkwargs(ax, x, y, tot*plottot, **kwargs)
 

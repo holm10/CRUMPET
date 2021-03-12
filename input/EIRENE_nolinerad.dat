@@ -55,7 +55,6 @@
 
 ** BACKGROUND
 * e
-	V 0
 * p
 	V 15.975
 	
@@ -84,8 +83,8 @@ e + H2+ > 2*e + 2*p
 	K=2*0.4
 
 
-* H2VIBR_2.Xl2
-p + H2(v=X) > H2+ + H(n=1)
+* H2VIBR_2.$l2
+p + H2(v=$) > H2+ + H(n=1)
 
 
 * HYDHEL_2.2.10
@@ -93,24 +92,24 @@ e + H2(v=0) > 2*e + p + H(n=1)
 	K=2*0.25 # T-dependent!
 
 
-* H2VIBR_2.Xl1
-e + H2(v=X) > e + 2*H(n=1)
+* H2VIBR_2.$l1
+e + H2(v=$) > e + 2*H(n=1)
 	K=2*3
 
-* H2VIBR_2.Xl4
-e + H2(v=X) > 2*e + H2+
+* H2VIBR_2.$l4
+e + H2(v=$) > 2*e + H2+
 
 
-* H2VIBR_2.XvY
-e + H2(v=X) > e + H2(v=Y)
+* H2VIBR_2.$v&
+e + H2(v=$) > e + H2(v=&)
 
 
-* APID_IONIZ
-e + H(n=X) > 2*e + p
+* APID_IONIZ$
+e + H(n=$) > 2*e + p
 	K=Te
 
-* JOHNSON_RELAXATION
-H(n=X) > H(n=Y)
+* JOHNSON_RELAXATION$-&
+H(n=$) > H(n=&)
 
 
 ** RATES
@@ -118,8 +117,6 @@ H(n=X) > H(n=Y)
 AMJUEL  rates/amjuel.tex # Inline comments now work too!
 HYDHEL  rates/hydhel.tex
 H2VIBR  rates/h2vibr.tex
-UE      rates/ehr2.dat
-ADAS    rates/ich0-1.dat
 
 
 ** SETTINGS

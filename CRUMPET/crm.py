@@ -1064,14 +1064,128 @@ class Crm(Tools):
             mat = M
             ext = G
             n = n0
-        return solve_ivp(lambda x, y: self.ddt(x, y, mat, ext), (0, t),
+        return solve_ivp(lambda x, y: self.ddt(y, x, mat, ext), (0, t),
                 n, 'LSODA', dense_output=True)
 
+    def old_steady_state(
+            self, Te, ne, na, nm, diva, divm, srca, srcm, bga, bgm, psor,
+            psorgc, vol, E=0.1, Ti=None, ni=None, Sext=True, gl=False,
+            plot=False):
+        ''' Solves the steady-state population of atoms and molecules
+        Returns the ground state atom, molecule, and total vibrationally
+        excited molecule populations. Assumes the reactions defined for 
+        in Crm and the external sinks and sources defined and simulates 
+        the population for 10s, assuming steady-staten to be achieved by
+        that time.
+        Parameters
+        ----------
+        Te : float
+            electron temperature in J
+        ne : float
+            electron density in m**-3
+        na : float
+            initial guess for atom density in m**-3
+        nm : float
+            initial guess for molecule density in m**-3
+        diva : float
+            atom divergence of domain (transport in/out) in s**-1
+        divm : float
+            molecule divergence of domain (transport in/out) in s**-1
+        srca : float
+            atom particle source in domain in s**-1
+        srcm : float
+            molecule particle source in domain in s**-1
+        bga : float
+            atom background source in domain in s**-1
+        bgm : float
+            molecule background source in domain in s**-1
+        psor : float
+            ionization sink in domain in s**-1
+        psorgc : float
+            recombination source in domain in s**-1
+        vol : float
+            volume of the domain in m**3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates
+        Sext : boolean, optional (default: True)
+            switch for considering 'external' sinks/sources (e.g. 
+            re-association)
+        gl : boolean, optional (default: False)
+            switch determining wheter to evaluate the Np x Np 
+            Greenland CRM (True) or solve the full NxN system of ODEs (False)
+        plot : boolean, optional (default: False)
+            show a plot of the 10s time-evolution
+        Returns
+        -------
+        na, nm, nmvib
+        na : float
+            steady-state atom density in m**-3
+        nm : float
+            steady-state atom density in m**-3
+        nmvib - float
+            total density of all vibrationally excited molecular species 
+            in m**-3
+        '''
+        # TODO: Solve steady-state from dn/dt=0!
+        from numpy import log, ones, matmul, polyfit, zeros, exp, sum
+        from scipy.optimize import fsolve, minimize
+        from scipy.linalg import norm
+        from scipy.integrate import solve_ivp
+        from matplotlib.pyplot import figure
+
+        def dt(t, n, mat, ext, n0):
+            return matmul(mat, n) + ext
+
+        Te /= 1.602e-19
+        ne /= 1e6
+        # Set volume to be cm**3
+        vol *= 1e6
+        # Set initial density in [1/cm**3]
+        n = zeros((len(self.n0()),))
+        n[0] = 1e-6*na
+        n[1] = 1e-6*nm
+        # Get the rate matrices 
+        mat, ext = self.M(Te, ne, Ti, ni, E, write=True) 
+        if gl is True:
+            # Get matrices and eigenvalues
+            mat, ext, n = self.gl_crm(mat, ext, n=n) 
+        # Set external sources to be [1/cm**3/s]
+        ext[0] = (psorgc + diva + srca + bga)/vol
+        ext[1] = (divm + srcm + bgm)/vol
+        # Normalize ionzation rate to UEDGE values 
+        mat[0,0] = (psor/ne)/vol
+        # Simulate to SS
+        ss_sol = solve_ivp(lambda x,y: dt(x, y, mat, ext, n), (0, 10), n,
+                'LSODA', dense_output=True)
+        if plot is True:
+            f = figure(figsize = (7,7))
+            ax = f.add_subplot(111)
+            for i in range(len(n)):
+                line = '-' + '-'*('H2' in self.slist[i])
+                ax.semilogx(ss_sol.t, ss_sol.y[i,:], line, label=self.slist[i])
+                if i == 0:
+                    ax.semilogx(ss_sol.t, ss_sol.y[i,:], 'k.', 
+                            label=self.slist[i]) 
+            ax.legend(ncol=3)
+            ax.set_xlabel('Time [s]')
+            ax.set_ylabel('Density [cm**-3]')
+        return [ss_sol.y[0,-1]*1e6, ss_sol.y[1,-1]*1e6, 
+                1e6*self.totmol(ss_sol.y[:,-1])]
+
+    def get_relv(self, Te, ne, E=0.1, Ti=None, ni=None):
+        sol = self.steady_state(Te, ne, E, Ti, ni)
+        return sol/sol[0]
 
     def steady_state(
-            self, Te, ne, vol, E=0.1, Ti=None, ni=None, Sext=True, 
-            gl=False, plot=False, n0=None, ext=None, ioniz=0):
-        ''' Solves the steady-state population of atoms and molecules
+            self, Te, ne, E=0.1, Ti=None, ni=None, Sext=True, 
+            gl=False, plot=False, n0=None, ext=None, ioniz=0, dt=False):
+        ''' TODO: update documentation
+
+        Solves the steady-state population of atoms and molecules
 
         Returns the ground state atom, molecule, and total vibrationally
         excited molecule populations. Assumes the reactions defined for 
@@ -1124,8 +1238,7 @@ class Crm(Tools):
             steady-state populations
         '''
         from numpy import log, ones, matmul, polyfit, zeros, exp, sum
-        from numpy.linalg import solve
-        from scipy.optimize import fsolve, minimize
+        from scipy.optimize import fsolve
         from scipy.linalg import norm
         from scipy.integrate import solve_ivp
         from matplotlib.pyplot import figure
@@ -1153,7 +1266,7 @@ class Crm(Tools):
         mat[0,0] += ioniz
         if plot is True:
             # Simulate to SS
-            ss_sol = solve_ivp(lambda x,y: self.ddt(x, y, mat, ext), (0, 10), 
+            ss_sol = solve_ivp(lambda x,y: self.ddt(y, x, mat, ext), (0, 100), 
                     n0, 'LSODA', dense_output=True)
             f = figure(figsize = (7,7))
             ax = f.add_subplot(111)
@@ -1167,7 +1280,11 @@ class Crm(Tools):
             ax.set_xlabel('Time [s]')
             ax.set_ylabel('Density [cm**-3]')
             f.show()
-        return solve(mat,-ext)  
+        if dt is False:
+            return fsolve(self.ddt, n0, args=(0, mat, ext))  
+        else: 
+            return solve_ivp(lambda x,y: self.ddt(y, x, mat, ext), (0, 100), 
+                    n0, 'LSODA', dense_output=True).y[:,-1]
 
 
     def gl_crm(self, mat, ext, Sext=True, n0=None):
@@ -1253,7 +1370,7 @@ class Crm(Tools):
         return Meff, GPp, nP0p
 
   
-    def ddt(self, t, n, mat, ext):
+    def ddt(self, n, t, mat, ext):
         ''' RHS of the linearized system of ODEs ''' 
         from numpy import matmul
 
@@ -1632,7 +1749,9 @@ class Crm(Tools):
                         in self.slist[i]))*arr[i]
         return ret
 
-
+    def get_species_ind(self,species):
+        ''' TODO: documentation'''
+        return list(self.species).index(species)
 
 
 
