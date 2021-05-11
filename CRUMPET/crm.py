@@ -305,7 +305,8 @@ class Crm(Tools):
                                                 x + y) for i in rebuff[label]]
                                     _name = vID
                                     _database = database
-                                    _ratecoeff = rdata[database][vID] 
+                                    _ratecoeff = rdata[database][
+                                                vID.split('-')[0]] 
                                     _rtype = 'RATE'
                                     _rlist = rebuff
                                     self.reactions[_database][_name] = \
