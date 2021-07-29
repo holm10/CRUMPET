@@ -118,72 +118,63 @@ class RateData:
         -------
         None
         '''
-        from numpy import zeros
-        from csv import reader
+        from numpy import array
         # Script parsing Hydhel.tex
-        lst = []
         book = []
-        # Open reader object
-        rd = reader(open('{}/{}'.format(path,fname), 'rt'), delimiter=' ')
-        # Store book in list
-        for row in rd:
-            lst.append(row)
-        # Strip all empty arrays
-        lst = list(filter(None, lst))
 
-        for row in lst:
-            book.append(list(filter(None, row)))
+        data = False
+        # Open and loop through file line-by-line
+        with open('{}/{}'.format(path, fname), 'r') as f:
+            for line in f:
+                # Find the beginning of data
+                if '##BEGIN DATA HERE##' in line:
+                    data = True
+                elif 'section{Appendix}' in line:
+                    data = False
+                elif data is False:
+                    pass
+                else:
+                    if len(line.split()) !=0:
+                        book.append(line.split())
+        h123 = None
 
-        i = settings[0] # Read from top
-        while True:
-            # Loop through rows looking for reactions
-            if book[i][0] == "Reaction":
-                reaction = book[i][1] # Store reaction name
-                i += 1
-                # Loop through reaction looking for coeffs
-                while True:
-                    if book[i][0] not in settings[1]:
-                        i += 1
-                     #   break
-                    # Break if wrong fits
-                    elif book[i][0] in settings[2]:
-                        break
-                    # We are in a T-fit
-                    elif book[i][0] == 'b0':
-                        coeff = []
-                        # Parse the next three lines
-                        for j in range(3):
-                            for k in range(3):
-                                coeff.append(float(
-                                        book[i + j][1 + k*2].replace(
-                                        ',', '').replace('D', 'E')))
-                        i += 1
-                        reactions[reaction.upper()] = coeff
-                        break
-                    # Wea re in a (T,E)-fit
-                    elif book[i][0] == '0':
-                        coeff = zeros((9, 9))
-                        # Parse the whole data block in one
-                        for j in range(3):
-                            for k in range(9):
-                                for m in range(3):
-                                    coeff[k, j*3 + m]=float(
-                                            book[i + k + j*9 + j*2][
-                                            m+1].replace('D', 'E'))
-                        # Store the coefficients
-                        # TODO: figure out better way to kill off ne,T fits??
-                        if reaction not in ['2.2.14', '2.0l2']:
-                            reactions[reaction.upper()] = coeff
-                        
-                        i += 9 + 3*3 + 2*2 # Set counter after block
-                        break
-                    if i >= len(book) - settings[3]: # Omit last lines 
-                        break
-
-            i += 1
-            if i >= len(book) - settings[3]: # Omit last lines
-                break
-
+        oneparfit = ['a', 'b', 'e', 'h', 'k', 'p']
+        twoparfit = ['H.3', 'H.4', 'H.7', 'H.9', 'H.10', 'H.12']
+        reaction = False
+        coeffs = False
+        for l in book:
+            # Reaction is being read
+            if reaction is True:
+                # Check whether we're at the end of coefficient declatation
+                if 'end{verbatim' in l[0]:
+                    reaction = False
+                    coeffs = False
+                    reactions[h123][rname.upper()] = array(cf)
+                # Double polynomial fit
+                if h123 in twoparfit:
+                    if 'begin{verbatim' in l[0]:
+                        coeffs = True
+                    elif coeffs is True and l[0] in [str(x) for x in range(9)]:
+                        cf[int(l[0])] += [float(x.replace('D','E')) for x in l[1:]]
+                # Single polynomial fit
+                else:
+                    if 'begin{verbatim' in l[0]:
+                        coeffs = True
+                    elif coeffs is True:
+                        if l[0][0] in oneparfit:
+                            cf += [float(x.strip(',').replace('D','E')) for x in l[1::2]]
+            # Begin reading reaction
+            elif l[0] == 'Reaction':
+                reaction = True # Reaction coeffs follow
+                rname = l[1] # Store the reaction name
+                if h123 in twoparfit:
+                    cf = [[] for x in range(9)]
+                else:
+                    cf = []
+            # Move to other fit type
+            elif r'\section' in l[0]:
+                h123 = l[0].split('{')[1].strip(':')#.replace('.','')
+                reactions[h123] = dict()
 
     def read_ADAS(self, fname, reactions, path='.'):
         ''' Reads coefficents from ADAS databases

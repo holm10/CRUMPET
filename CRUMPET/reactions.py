@@ -113,7 +113,7 @@ class Reaction:
     '''
 
 
-    def __init__(self, database, coeffs, typ, data, bg, species, 
+    def __init__(self, database, rtype, coeffs, typ, data, bg, species,
             isotope='H', mass=1, Tarr=0):
         ''' 
         Parameters 
@@ -122,6 +122,8 @@ class Reaction:
             reaction handle/ID
         database : string
             database where reaction rates are defined
+        rtype : string
+            database fit type according to EIRENE definitions
         coeffs : ndarray
             the reaction rate coefficients. The shape and values depend
             on the type of reaction. Used by rate() to calculate the
@@ -165,6 +167,7 @@ class Reaction:
         self.coeffs = coeffs
         self.coeffs = array(coeffs)
         self.type = typ
+        self.fittype = rtype
         self.Tarr = array(Tarr)
         self.rate = self.pick_rate()
 
@@ -389,7 +392,7 @@ class Reaction:
     
     def print_reaction(self, database, name):
         ''' Returns formatted a string with the reaction '''
-        ret = '{}_{}: '.format(database, name) # Append reaction ID
+        ret = '{}_{}_{}: '.format(database, self.fittype, name) # Append reaction ID
         for i in range(len(self.reactants)):    # Loop through all reactants
             ret += (self.r_mult[i] != 1)*'{}*'.format(self.r_mult[i])\
                     + '{}'.format(self.reactants[i])\
@@ -461,7 +464,7 @@ class Reaction:
         return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse)
 
 
-    def EIR_rate(self, Te, Ti, E=None, **kwargs):
+    def EIR_rate(self, Te, Ti, E=None, ne=None, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp
         T = Te*self.e + Ti*self.p
@@ -472,15 +475,50 @@ class Reaction:
         else:       
             Tuse = T
             coeff = 1
-        if len(self.coeffs.shape) == 2:
-            ''' T,E fit '''
+        if self.fittype == 'H.0':
+            print('Potential: TBD')
+            return
+        elif self.fittype == 'H.1':
+            print('Cross-section vs energy: TBD')
+            return
+        elif self.fittype == 'H.2':
+            # Rate coefficient vs temperature
+            for i in range(9):
+                ret += self.coeffs[i]*(log(Tuse)**i)    
+        elif self.fittype == 'H.3':
+            # Rate coefficient vs temperature and energy
             for i in range(9):
                 for j in range(9):
                     ret += self.coeffs[i,j]*(log(Tuse)**i)*(log(E)**j)
-        elif len(self.coeffs.shape) == 1: 
-            ''' T fit '''
+        elif self.fittype == 'H.4':
+            # Rate coefficient vs temperature and density
             for i in range(9):
-                ret += self.coeffs[i]*(log(Tuse)**i)    
+                for j in range(9):
+                    ret += self.coeffs[i,j]*(log(Tuse)**i)*(log(ne*1e-8)**j)
+        elif self.fittype == 'H.5':
+            print('Momentum-weighted rates vs. temperature, not in use')
+            return
+        elif self.fittype == 'H.6':
+            print('Momentum-weighted rates vs. temperaturei and energy: TBD')
+            return
+        elif self.fittype == 'H.7':
+            print('Momentum-weighted rates vs. temperature and density, not in use')
+            return
+        elif self.fittype == 'H.8':
+            print('Energy-weighted rates vs. temperature: TBD')
+            return
+        elif self.fittype == 'H.9':
+            print('Energy-weighted rates vs. temperature and energy, not in use')
+            return
+        elif self.fittype == 'H.10':
+            print('Energy-weighted rates vs. temperature and density: TBD')
+            return
+        elif self.fittype == 'H.11':
+            print('Other data: TBD')
+            return
+        elif self.fittype == 'H.12':
+            print('Other data: TBD')
+            return
         else:
             print('Unknown fit: {}, {}, {}'.format(
                     self.database,self.name,self.type))

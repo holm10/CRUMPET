@@ -258,76 +258,78 @@ class Crm(Tools):
         from CRUMPET.reactions import Reaction
         from numpy import zeros, pi
         
+
         ''' LOOP OVER ALL THE DEFINED ReactionS '''
-        for database, reaction in reactionlist.items():
-            # Create database if not already created
+        for database, dbreactions in reactionlist.items():
             try:
                 self.reactions[database]
             except:
                 self.reactions[database] = {}
-            for ID, data in reaction.items():
-                # Split the definitions into names and databases
-                ndep = ('N=$' in ''.join(data['reactants'] + 
-                        data['fragments']).upper())
-                vdep = ('V=$' in ''.join(data['reactants'] + 
-                        data['fragments']).upper())
-                # Loop through states, if necessary. Dynamicallt set boundaries
-                # according to electronic or vibrational transitions
-                for x in range(ndep, 1 + vdep*self.vmax + ndep*self.nmax):
-                    # Vibrational/electronic dependence present
-                    if '$' in ID:
-                        buff = data.copy()
-                        # Substitute state into reactants and product strings 
-                        for label in ['reactants', 'fragments']:
-                            buff[label] = [self.XY2num(i, x) for i in 
-                                    buff[label]]
-                        # %%% ADAS rates detected %%%
-                        if database == 'ADAS':
-                            self.setup_ADAS(x, ID, rdata, rlist, plist, 
-                                    data['K'])
-                        # %%% APID rates detected %%%
-                        elif database == 'APID':
-                            self.setup_APID(x, ID, buff)
-                        # %%% APID rates detected %%%
-                        elif database == 'JOHNSON':
-                            self.setup_Johnson(x, ID, buff)
-                        # %%% Neither of the above: rate for transitions %%%
+            for rtype, reaction in dbreactions.items():
+                # Create database if not already created
+                for ID, data in reaction.items():
+                    # Split the definitions into names and databases
+                    ndep = ('N=$' in ''.join(data['reactants'] + 
+                            data['fragments']).upper())
+                    vdep = ('V=$' in ''.join(data['reactants'] + 
+                            data['fragments']).upper())
+                    # Loop through states, if necessary. Dynamicallt set boundaries
+                    # according to electronic or vibrational transitions
+                    for x in range(ndep, 1 + vdep*self.vmax + ndep*self.nmax):
+                        # Vibrational/electronic dependence present
+                        if '$' in ID:
+                            buff = data.copy()
+                            # Substitute state into reactants and product strings 
+                            for label in ['reactants', 'fragments']:
+                                buff[label] = [self.XY2num(i, x) for i in 
+                                        buff[label]]
+                            # %%% ADAS rates detected %%%
+                            if database == 'ADAS':
+                                self.setup_ADAS(x, ID, rdata, rlist, plist, 
+                                        data['K'])
+                            # %%% APID rates detected %%%
+                            elif database == 'APID':
+                                self.setup_APID(x, ID, buff)
+                            # %%% APID rates detected %%%
+                            elif database == 'JOHNSON':
+                                self.setup_Johnson(x, ID, buff)
+                            # %%% Neither of the above: rate for transitions %%%
+                            else:
+                                # Assume ladder-like vibrational transitions (+/-1)
+                                for y in range(-1*('&' in ID), 2, 2):
+                                    # Limit transitions to [0,vmax]
+                                    if x + y in range(self.vmax + 1):
+                                        rebuff = buff.copy()
+                                        # Retain intial and final states in name
+                                        vID = self.XY2num(ID, x, x + y) 
+                                        for label in ['reactants', 'fragments']:
+                                            rebuff[label] = [self.XY2num(i, x, 
+                                                    x + y) for i in rebuff[label]]
+                                        _name = vID
+                                        _database = database
+                                        _ratecoeff = rdata[database][rtype][
+                                                    vID.split('-')[0]] 
+                                        _rtype = 'RATE'
+                                        _rlist = rebuff
+                                        self.reactions[_database][_name] = \
+                                                Reaction(_database, rtype, 
+                                                _ratecoeff, _rtype, _rlist, 
+                                                self.bg, self.species, 
+                                                self.isotope, self.mass)
+                        #%%%%% Read custom rates %%%%%
+                        elif database == 'CUSTOM':
+                            self.setup_custom(ID.strip(), database)
+                        #%%% EIRENE/UEDGE-DEGAS rates %%%
+                        elif database in ['HYDHEL', 'AMJUEL', 'H2VIBR', 'UE']:
+                            self.reactions[database][ID] = Reaction(database, rtype, 
+                                    rdata[database][rtype][ID], 'RATE'*(database != 'UE') + 
+                                    'UE'*(database == 'UE'), data, self.bg, 
+                                    self.species, self.isotope, self.mass)
+                        #%%% Fell through loop %%%
                         else:
-                            # Assume ladder-like vibrational transitions (+/-1)
-                            for y in range(-1*('&' in ID), 2, 2):
-                                # Limit transitions to [0,vmax]
-                                if x + y in range(self.vmax + 1):
-                                    rebuff = buff.copy()
-                                    # Retain intial and final states in name
-                                    vID = self.XY2num(ID, x, x + y) 
-                                    for label in ['reactants', 'fragments']:
-                                        rebuff[label] = [self.XY2num(i, x, 
-                                                x + y) for i in rebuff[label]]
-                                    _name = vID
-                                    _database = database
-                                    _ratecoeff = rdata[database][
-                                                vID.split('-')[0]] 
-                                    _rtype = 'RATE'
-                                    _rlist = rebuff
-                                    self.reactions[_database][_name] = \
-                                            Reaction(_database, _ratecoeff, 
-                                            _rtype, _rlist, self.bg, 
-                                            self.species, self.isotope, 
-                                            self.mass)
-                    #%%%%% Read custom rates %%%%%
-                    elif database == 'CUSTOM':
-                        self.setup_custom(ID.strip(), database)
-                    #%%% EIRENE/UEDGE-DEGAS rates %%%
-                    elif database in ['HYDHEL', 'AMJUEL', 'H2VIBR', 'UE']:
-                        self.reactions[database][ID] = Reaction(database,
-                                rdata[database][ID], 'RATE'*(database != 'UE') + 
-                                'UE'*(database == 'UE'), data, self.bg, 
-                                self.species, self.isotope, self.mass)
-                    #%%% Fell through loop %%%
-                    else:
-                        print(  'Database "{}" not recognized!\n'
-                                'Aborting.'.format(database))
-                        return
+                            print(  'Database "{}" not recognized!\n'
+                                    'Aborting.'.format(database))
+                            return
 
 
     def setup_custom(self, fname, database):
@@ -938,7 +940,7 @@ class Crm(Tools):
 
  
     def solve_crm(self, t, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, Sext=True, gl=True,
-            n=None, Qres=True, densonly=False, write=False):
+            n=None, Qres=True, densonly=False, write=False, addext=None):
         ''' Solves the time-evolution of the CRM system at given T and n
 
         Parameters
@@ -977,6 +979,8 @@ class Crm(Tools):
         densonly : boolean, optional (default: False)
             Only returns density rates if True, otherwise evaluates
             both density and energy rates
+        ext : list of floats, optional (default: None)
+            External, imposed sinks and sources
         
         Returns
         -------
@@ -1041,6 +1045,7 @@ class Crm(Tools):
                 n = zeros((len(mat),))
                 n[-Np*gl - N*(not gl):] = n0
                 ext = block([U[0][1], U[1][1], U[2][1], U[3][1], U[4][1], G])
+                # TODO: Add non-zero ext sources and sinks
             else:
                 mat = block([
                         [zeros((5,)), sum(U[0][0], axis=0)],
@@ -1061,10 +1066,14 @@ class Crm(Tools):
                         sum(U[2][1], axis=0), sum(U[3][1], axis=0), 
                         sum(U[4][1],axis=0), G
                         ])
+                # TODO: Add non-zero ext sources and sinks
         else:
             mat = M
             ext = G
+            if addext is not None:
+                ext += addext
             n = n0
+
         return solve_ivp(lambda x, y: self.ddt(y, x, mat, ext), (0, t),
                 n, 'LSODA', dense_output=True)
 
@@ -1693,6 +1702,196 @@ class Crm(Tools):
     def get_rate(self, database, name, T, n, E=0.1):
         ''' **INCOMPLETE** Returns the rate of the requested reaction '''
         return self.get_reaction(database,name).rate(T, T, E, n)
+
+
+    def write_YACORA(self, modelname, path='.', dirname='YACORArun', 
+                    Trange=None, write_reac=True, Tlist=None, nlist=None):
+        from pathlib import Path
+        from numpy import logspace, linspace
+
+        # TODO: spacing, etc
+
+        if Trange is None:
+            Trange=logspace(-2, 2.7, 500)
+        
+        if nlist is None:
+            nlist = [1e19, 1e20, 1e21]
+
+        if Tlist is None:
+            Tlist = linspace(0.25, 30, 120)
+
+        # Create path for writing    
+ #       Path('{}/{}'.format(path, dirname)).mkdir(parents=True, exist_ok=True)
+        Path('{}/{}/ratecoefficients'.format(path, dirname)).mkdir(parents=True, exist_ok=True)
+ #       Path('{}/{}/modelfiles'.format(path, dirname)).mkdir(parents=True, exist_ok=True)
+ #       Path('{}/{}/parameterfiles'.format(path, dirname)).mkdir(parents=True, exist_ok=True)
+ #       Path('{}/{}/runfiles'.format(path, dirname)).mkdir(parents=True, exist_ok=True)
+ #       Path('{}/{}/output'.format(path, dirname)).mkdir(parents=True, exist_ok=True)
+
+
+        # Run-file
+        
+        for T in Tlist:
+            for n in nlist:
+                Path('{}/{}/runfiles/{:.2E}'.format(path, dirname, n)).mkdir(parents=True, exist_ok=True)
+                rf = open('{}/{}/runfiles/{:.2E}/run_T{:.2E}.txt'.format(path, dirname, n, T),'w')
+        
+                rf.write('SOLUTION\n')
+                rf.write('    NONLINEAR\n\n') 
+                
+                rf.write('MODEL\n')
+                rf.write('    ../../modelfiles/{:.2E}/{}.txt\n\n'.format(n, modelname))
+                
+                rf.write('PARAMETERS\n')
+                rf.write('    ../../parameterfiles/{:.2E}/param_T{:.2E}.txt\n\n'.format(n, T))
+
+                rf.write('OUTPUT_FILES\n')
+                n_abs = '{}/{}/output/{:.2E}/T{:.2E}/n_abs'.format(path, dirname, n, T)
+                n_bal = '{}/{}/output/{:.2E}/T{:.2E}/n_bal'.format(path, dirname, n, T)
+                pop_coeff = '{}/{}/output/{:.2E}/T{:.2E}/pop_coeff'.format(path, dirname, n, T)
+
+                Path(n_abs).mkdir(parents=True, exist_ok=True)
+                Path(n_bal).mkdir(parents=True, exist_ok=True)
+                Path(pop_coeff).mkdir(parents=True, exist_ok=True)
+                
+                for s in list(self.species):
+                    rf.write('    POPULATION_COEFFICIENT    {}    {}    {}\n'.format(s, list(self.species)[0], pop_coeff))
+                    rf.write('    ABSOLUTE_DENSITY    {}    {}\n'.format(s, n_abs))
+                    rf.write('    DENSITY_BALANCE    {}    {}\n'.format(s, n_bal))
+
+
+        # Model file
+        for n in nlist:
+            Path('{}/{}/modelfiles/{:.2E}'.format(path, dirname, n)).mkdir(parents=True, exist_ok=True)
+            mf = open('{}/{}/modelfiles/{:.2E}/{}.txt'.format(path, dirname, n, modelname),'w')
+            mf.write('PARTICLES\n')
+            for s in self.species:
+                mf.write('    {}\n'.format(s))
+            mf.write('    H+\n')
+            #for bg in self.bg:
+            #    mf.write('    {}\n'.format(bg))
+
+            mf.write('REACTIONS\n')
+            for database, reactions in self.reactions.items():
+                for handle, rate in reactions.items():
+                    mf.write('\n\n')
+                    # Write reaction block to file
+                    buff = ''
+                    for r in rate.reactants:
+                            buff += '{} '.format(r)
+                    buff += '=> '
+                    for f in rate.fragments:
+                            buff += '{} '.format(f)
+    #                print(buff)
+    #                print(handle, rate.reactants, rate.fragments)
+                    
+                    mf.write('EDUCTS'+' '*8)
+                    # Electron impact
+                    mf.write(rate.reactants[1] + ' '*8 + 
+                            str(int(rate.r_mult[1])))
+                    if rate.reactants[0] == 'e':
+                        filefac = 'NE'
+                    else:
+                        filefac = 'NI1'
+                    mf.write('\n')
+
+                    mf.write('PRODUCTS')
+                    for fi in range(len(rate.fragments)):
+                        species = rate.fragments[fi].replace('p', 'H+')
+                        if rate.fragments[fi] == rate.reactants[0]:
+                            if rate.fragments[fi] == 'e':
+                                pass
+                            elif rate.f_mult[fi] > rate.r_mult[0]:
+                                mf.write(8*' ')
+                                mf.write(species + 8*' ' + 
+                                    str(int(rate.f_mult[fi] - rate.r_mult[0])))
+                            else: 
+                                pass
+                        else:
+                            mf.write(8*' ')
+                            mf.write(species + 8*' ' + 
+                                str(int(rate.f_mult[fi])))
+                    mf.write('\n')                
+
+                    mf.write('PROBABILITY'+8*' '+'FILEFACTORS')
+                    if rate.fittype == 'H.4':
+                        mf.write(8*' ' + '../../ratecoefficients/{:.2E}/{}-{}.txt'.format(n,database, 
+                                handle) + 8*' ' + filefac + '\n')
+                    
+                        mf.write('COMMENT' + 8*' ')
+                        mf.write('{} rate coefficient for reaction {} at ne={:.2E}'.format(database,
+                            handle, n))
+                    else:
+                        mf.write(8*' ' + '../../ratecoefficients/{}-{}.txt'.format(database, 
+                                handle) + 8*' ' + filefac + '\n')
+                    
+                        mf.write('COMMENT' + 8*' ')
+                        mf.write('{} rate coefficient for reaction'.format(database,
+                            handle))
+
+                    if write_reac is True:
+                        dbpath='{}/{}/ratecoefficients'.format(path, dirname)
+                        if rate.fittype == 'H.4': # Density-dependent rate
+                            ndbpath = '{}/{:.2E}'.format(dbpath,n)
+                            Path(ndbpath).mkdir(parents=True, exist_ok=True)
+                            f = open('{}/{}-{}.txt'.format(ndbpath, database, 
+                                handle),'w')
+                            f.write('RATE_COEFFICIENT\n')
+                            f.write('VALUES\n')
+                            f.write((8*' ').join(['Te','X\n']))
+                            for T in Trange:
+                                f.write('{:.5E}  {:.5E}\n'.format(T, 
+                                    1e-6*rate.rate(T, T, ne=n*1e-6)))
+                        elif rate.fittype == 'H.3': # Energy-dependent rate
+                            f = open('{}/{}-{}.txt'.format(dbpath, database, 
+                                handle),'w')
+                            f.write('RATE_COEFFICIENT\n')
+                            f.write('VALUES\n')
+                            f.write((8*' ').join(['Te','X\n']))
+                            for T in Trange:
+                                f.write('{:.5E}  {:.5E}\n'.format(T, 
+                                    rate.rate(T, T, E=0.1)))
+                        else:
+                            f = open('{}/{}-{}.txt'.format(dbpath, database, 
+                                handle),'w')
+                            f.write('RATE_COEFFICIENT\n')
+                            f.write('VALUES\n')
+                            f.write((8*' ').join(['Te','X\n']))
+                            for T in Trange:
+                                f.write('{:.5E}  {:.5E}\n'.format(T, 
+                                    rate.rate(T, T, 0.1)))
+
+        # Runfile
+        e2k = 1.160451812e4
+        for T in Tlist:
+            for n in nlist:
+                Path('{}/{}/parameterfiles/{:.2E}'.format(path, dirname, n)).mkdir(parents=True, exist_ok=True)
+                pf = open('{}/{}/parameterfiles/{:.2E}/param_T{:.2E}.txt'.format(path, 
+                    dirname, n, T),'w')
+                pf.write('PROFILE\n')
+                pf.write('    TE\n    TI1\n')
+
+                pf.write('\nTEMPERATURES\n')
+                pf.write('TE\n    FIXED\n    {:.2E}\n\n'.format(T))
+                pf.write('TI1\n    FIXED\n    {:.2E}\n\n'.format(T*e2k))
+                pf.write('TN1\n    FIXED\n    {:.2E}\n\n'.format((2/5)*0.1*e2k)) # E=0.1eV
+
+                pf.write('\nDENSITIES\n')
+                pf.write('NE\n    FIXED\n    {:.2E}\n\n'.format(n))
+                pf.write('NI1\n   FIXED\n    {:.2E}\n\n'.format(n))
+                pf.write('NN1\n   FIXED\n    1e18\n\n')
+                
+                pf.write('\nSTARTING_DENSITIES\n')
+                pf.write('    {}    NN1   FIXED\n'.format(list(self.species)[0]))
+                for i in range(1,15):                       
+                    pf.write('    {}    0   VARIABLE\n'.format(list(self.species)[i], i))
+                pf.write('    {}    0   FIXED\n'.format(list(self.species)[15], i))
+                pf.write('    H+    NI1   FIXED\n')
+
+                pf.write('\nEEPF\n    MAXWELL')
+                
+                
+
 
 
     def totparticles(self, arr):

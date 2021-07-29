@@ -96,12 +96,16 @@ class Crumpet(Crm, RateData):
 
                     # Store the reaction name, discard subcard marker
                     rname = lines[subcards[k]].split()[1].upper() 
+                    [db, h123, rnm] = rname.split('_')
                     # Create database dict if it doesn't exist
                     try:
-                        rlst[rname.split('_')[0]]
+                        rlst[db]
                     except:
-                        rlst[rname.split('_')[0]] = {}
-                
+                        rlst[db] = {}
+                    try:
+                        rlst[db][h123]
+                    except:
+                        rlst[db][h123] = {}
 
                     # Check if custom reaction deck called
                     if rname.upper() == 'CUSTOM': 
@@ -123,7 +127,7 @@ class Crumpet(Crm, RateData):
                         # Extract the reactants and fragments from the input
                         reactant, fragment = [x.strip().split(' + ') for x 
                                     in lines[subcards[k] + 1].split(' > ')]
-                        rlst[rname.split('_')[0]][rname.split('_')[1]] = {
+                        rlst[db][h123][rnm] = {
                                 'reactants': reactant,
                                 'fragments': fragment,
                                 'K' : K,
@@ -436,7 +440,7 @@ class Crumpet(Crm, RateData):
             sets figure's figsize
         E : float, optional (default: E=0.1)
             molecular energy in eV for rates
-        plot : str, optional (default: loglog)
+        plot : str, optional (default: plot)
             plot layout specifier, see documentation of plotax.
         **kwargs
             passed to ax.plot
@@ -491,7 +495,7 @@ class Crumpet(Crm, RateData):
             self, t, Te, ne, E=0.1, Ti=None, ni=None, Sext=True, Qres=True, 
             Tm=0, gl=False, density=False, fig=None, n0=None, title=None,
             figsize=(7+7,7*1.618033-3), savename=None, figtype='png', 
-            conservation=False):
+            conservation=False, plot='plot', ext=None):
         ''' Plots the CRM results for neutrals in a static background plasma
 
         Parameters
@@ -548,6 +552,8 @@ class Crumpet(Crm, RateData):
             Switch to also plot particle and energy conservation. 
             Particle conservation does not account for 
             recombination/ionization gains/losses
+        ext : list of floats, optional (default: None)
+            External sinks and sources
 
         Returns
         -------
@@ -573,7 +579,7 @@ class Crumpet(Crm, RateData):
             return
         # Solve the problem up to T
         ft = self.solve_crm(t, Te, ne, Ti, ni, E, Tm, Sext, gl=gl, 
-                            n=n0, Qres=Qres, densonly=density) 
+                            n=n0, Qres=Qres, densonly=density, addext=ext) 
         t = linspace(0, t, 250)
         xt = t*1e3
         # Solve densities only
@@ -583,7 +589,7 @@ class Crumpet(Crm, RateData):
             ax = fig.add_subplot(111 + 100*conservation + 100*Qres)
             ylabel = r'Particles [$10^{{{}}}$]'
             self.plotax(ax, xt, nt, ylabel=ylabel,
-                    plotmax=self.Np*(not Qres) + 1e3*Qres)
+                    plotmax=self.Np*(not Qres) + 1e3*Qres, plot=plot)
             self.plottotpart(ax, n0)
             if Qres:
                 ax.legend(  ncol=9 - 2*(not conservation), frameon=False,
@@ -615,7 +621,7 @@ class Crumpet(Crm, RateData):
                 for i in range(len(data)):
                     ax = fig.add_subplot(400 + 100*conservation + 2*10 + i + 1)
                     self.plotax(ax, xt, data[i], nuclei=False, 
-                            ylabel=ylabel[i])
+                            ylabel=ylabel[i], plot=plot)
                     if i < 4:
                         ax.set_xticklabels([])
 
@@ -642,7 +648,8 @@ class Crumpet(Crm, RateData):
                 fig.subplots_adjust(hspace=0, right=0.8)
                 ax1 = fig.add_subplot(211 + 100*conservation)
                 ylabel = r'Particles [$10^{{{}}}$]'
-                self.plotax(ax1, xt, nt, ylabel=ylabel, plotmax=self.Np)
+                self.plotax(ax1, xt, nt, ylabel=ylabel, plotmax=self.Np, 
+                            plot=plot)
                 self.plottotpart(ax1, n0)
                 ax1.set_xticklabels([])
                 ax1.legend( title='Particle balance', bbox_to_anchor=(1.05, 1),
@@ -652,7 +659,7 @@ class Crumpet(Crm, RateData):
                 ylabel = r'Energy [$10^{{{}}}$ J]'
                 self.plotax(ax2, xt,
                         self.ev*concatenate((-Ee, Eia, Epot, Erada, Eradm)),
-                        plottot=False, ylabel=ylabel)
+                        plottot=False, ylabel=ylabel, plot=plot)
                 ax2.legend([r'$\rm S_{e,loss}$',r'$\rm S_{i/a}$',
                             r'$\rm S_{pot}$',r'$\rm S_{rad,a}$',
                             r'$\rm S_{rad,m}$'],
