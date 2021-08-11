@@ -1248,6 +1248,7 @@ class Crm(Tools):
             steady-state populations
         '''
         from numpy import log, ones, matmul, polyfit, zeros, exp, sum
+        from numpy.linalg import inv
         from scipy.optimize import fsolve
         from scipy.linalg import norm
         from scipy.integrate import solve_ivp
@@ -1291,7 +1292,8 @@ class Crm(Tools):
             ax.set_ylabel('Density [cm**-3]')
             f.show()
         if dt is False:
-            return fsolve(self.ddt, n0, args=(0, mat, ext))  
+            return matmul(inv(mat),-ext)
+            #return fsolve(self.ddt, n0, args=(0, mat, ext))  
         else: 
             return solve_ivp(lambda x,y: self.ddt(y, x, mat, ext), (0, 100), 
                     n0, 'LSODA', dense_output=True).y[:,-1]
@@ -1730,34 +1732,34 @@ class Crm(Tools):
 
 
         # Run-file
-        
-        for T in Tlist:
-            for n in nlist:
-                Path('{}/{}/runfiles/{:.2E}'.format(path, dirname, n)).mkdir(parents=True, exist_ok=True)
-                rf = open('{}/{}/runfiles/{:.2E}/run_T{:.2E}.txt'.format(path, dirname, n, T),'w')
-        
-                rf.write('SOLUTION\n')
-                rf.write('    NONLINEAR\n\n') 
-                
-                rf.write('MODEL\n')
-                rf.write('    ../../modelfiles/{:.2E}/{}.txt\n\n'.format(n, modelname))
-                
-                rf.write('PARAMETERS\n')
-                rf.write('    ../../parameterfiles/{:.2E}/param_T{:.2E}.txt\n\n'.format(n, T))
+    
+        for n in nlist:
+            Path('{}/{}/runfiles/{:.2E}'.format(path, dirname, n)).mkdir(parents=True, exist_ok=True)
+            rf = open('{}/{}/runfiles/{:.2E}/run.txt'.format(path, dirname, n),'w')
+    
+            rf.write('SOLUTION\n')
+            rf.write('    NONLINEAR\n\n') 
+            
+            rf.write('\nMODEL\n')
+            rf.write('    ../../modelfiles/{:.2E}/{}.txt\n\n'.format(n, modelname))
+            
+            rf.write('\nPARAMETERS\n')
+            rf.write('    ../../parameterfiles/{:.2E}/param.txt\n\n'.format(n))
 
-                rf.write('OUTPUT_FILES\n')
-                n_abs = '{}/{}/output/{:.2E}/T{:.2E}/n_abs'.format(path, dirname, n, T)
-                n_bal = '{}/{}/output/{:.2E}/T{:.2E}/n_bal'.format(path, dirname, n, T)
-                pop_coeff = '{}/{}/output/{:.2E}/T{:.2E}/pop_coeff'.format(path, dirname, n, T)
+            rf.write('\nOUTPUT_FILES\n')
+            n_abs = '../../output/{:.2E}/n_abs'.format(n)
+            n_bal = '../../output/{:.2E}/n_bal'.format(n)
+            pop_coeff = '../../output/{:.2E}/pop_coeff'.format(n)
 
-                Path(n_abs).mkdir(parents=True, exist_ok=True)
-                Path(n_bal).mkdir(parents=True, exist_ok=True)
-                Path(pop_coeff).mkdir(parents=True, exist_ok=True)
-                
-                for s in list(self.species):
-                    rf.write('    POPULATION_COEFFICIENT    {}    {}    {}\n'.format(s, list(self.species)[0], pop_coeff))
-                    rf.write('    ABSOLUTE_DENSITY    {}    {}\n'.format(s, n_abs))
-                    rf.write('    DENSITY_BALANCE    {}    {}\n'.format(s, n_bal))
+            Path(n_abs).mkdir(parents=True, exist_ok=True)
+            Path(n_bal).mkdir(parents=True, exist_ok=True)
+            Path(pop_coeff).mkdir(parents=True, exist_ok=True)
+            
+            for s in list(self.species)[:-1]:
+                rf.write('    {:<24}{:<10}{:<10}{}/{}.txt\n'.format('population_coefficient', s, list(self.species)[0], pop_coeff, s.replace('(','').replace('=','').replace(')','')))
+                rf.write('    {:<24}{:<20}{}/{}.txt\n'.format('ABSOLUTE_DENSITY', s, n_abs, s.replace('(','').replace('=','').replace(')','')))
+                rf.write('    {:<24}{:<20}{}/{}.txt\n'.format('DENSITY_BALANCE', s, n_bal, s.replace('(','').replace('=','').replace(')','')))
+                rf.write('\n')
 
 
         # Model file
@@ -1771,63 +1773,41 @@ class Crm(Tools):
             #for bg in self.bg:
             #    mf.write('    {}\n'.format(bg))
 
-            mf.write('REACTIONS\n')
+            mf.write('\n\nREACTIONS')
             for database, reactions in self.reactions.items():
                 for handle, rate in reactions.items():
                     mf.write('\n\n')
                     # Write reaction block to file
-                    buff = ''
-                    for r in rate.reactants:
-                            buff += '{} '.format(r)
-                    buff += '=> '
-                    for f in rate.fragments:
-                            buff += '{} '.format(f)
-    #                print(buff)
-    #                print(handle, rate.reactants, rate.fragments)
-                    
-                    mf.write('EDUCTS'+' '*8)
-                    # Electron impact
-                    mf.write(rate.reactants[1] + ' '*8 + 
-                            str(int(rate.r_mult[1])))
+                    mf.write('    {:<16}{:<16}{:<10}'.format('EDUCTS',rate.reactants[1],
+                            str(int(rate.r_mult[1]))))
                     if rate.reactants[0] == 'e':
                         filefac = 'NE'
                     else:
                         filefac = 'NI1'
                     mf.write('\n')
 
-                    mf.write('PRODUCTS')
+                    mf.write('    {:<16}'.format('PRODUCTS'))
                     for fi in range(len(rate.fragments)):
                         species = rate.fragments[fi].replace('p', 'H+')
                         if rate.fragments[fi] == rate.reactants[0]:
                             if rate.fragments[fi] == 'e':
                                 pass
                             elif rate.f_mult[fi] > rate.r_mult[0]:
-                                mf.write(8*' ')
-                                mf.write(species + 8*' ' + 
-                                    str(int(rate.f_mult[fi] - rate.r_mult[0])))
+                                mf.write('{:<16}{:<10}'.format(species, str(int(rate.f_mult[fi] - rate.r_mult[0]))))
                             else: 
                                 pass
                         else:
-                            mf.write(8*' ')
-                            mf.write(species + 8*' ' + 
-                                str(int(rate.f_mult[fi])))
+                            mf.write('{:<16}{:<10}'.format(species, str(int(rate.f_mult[fi]))))
                     mf.write('\n')                
 
-                    mf.write('PROBABILITY'+8*' '+'FILEFACTORS')
                     if rate.fittype == 'H.4':
-                        mf.write(8*' ' + '../../ratecoefficients/{:.2E}/{}-{}.txt'.format(n,database, 
-                                handle) + 8*' ' + filefac + '\n')
-                    
-                        mf.write('COMMENT' + 8*' ')
-                        mf.write('{} rate coefficient for reaction {} at ne={:.2E}'.format(database,
-                            handle, n))
+                        ratepath =  '../../ratecoefficients/{:.2E}/{}-{}.txt'.format(n,database, handle)
+                        commentstr = '{} rate coefficient for reaction {} at ne={:.2E}'.format(database, handle, n)
                     else:
-                        mf.write(8*' ' + '../../ratecoefficients/{}-{}.txt'.format(database, 
-                                handle) + 8*' ' + filefac + '\n')
-                    
-                        mf.write('COMMENT' + 8*' ')
-                        mf.write('{} rate coefficient for reaction'.format(database,
-                            handle))
+                        ratepath = '../../ratecoefficients/{}-{}.txt'.format(database, handle)
+                        commentstr = '{} rate coefficient for reaction {}'.format(database, handle)
+                    mf.write('    {:<16}{:<16}{:<56}    {}\n'.format('PROBABILITY','FILEFACTORS', ratepath, filefac))
+                    mf.write('    {:<16}{}'.format('COMMENT', commentstr))
 
                     if write_reac is True:
                         dbpath='{}/{}/ratecoefficients'.format(path, dirname)
@@ -1863,33 +1843,37 @@ class Crm(Tools):
 
         # Runfile
         e2k = 1.160451812e4
-        for T in Tlist:
-            for n in nlist:
-                Path('{}/{}/parameterfiles/{:.2E}'.format(path, dirname, n)).mkdir(parents=True, exist_ok=True)
-                pf = open('{}/{}/parameterfiles/{:.2E}/param_T{:.2E}.txt'.format(path, 
-                    dirname, n, T),'w')
-                pf.write('PROFILE\n')
-                pf.write('    TE\n    TI1\n')
+        for n in nlist:
+            Path('{}/{}/parameterfiles/{:.2E}'.format(path, dirname, n)).mkdir(parents=True, exist_ok=True)
+            pf = open('{}/{}/parameterfiles/{:.2E}/param.txt'.format(path, dirname, n),'w')
+            pf.write('PROFILE\n')
+            pf.write('    TE\n    TI1\n\n')
 
-                pf.write('\nTEMPERATURES\n')
-                pf.write('TE\n    FIXED\n    {:.2E}\n\n'.format(T))
-                pf.write('TI1\n    FIXED\n    {:.2E}\n\n'.format(T*e2k))
-                pf.write('TN1\n    FIXED\n    {:.2E}\n\n'.format((2/5)*0.1*e2k)) # E=0.1eV
+            pf.write('\nTEMPERATURES\n')
+            pf.write('TE\n    VALUES\n')
+            pf.write('    {}\n'.format(int(len(Tlist))))
+            for T in Tlist:
+                pf.write('    {:.2E}\n'.format(T))
+            pf.write('\nTI1\n    VALUES\n')
+            pf.write('    {}\n'.format(int(len(Tlist))))
+            for T in Tlist:
+                pf.write('    {:.2E}\n'.format(T*e2k))
+            pf.write('\nTN1\n    FIXED\n    {:.2E}\n\n'.format((2/5)*0.1*e2k)) # E=0.1eV
 
-                pf.write('\nDENSITIES\n')
-                pf.write('NE\n    FIXED\n    {:.2E}\n\n'.format(n))
-                pf.write('NI1\n   FIXED\n    {:.2E}\n\n'.format(n))
-                pf.write('NN1\n   FIXED\n    1e18\n\n')
-                
-                pf.write('\nSTARTING_DENSITIES\n')
-                pf.write('    {}    NN1   FIXED\n'.format(list(self.species)[0]))
-                for i in range(1,15):                       
-                    pf.write('    {}    0   VARIABLE\n'.format(list(self.species)[i], i))
-                pf.write('    {}    0   FIXED\n'.format(list(self.species)[15], i))
-                pf.write('    H+    NI1   FIXED\n')
+            pf.write('\nDENSITIES\n')
+            pf.write('NE\n    FIXED\n    {:.2E}\n\n'.format(n))
+            pf.write('NI1\n   FIXED\n    {:.2E}\n\n'.format(n))
+            pf.write('NN1\n   FIXED\n    1e18\n\n')
+            
+            pf.write('\nSTARTING_DENSITIES\n')
+            pf.write('    {:<14}{:<10}FIXED\n'.format(list(self.species)[0], 'NN1'))
+            for i in range(1,15):                       
+                pf.write('    {:<14}{:<10}VARIABLE\n'.format(list(self.species)[i], '0'))
+            pf.write('    {:<14}{:<10}FIXED\n'.format(list(self.species)[15], '0'))
+            pf.write('    {:<14}{:<10}FIXED\n'.format('H+', 'NI1'))
 
-                pf.write('\nEEPF\n    MAXWELL')
-                
+            pf.write('\n\nEEPF\n    MAXWELL')
+            
                 
 
 
