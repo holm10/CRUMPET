@@ -161,10 +161,11 @@ class Reaction:
         from scipy.interpolate import interp2d, interp1d
         from numpy import array
 
-        self.parseS(data, bg, species, database, isotope)
+        self.parseS(data, bg, species, isotope)
+        self.database = database
         self.isotope = isotope
         self.mass = mass
-        self.coeffs = coeffs
+#        self.coeffs = coeffs
         self.coeffs = array(coeffs)
         self.type = typ
         self.fittype = rtype
@@ -172,7 +173,7 @@ class Reaction:
         self.rate = self.pick_rate()
 
 
-    def parseS(self, data, bg, species, database, isotope):
+    def parseS(self, data, bg, species, isotope):
         ''' Derives the reaction information
         
         Assigns the majority of the object attributes, including
@@ -390,9 +391,9 @@ class Reaction:
         return Te
 
     
-    def print_reaction(self, database, name):
+    def print_reaction(self, name):
         ''' Returns formatted a string with the reaction '''
-        ret = '{}_{}_{}: '.format(database, self.fittype, name) # Append reaction ID
+        ret = '{}_{}_{}: '.format(self.database, self.fittype, name) # Append reaction ID
         for i in range(len(self.reactants)):    # Loop through all reactants
             ret += (self.r_mult[i] != 1)*'{}*'.format(self.r_mult[i])\
                     + '{}'.format(self.reactants[i])\

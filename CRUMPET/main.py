@@ -355,8 +355,8 @@ class Crumpet(Crm, RateData):
                 for j in range(15): # Write each density block
                     out=''
                     f.write(' jn =   {}'.format(j + 1)\
-                            +(j == 0)*(l == 0)*'; jt = 1 -> 60 going by '
-                            'rows   ne(jn) = 10**(10 + 0.5*(jn-1)) jn=1,15\n')
+                            +(j == 0)*'; jt = 1 -> 60 going by '
+                            'rows   ne(jn) = 10**(10 + 0.5*(jn-1)) jn=1,15' + '\n')
 
                     for k in range(60): # Store temperature data to string  
                         out+='{:1.5E}'.format(setups[m][1][j,k]).rjust(13,' ')
@@ -398,7 +398,7 @@ class Crumpet(Crm, RateData):
                 f.write(setups[m][0])
                 for j in range(15): # Write each density block
                     out = ''
-                    f.write(' jn =   {}'.format(j+1)+(j==0)*(l==0)*
+                    f.write(' jn =   {}'.format(j+1)+(j==0)*
                             '; jt = 1 -> 60 going by rows   ne(jn) '
                             '= 10**(10 + 0.5*(jn-1)) jn=1,15'+'\n')
                     for k in range(60): # Store temperature data to string  

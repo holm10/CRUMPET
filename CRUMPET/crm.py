@@ -146,7 +146,7 @@ class Crm(Tools):
             f.write('Defined reactions:\n')
             for dkey, database in self.reactions.items():
                 for rkey, reaction in database.items():
-                    f.write('{}\n'.format(reaction.print_reaction(dkey, rkey)))
+                    f.write('{}\n'.format(reaction.print_reaction(rkey)))
         # Output to stdout if run verbosely
         if self.verbose:
             with open('logs/setup.log', 'rt') as f:
@@ -186,8 +186,8 @@ class Crm(Tools):
     def setup_APID(self, x, ID, rdata):
         ''' Adds an APID-style ionization reaction '''
         from CRUMPET.reactions import Reaction
-        self.reactions['APID'][self.XY2num(ID,x)] = Reaction('APID', x, 'APID',
-                rdata, self.bg, self.species, self.isotope, self.mass)
+        self.reactions['APID'][self.XY2num(ID,x)] = Reaction('APID', '', x, 
+                'APID', rdata, self.bg, self.species, self.isotope, self.mass)
 
 
     def setup_Johnson(self, i, ID, r):
@@ -219,7 +219,7 @@ class Crm(Tools):
             for label in ['reactants','fragments']:
                 buff[label] =  [self.XY2num(a, i, f) for a in buff[label]]
             self.reactions['JOHNSON'][self.XY2num(ID, i, f)] = Reaction(
-                    'JOHNSON', Afac, 'COEFFICIENT', buff, self.bg, 
+                    'JOHNSON', '', Afac, 'COEFFICIENT', buff, self.bg, 
                     self.species, self.isotope, self.mass)
 
 
@@ -452,6 +452,7 @@ class Crm(Tools):
             Vector of external sinks/sources. List if mode=diagnostic
         '''
         from numpy import zeros,array,sum,transpose
+        from math import isinf
         
         N = len(self.species)
         if mode == 'diagnostic':
@@ -478,26 +479,32 @@ class Crm(Tools):
                     ext = 0
                     if mode != 'diagnostic':
                         bgm = (r.e*ne) * (r.p*ni)
+                        rate = r.rate(Te, Ti, E=E, ne=ne)
+                        # Fix for writing AMJUEL 2.2.9 for high temperatures 
+                        # and density - required for UEDGE fits but
+                        # outside the polynomial fit range
+                        if isinf(rate):
+                            rate = 1e20
                     if mode == 'R':
-                        bgm = r.rate(Te, Ti, E=E, ne=ne)
-                        bg = r.rate(Te, Ti, E=E, ne=ne)
+                        bgm = rate
+                        bg = rate
                     elif mode in ['M']:#,'Sgl']:
                         # Specify density for external source
-                        bgm = bgm*r.rate(Te, Ti, E=E, ne=ne) 
+                        bgm = bgm*rate
                         # Assure that auto-processes are considered
-                        bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)    
+                        bg = max(bg, 1)*rate
                     elif mode == 'Sgl':
                         # Specify density for external source
-                        bgm = bgm*r.rate(Te, Ti, E=E, ne=ne)*Sgl[:,0] 
+                        bgm = bgm*rate*Sgl[:,0] 
                         # Assure that auto-processes are considered
-                        bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)*Sgl[:,0]
+                        bg = max(bg, 1)*rate*Sgl[:,0]
                         ext = Sgl[:,1]
                     elif mode == 'I':
+                        print(rate)
                         # Specify density for external source
-                        bgm = bgm*r.rate(Te, Ti, E=E, ne=ne)*Sgl[-2:,0] 
+                        bgm = bgm*rate*Sgl[-2:,0] 
                         # Assure that auto-processes are considered
-                        bg = max(bg, 1)*r.rate(Te, Ti, E=E, ne=ne)*\
-                                (abs(Sgl[-2:,0]) > 0)    
+                        bg = max(bg, 1)*rate*(abs(Sgl[-2:,0]) > 0)    
                     elif mode == 'E':
                         bgm = Sgl[-2:,0] # Specify density for external source
                         # Assure that auto-processes are considered

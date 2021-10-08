@@ -17,3 +17,6 @@ logs/.DS_Store
 manual/.DS_Store
 output/.DS_Store
 '
+*.dat
+output/.DS_Store
+.DS_Store
