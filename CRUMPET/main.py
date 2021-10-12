@@ -1698,13 +1698,13 @@ class Crumpet(Crm, RateData):
         if logx is True:
             pf = ax.semilogx
             try:
-                x = logspace(log10(T[0]), log10(T[1]))
+                x = logspace(log10(T[0]), log10(T[1]),res)
                 y = [self.get_rate(database, name, i, n, E) for i in x]
                 xlabel = 'Temperature [eV]'.format(T)
-                titapp = (', '*(len(title) > 0) + r'n={:.2E} '
-                        + '$\rm{{cm^{{-3}}}}$'.format(n))
+                titapp = (', '*(len(title) > 0) + r'n={:.2E} '.format(n)
+                        + r'$\rm{{cm^{{-3}}}}$')
             except:
-                x = logspace(log10(T[0]), log10(T[1]))
+                x = logspace(log10(T[0]), log10(T[1]),res)
                 y = [self.get_rate(database, name, T, i, E) for i in x]
                 xlabel = r'Density [$\rm{cm^{-3}}$]'
                 titapp = ', '*(title != '') + r'T={} eV'.format(T)
@@ -1716,8 +1716,8 @@ class Crumpet(Crm, RateData):
                 x = linspace(T[0], T[1], res)
                 y = [self.get_rate(database, name, i, n, E) for i in x]
                 xlabel = 'Temperature [eV]'.format(T)
-                titapp= ', '*(len(title) > 0) + r'n={:.2E} '\
-                        '$\rm{{cm^{{-3}}}}$'.format(n)
+                titapp= ', '*(len(title) > 0) + r'n={:.2E} '.format(n)+\
+                        r'$\rm{{cm^{{-3}}}}$'
             except:
                 x = linspace(T[0], T[1], res)
                 y = [self.get_rate(database, name, T, i, E) for i in x]
@@ -1726,7 +1726,7 @@ class Crumpet(Crm, RateData):
             if logy is True:
                 pf = ax.semilogy
         pf(x, y, color=color, linestyle=linestyle, linewidth=linewidth,
-                label=database + '.' + name)
+                label=database + '.' + name, marker='.')
         ax.set_xlabel(xlabel)
         ax.set_ylabel(r'$\rm{Rate}$ [$\rm{cm^{3}/s}$]')
         ax.set_title(title + titapp)

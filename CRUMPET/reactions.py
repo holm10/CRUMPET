@@ -467,15 +467,15 @@ class Reaction:
 
     def EIR_rate(self, Te, Ti, E=None, ne=None, **kwargs):
         ''' Function returning the EIRENE rate for T '''
-        from numpy import log, exp
+        from numpy import log, exp, log10
         T = Te*self.e + Ti*self.p
         ret = 0
         if T < 0.5:   
-            Tuse = 0.5
-            coeff = T/Tuse
-        else:       
-            Tuse = T
-            coeff = 1
+            dx=2e-1
+            b = log10(self.EIR_rate(0.5,0.5,E,ne))
+            dy = log10(self.EIR_rate(0.5+dx,0.5+dx,E,ne)-10**b)
+            k = dy/log10(dx)
+            return 10**(k*(log10(T)-log10(0.5))+b)#(k*(T-0.5) + b) 
         if self.fittype == 'H.0':
             print('Potential: TBD')
             return
@@ -485,17 +485,17 @@ class Reaction:
         elif self.fittype == 'H.2':
             # Rate coefficient vs temperature
             for i in range(9):
-                ret += self.coeffs[i]*(log(Tuse)**i)    
+                ret += self.coeffs[i]*(log(T)**i)    
         elif self.fittype == 'H.3':
             # Rate coefficient vs temperature and energy
             for i in range(9):
                 for j in range(9):
-                    ret += self.coeffs[i,j]*(log(Tuse)**i)*(log(E)**j)
+                    ret += self.coeffs[i,j]*(log(T)**i)*(log(E)**j)
         elif self.fittype == 'H.4':
             # Rate coefficient vs temperature and density
             for i in range(9):
                 for j in range(9):
-                    ret += self.coeffs[i,j]*(log(Tuse)**i)*(log(ne*1e-8)**j)
+                    ret += self.coeffs[i,j]*(log(T)**i)*(log(ne*1e-8)**j)
         elif self.fittype == 'H.5':
             print('Momentum-weighted rates vs. temperature, not in use')
             return
@@ -523,7 +523,7 @@ class Reaction:
         else:
             print('Unknown fit: {}, {}, {}'.format(
                     self.database,self.name,self.type))
-        return coeff*exp(ret)
+        return exp(ret)
 
 
     def coeff_rate(self, *args, **kwargs):
