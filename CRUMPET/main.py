@@ -54,13 +54,97 @@ class Crumpet(Crm, RateData):
 
         self.ver = 'V1.0'
         self.ev = 1.602e-19
-        # Contingency in case databases are not defined
-        ADAS = None
-        UE = None
-        amjuel = None
-        hydhel = None
-        h2vibr = None
 
+        # Parse the input file into the dict data
+        data = {} # Hierarchy: Card - Subcard - Data
+        with open('{}/{}'.format(path, fname)) as f:  # Open the file
+            for l in f:
+                # Omit empty and comment lines
+                l=l.strip()
+                if len(l)>0 and l[0] != '#':
+                    l = l.split('#')[0].strip() # Discard comments
+                    if '**' in l[:3]: # Card
+                        card = l.split()[1].upper()
+                        data[card] = {}
+                        subcard = None
+                    elif '*' in l[:3]: # Subcard
+                        subcard = l.split()[1]
+                        data[card][subcard] = [] 
+                        if len(l.split()) > 2:
+                            data[card][subcard] = l.split()[2]
+                    else:
+                        if subcard is None: # Direct data input w/o subcard
+                            data[card][l.split()[0].strip()] = \
+                                    ' '.join(l.split()[1:])
+                        else:
+                            data[card][subcard].append(l)
+                    
+        ''' Store required input parameters '''
+        # Species
+        species = {}
+        for key, value in data.pop('SPECIES',None).items():
+            species[key] = {'V':0} # Set default value
+            if len(value) > 0:
+                for val in value:
+                    # Update V if set in input
+                    if val.split()[0].upper() == 'V':
+                        species[key]['V'] = float(val.split()[1].strip())
+        
+        # Reactions
+        rlist = {}
+        for key, value in data.pop('REACTIONS', None).items():
+            # Store reaction
+            rea = [x.strip() for x in key.split('_')]
+            reaction = value.pop(0)
+            [reactants, products] = [x.strip() for x in reaction.split(' > ')]
+            # Non-EIRENE db structure
+            if len(rea) == 2:
+                [db, reaction] = rea
+                if db not in list(rlist):
+                    rlist[db] = {}
+                rlist[db][reaction] = {
+                        'reactants':[x.strip() for x in reactants.split(' + ')],
+                        'fragments':[x.strip() for x in products.split(' + ')],
+                        'data':value }
+            # EIRENE db structure
+            elif len(rea) == 3:
+                [db, h123, reaction] = rea
+                if db not in list(rlist):
+                    rlist[db] = {}
+                if h123 not in list(rlist[db]):
+                    rlist[db][h123] = {}
+                rlist[db][h123][reaction] = {
+                        'reactants':[x.strip() for x in reactants.split(' + ')],
+                        'fragments':[x.strip() for x in products.split(' + ')],
+                        'data':value }
+        
+
+        ''' Store optional input parameters '''
+        # Settings
+        settings = data.pop('SETTINGS',{})
+        # Rates
+        rates = {}
+        if 'RATES' in list(data):
+            rates = data.pop('RATES', None)
+        RateData.__init__(self, rates, path)
+                
+        # Background
+        if 'BACKGROUND' in list(data):
+            bg = {}
+            for key, value in data.pop('BACKGROUND',None).items():
+                bg[key] = {'V':0} # Default potential level
+                if len(value) > 0:
+                    for val in value:
+                        # Update V if set in input
+                        if val.split()[0].upper() == 'V':
+                            bg[key]['V'] = float(val.split()[1].strip())
+        else:
+            bg = {'e':{'V':0}, 'p':{'V':0}} # Default background
+
+        for key, values in data:
+            print('Unrecognized card {}.\nIgnoring.'.format(setting))
+
+        '''
         # Read the input file into a list
         lines, cards, subcards = self.file2list(path, fname)
         # %%%%%%%%%% LOOP THROUGH THE DEFINED CARDS %%%%%%%%%%%
@@ -155,16 +239,19 @@ class Crumpet(Crm, RateData):
                         continue
 
                 # Create RATE_DATA class object based on the above files paths
-                RateData.__init__(self, amjuel, hydhel, h2vibr, ADAS, UE, path)
+                RateData.__init__(self, rates, path)
             # %%%% Define CRM settings %%%%
             elif lines[cards[i]].split()[1].upper() == 'SETTINGS':
                 # Search this card only
                 for j in range(cards[i] + 1, cards[i + 1]): 
                     # Create setting based on card type
-                    try:
-                        [c, setting, value] = lines[j].upper().split()
-                    except:
-                        [c, setting] = lines[j].upper().split()
+                    linein = lines[j].upper().split()
+                    if len(linein) == 3:
+                        [c, setting, value] = linein
+                    elif len(linein) == 2: 
+                        [c, setting] = linein
+                    elif len(linein) == 1:
+                        [setting] = linein
                     if c != '*': 
                         continue # Ensure that we are reading subcards
                     elif setting == 'VMAX':
@@ -188,6 +275,14 @@ class Crumpet(Crm, RateData):
                     elif setting == 'MASS':
                         # Isotope mass in AMU
                         mass = int(value)
+                    elif setting == 'STATIC':
+                        print('Here')
+                        # Static intial density species
+                        # Loop through all species set to be static
+                        static = []
+                        print(subcards, cards, j)
+                        for k in range(j + 1, subcards[subcards.index(j) + 1]): 
+                            static.append([lines[k].split()[0].strip()])
                     else:
                         print(   'Unrecognized setting {}.\n'
                                  'Ignoring.'.format(setting))
@@ -211,18 +306,16 @@ class Crumpet(Crm, RateData):
                 print('Unknown card "{}": ' 
                       'aborting!'.format(lines[cards[i]].split()[1]))
                 return
+        '''
+
         # %%%% Set up the CRM %%%%
-        Crm.__init__(   
-                self, species, bg, rlst, verbose, Np, path, vmax, nmax, 
-                self.reactions, isotope, mass)
+        Crm.__init__(self, species, bg, rlist, path, self.reactions, settings)
      
 
 
 
 
-
-
-    def write_ue_rates( self, fname='crumpet', E=0.1, Sext=True, Tm=0, 
+    def write_ue_rates( self, fname='crumpet', E=0.1, Srec=True, Tm=0, 
                         groundstate=['(n=1)','(v=0)']):
         ''' Writes UEDGE-compatible tab-delimited rate files
 
@@ -244,7 +337,7 @@ class Crumpet(Crm, RateData):
             prefix to tabulated rate data files
         E : floar, optional (default: 0.1)
             assumed temperature of the molecules for rates it Tm=False
-        Sext : boolean, optional (default: True)
+        Srec : boolean, optional (default: True)
             switch for considering 'external' sinks/sources (e.g. 
             re-association)
         Tm : float, optional (default: 0)
@@ -304,7 +397,7 @@ class Crumpet(Crm, RateData):
 
                 # Store density rate to matrix
                 ret[i,j,:,:], ext[i,j,:], _ = self.gl_crm(
-                        *self.M(Te, ne, Te, ne, E, write=False), Sext=Sext)
+                        *self.M(Te, ne, Te, ne, E, write=False), Srec=Srec)
                 
                 # Calculate energy rates
                 U = self.Sgl(Te, ne, Te, ne, E, Tm, write=False)
@@ -492,10 +585,10 @@ class Crumpet(Crm, RateData):
 
 
     def plot_crm_dt(
-            self, t, Te, ne, E=0.1, Ti=None, ni=None, Sext=True, Qres=True, 
+            self, t, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, Qres=True, 
             Tm=0, gl=False, density=False, fig=None, n0=None, title=None,
             figsize=(7+7,7*1.618033-3), savename=None, figtype='png', 
-            conservation=False, plot='plot', ext=None):
+            conservation=False, plot='plot', ext=None, plottot=False):
         ''' Plots the CRM results for neutrals in a static background plasma
 
         Parameters
@@ -512,7 +605,7 @@ class Crumpet(Crm, RateData):
             ion density in cm**-3. Default sets ni=ne
         E : float, optional (default: E=0.1)
             molecular energy in eV for rates
-        Sext : boolean, optional (default: True)
+        Srec : boolean, optional (default: True)
             switch for considering 'external' sinks/sources (e.g. 
             re-association)
         Tm : float, optional (default: 0)
@@ -578,8 +671,11 @@ class Crumpet(Crm, RateData):
                     'used.\nAborting.')
             return
         # Solve the problem up to T
-        ft = self.solve_crm(t, Te, ne, Ti, ni, E, Tm, Sext, gl=gl, 
-                            n=n0, Qres=Qres, densonly=density, addext=ext) 
+        # TODO: fix addext
+        print('REVISE')
+        ft = self.solve_crm(t, Te, ne, Ti, ni, E, Tm, Srec, gl=gl, 
+                            n=n0, Qres=Qres, densonly=density)#, addext=ext) 
+        # TODO: allow passing of additional sources
         t = linspace(0, t, 250)
         xt = t*1e3
         # Solve densities only
@@ -588,9 +684,10 @@ class Crumpet(Crm, RateData):
             fig.subplots_adjust(hspace=0, right=.8 + 0.13*Qres)
             ax = fig.add_subplot(111 + 100*conservation + 100*Qres)
             ylabel = r'Particles [$10^{{{}}}$]'
-            self.plotax(ax, xt, nt, ylabel=ylabel,
+            self.plotax(ax, xt, nt, ylabel=ylabel, plottot=plottot,
                     plotmax=self.Np*(not Qres) + 1e3*Qres, plot=plot)
-            self.plottotpart(ax, n0)
+            if plottot:
+                self.plottotpart(ax, n0)
             if Qres:
                 ax.legend(  ncol=9 - 2*(not conservation), frameon=False,
                             bbox_to_anchor=(1.0, -0.4),
@@ -701,7 +798,7 @@ class Crumpet(Crm, RateData):
 
 
     def plot_species_dt(
-            self, t, Te, ne, species, E=0.1, Ti=None, ni=None, Sext=True, Qres=True, 
+            self, t, Te, ne, species, E=0.1, Ti=None, ni=None, Srec=True, Qres=True, 
             Tm=0, gl=False, density=False, fig=None, n0=None, title=None, ylim=(None,None),
             figsize=(7+7,7*1.618033-3), savename=None, figtype='png', plot='semilogx', legend=None,
             xlabel=None):
@@ -725,7 +822,7 @@ class Crumpet(Crm, RateData):
             ion density in cm**-3. Default sets ni=ne
         E : float, optional (default: E=0.1)
             molecular energy in eV for rates
-        Sext : boolean, optional (default: True)
+        Srec : boolean, optional (default: True)
             switch for considering 'external' sinks/sources (e.g. 
             re-association)
         Tm : float, optional (default: 0)
@@ -791,7 +888,7 @@ class Crumpet(Crm, RateData):
                     'used.\nAborting.')
             return
         # Solve the problem up to T
-        ft = self.solve_crm(t, Te, ne, Ti, ni, E, Tm, Sext, gl=gl, 
+        ft = self.solve_crm(t, Te, ne, Ti, ni, E, Tm, Srec, gl=gl, 
                             n=n0, Qres=Qres, densonly=density) 
         inds = []
         for sp in species:
@@ -1138,7 +1235,7 @@ class Crumpet(Crm, RateData):
             T = Te[i]
             # Store to matrix
             ret[i,:,:], ext[i,:], _ = self.gl_crm(
-                    *self.M(T, ne, T, ne, E, write=False), Sext=True) 
+                    *self.M(T, ne, T, ne, E, write=False), Srec=True) 
         setups = [
                 ['H0_depl', ret[:,0,0]],
                 ['H0_create', ret[:,0,1]],
@@ -1487,7 +1584,7 @@ class Crumpet(Crm, RateData):
 
 
     def spectrum(
-            self, Te, ne, vol, E=0.1, Ti=None, ni=None, Sext=True, n0=None, 
+            self, Te, ne, vol, E=0.1, Ti=None, ni=None, Srec=True, n0=None, 
             ext=None, ioniz=0, units='l',write=False, norm=False, fig=None,
             figsize=(10,10/1.618033), xlim=None, linewidth=1, split=False):
         ''' Plots atomic and molecular spectra 
@@ -1506,7 +1603,7 @@ class Crumpet(Crm, RateData):
             ion density in cm**-3. Default sets ni=ne
         E : float, optional (default: E=0.1)
             molecular energy in eV for rates
-        Sext : boolean, optional (default: True)
+        Srec : boolean, optional (default: True)
             switch for considering 'external' sinks/sources (e.g. 
             re-association)
         n0 : ndarray, optional (default: None)
@@ -1585,7 +1682,7 @@ class Crumpet(Crm, RateData):
 
 
 
-        data = self.intensity(Te, ne, vol, E, Ti, ni, Sext, n0, ext, ioniz, 
+        data = self.intensity(Te, ne, vol, E, Ti, ni, Srec, n0, ext, ioniz, 
                 units,False, norm)
         if split is True:
             species = ['atomic','molecular']
@@ -1632,7 +1729,7 @@ class Crumpet(Crm, RateData):
             self, database, name, T, n, E=0.1, logx=True, logy=True, res=200, 
             color='k', linestyle='-', figsize=(12,13/1.618033), title='',
             ylim=[1e-14,1e-6], linewidth=2, savename=None, figtype='png',
-            xlim=None, ncol=3, fig=None):
+            xlim=None, ncol=3, ax=None):
         ''' Plots the rate of the requested reaction
 
         Parameters
@@ -1690,9 +1787,7 @@ class Crumpet(Crm, RateData):
         from numpy import linspace, logspace, log10
         from matplotlib.pyplot import figure
 
-        try:
-            ax = fig.get_axes()[ax]
-        except:
+        if ax is None:
             fig = figure(figsize=figsize)
             ax = fig.add_subplot(111)
         if logx is True:
@@ -1726,7 +1821,7 @@ class Crumpet(Crm, RateData):
             if logy is True:
                 pf = ax.semilogy
         pf(x, y, color=color, linestyle=linestyle, linewidth=linewidth,
-                label=database + '.' + name, marker='.')
+                label=database + '.' + name)#, marker='.')
         ax.set_xlabel(xlabel)
         ax.set_ylabel(r'$\rm{Rate}$ [$\rm{cm^{3}/s}$]')
         ax.set_title(title + titapp)
@@ -1742,11 +1837,15 @@ class Crumpet(Crm, RateData):
                 pass
             fig.savefig('output/figs/{}.{}'.format(savename, figtype), dpi=300,
                     edgecolor=None, format=figtype, bbox_inches='tight')
-        fig.show()
-        return fig
+        try:
+            fig.show()
+            return fig
+        except:
+            pass
+            return
 
 
-    def lifetimes(self, Te, ne, E=0.1, Ti=None, ni=None, Sext=True, n=None):
+    def lifetimes(self, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, n=None):
         ''' **INCOMPLETE** Species lifetimes perturbation from equilibrium
 
         Retrurns a ordered list (according to the input file species) of 
@@ -1768,7 +1867,7 @@ class Crumpet(Crm, RateData):
             ion density in cm**-3. Default sets ni=ne
         E : float, optional (default: E=0.1)
             molecular energy in eV for rates
-        Sext : boolean, optional (default: True)
+        Srec : boolean, optional (default: True)
             switch for considering 'external' sinks/sources (e.g. 
             re-association)
         n : list of floats, optional (default: None)
@@ -1819,6 +1918,8 @@ class Crumpet(Crm, RateData):
         mat, ext = self.M(Te, ne, Ti, ni, E, write=False) 
         # TODO: use Greenland CRM to assess the SS - the same assumptions
         ''' Assume re-association to achieve SS '''
+        # TODO: fix ext sources and dissociation
+        print('REVISE')
         #mat[0,0]=-reassociation
         #mat[1,0]=-mat[0,0]*0.5 # Conserve nucleii
         ext[0] = (psorgc + diva + srca + bga)
@@ -1827,7 +1928,7 @@ class Crumpet(Crm, RateData):
         # Get matrices and eigenvalues/-vectors
         
 
-        M, T, D = self.gl_crm(mat, ext, matrices=True) 
+        M, T, D = self.gl_crm(mat, ext, matrices=True, Srec=Srec) 
         # Get matrices and eigenvalues/-vectors
         Meff, extp, n0p = self.gl_crm(mat, ext, n=n) 
         for i in D:

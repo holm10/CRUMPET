@@ -35,9 +35,8 @@ class RateData:
 
 
     def __init__(
-            self, amjuel='amjuel.tex', hydhel='hydhel.tex', 
-            h2vibr='h2vibr.tex', ADAS='ich0-1.dat', UE='ehr1.dat', 
-            path='.'):
+            self, rates = {'AMJUEL':None, 'HYDHEL':None, 'H2VIBR':None, 
+            'ADAS':None, 'UE':None}, path='.'):
         ''' 
         Parameters
         ----------
@@ -56,35 +55,41 @@ class RateData:
         '''
         # Create a loop that reads the EIRENE tex files, compatible with
         # Jan 2020 versions
-        self.reactions= {
-                'AMJUEL': { 'settings' : [500, ['b0','0','a0','h0','p0','k0'],
-                            ['a0','h0','p0','k0'], 45], 'path' : amjuel },
-                'HYDHEL': {'settings' : [150, ['b0','0','a0','h0'], 
-                            ['a0','h0'], 80], 'path' : hydhel },
-                'H2VIBR': {'settings' : [0, ['b0','0','a0','h0'], ['a0','h0'],
-                            20], 'path' : h2vibr },
-                'UE': {},
-                'ADAS': {} }
+        self.reactions = {}
+        if ('AMJUEL' in list(rates)) and (rates['AMJUEL'] is not None):
+            self.reactions['AMJUEL'] = { 'settings' : [500, 
+                            ['b0','0','a0','h0','p0','k0'],
+                            ['a0','h0','p0','k0'], 45], 
+                            'path':rates['AMJUEL']}
+        if ('HYDHEL' in list(rates)) and (rates['HYDHEL'] is not None):
+            self.reactions['HYDHEL'] = {'settings' : [150, 
+                            ['b0','0','a0','h0'], ['a0','h0'], 80], 
+                            'path' : rates['HYDHEL'] }
+        if ('H2VIBR' in list(rates)) and (rates['H2VIBR'] is not None):
+            self.reactions['H2VIBR'] = {'settings' : [0, ['b0','0','a0','h0'],
+                            ['a0','h0'], 20], 'path' : rates['H2VIBR']}
+
         # For each data point, add the reactions to the appropriate dictionary
-        for rate in ['AMJUEL', 'H2VIBR', 'HYDHEL']:
-            if self.reactions[rate]['path'] is not None:
-                try:
-                    self.read_EIRENE(self.reactions[rate]['path'],
-                            self.reactions[rate], 
-                            self.reactions[rate]['settings'], path=path)
-                except:
-                    print(  'Database {} not found in {}/{}. Omitting'
-                            ''.format(rate, path, 
-                            self.reactions[rate]['path']))
-        if ADAS is not None:
+        for rate in list(rates):
             try:
-                self.read_ADAS(ADAS, self.reactions['ADAS'], path=path)
+                self.read_EIRENE(self.reactions[rate]['path'],
+                        self.reactions[rate], 
+                        self.reactions[rate]['settings'], path=path)
+            except:
+                print(  'Database {} not found in {}/{}. Omitting'
+                        ''.format(rate, path, 
+                        self.reactions[rate]['path']))
+        if ('ADAS' in list(rates)) and (rates['ADAS'] is not None):
+            self.reactions['ADAS'] = {}
+            try:
+                self.read_ADAS(rates['ADAS'], self.reactions['ADAS'], path=path)
             except:
                 print(  'Database ADAS not found in {}/{}. Omitting'
                         ''.format(path, ADAS))
-        if UE is not None: 
+        if ('UE' in list(rates)) and (rates['UE'] is not None): 
+            self.reactions['UE'] = {}
             try:
-                self.read_UE(UE,self.reactions['UE'],path=path)
+                self.read_UE(rates['UE'],self.reactions['UE'],path=path)
             except:
                 print(  'Database UE not found in {}/{}. Omitting'
                         ''.format(path, UE))

@@ -200,7 +200,14 @@ class Reaction:
 
         r = data['reactants']
         p = data['fragments']
-        K = data['K']
+        rdata = data['data']
+        if any('K=' in entry for entry in rdata) or \
+            any('K =' in entry for entry in rdata):
+            kstr = rdata[[i for i, s in enumerate(rdata) if ('K=' in s) or \
+                    ('K =' in s)][0]] 
+            K = kstr.split('=')[1].strip()
+        else:
+            K = 0
         self.r_mult = ones((len(r),))
         self.f_mult = ones((len(p),))
         self.reactants = r
@@ -413,7 +420,7 @@ class Reaction:
         # TODO: Dynamically choose between ni and ne in reaction
         from scipy.interpolate import interp2d,interp1d
         if self.type == 'RATE': 
-            return self.EIR_rate
+            return self.polyfit
         elif self.type == 'COEFFICIENT': 
             return self.coeff_rate
         elif self.type == 'SIGMA': 
@@ -465,15 +472,15 @@ class Reaction:
         return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse)
 
 
-    def EIR_rate(self, Te, Ti, E=None, ne=None, **kwargs):
+    def polyfit(self, Te, Ti, E=None, ne=None, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
         T = Te*self.e + Ti*self.p
         ret = 0
         if T < 0.5:   
-            dx=2e-1
-            b = log10(self.EIR_rate(0.5,0.5,E,ne))
-            dy = log10(self.EIR_rate(0.5+dx,0.5+dx,E,ne)-10**b)
+            dx=1e-1
+            b = log10(self.polyfit(0.5,0.5,E,ne))
+            dy = log10(self.polyfit(0.5+dx,0.5+dx,E,ne)-10**b)
             k = dy/log10(dx)
             return 10**(k*(log10(T)-log10(0.5))+b)#(k*(T-0.5) + b) 
         if self.fittype == 'H.0':
@@ -522,7 +529,7 @@ class Reaction:
             return
         else:
             print('Unknown fit: {}, {}, {}'.format(
-                    self.database,self.name,self.type))
+                    self.database,self.name,self.fittype))
         return exp(ret)
 
 
