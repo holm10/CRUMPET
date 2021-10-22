@@ -55,8 +55,62 @@ class Crumpet(Crm, RateData):
         self.ver = 'V1.0'
         self.ev = 1.602e-19
 
+        def build_reactions(reaction_id):
+            if reaction_id:
+                return {reaction_id[0]: build_reactions(reaction_id[1:])}
+            return []
+
+
+        def merge_reactions(dct, merge_dct):
+            from collections import Mapping
+            """ Adapted from https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
+            """
+            for k, v in merge_dct.items():
+                if (k in dct and isinstance(dct[k], dict)
+                        and isinstance(merge_dct[k], Mapping)):
+                    merge_reactions(dct[k], merge_dct[k])
+                else:
+                    dct[k] = merge_dct[k]
+
+        def parse_file(path, fname, data):
+            ''' Parses file to dict '''
+            with open('{}/{}'.format(path, fname)) as f:  # Open the file
+                for l in f:
+                    # Omit empty and comment lines
+                    l=l.strip()
+                    if len(l)>0 and l[0] != '#':
+                        l = l.split('#')[0].strip() # Discard comments
+                        if '**' in l[:3]: # Card
+                            card = l.split()[1].upper()
+                            data[card] = {}
+                            subcard = None
+                        elif '*' in l[:3]: # Subcard
+                            if l.split()[1].strip().upper() == 'INCLUDE':
+                                parse_file(path, ' '.join(l.split()[2:]), data)
+                            elif card == 'REACTIONS':
+                                [subcard, h123, reaction] = l.split()[1:]
+                                merge_reactions(data[card], build_reactions(l.split()[1:]))
+                            else:
+                                subcard = l.split()[1]
+                                data[card][subcard] = [] 
+                                if len(l.split()) > 2:
+                                    data[card][subcard] = l.split()[2]
+                        else:
+                            if subcard is None: # Direct data input w/o subcard
+                                data[card][l.split()[0].strip()] = \
+                                        ' '.join(l.split()[1:])
+                            else:
+                                if card == 'REACTIONS':
+                                    data[card][subcard][h123][reaction].append(l)
+                                else:
+                                    data[card][subcard].append(l)
+
+
         # Parse the input file into the dict data
         data = {} # Hierarchy: Card - Subcard - Data
+        parse_file(path, fname, data)
+
+        '''
         with open('{}/{}'.format(path, fname)) as f:  # Open the file
             for l in f:
                 # Omit empty and comment lines
@@ -68,16 +122,28 @@ class Crumpet(Crm, RateData):
                         data[card] = {}
                         subcard = None
                     elif '*' in l[:3]: # Subcard
-                        subcard = l.split()[1]
-                        data[card][subcard] = [] 
-                        if len(l.split()) > 2:
-                            data[card][subcard] = l.split()[2]
+                        if card == 'REACTIONS':
+                            print(l)
+                            if len(l.split()) == 2:
+                                if l.split()[1].strip().upper() == 'INCLUDE':
+                                    print('INCLUDING')
+                            else:
+                                [subcard, h123, reaction] = l.split()[1:]
+                                merge_reactions(data[card], build_reactions(l.split()[1:]))
+                        else:
+                            subcard = l.split()[1]
+                            data[card][subcard] = [] 
+                            if len(l.split()) > 2:
+                                data[card][subcard] = l.split()[2]
                     else:
                         if subcard is None: # Direct data input w/o subcard
                             data[card][l.split()[0].strip()] = \
                                     ' '.join(l.split()[1:])
                         else:
-                            data[card][subcard].append(l)
+                            if card == 'REACTIONS':
+                                data[card][subcard][h123][reaction].append(l)
+                            else:
+                                data[card][subcard].append(l)'''
                     
         ''' Store required input parameters '''
         # Species
@@ -91,7 +157,11 @@ class Crumpet(Crm, RateData):
                         species[key]['V'] = float(val.split()[1].strip())
         
         # Reactions
+        rlist = data.pop('REACTIONS', None)
+
+        '''
         rlist = {}
+        print(reactions)
         for key, value in data.pop('REACTIONS', None).items():
             # Store reaction
             rea = [x.strip() for x in key.split('_')]
@@ -117,7 +187,7 @@ class Crumpet(Crm, RateData):
                         'reactants':[x.strip() for x in reactants.split(' + ')],
                         'fragments':[x.strip() for x in products.split(' + ')],
                         'data':value }
-        
+        ''' 
 
         ''' Store optional input parameters '''
         # Settings
@@ -588,7 +658,7 @@ class Crumpet(Crm, RateData):
             self, t, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, Qres=True, 
             Tm=0, gl=False, density=False, fig=None, n0=None, title=None,
             figsize=(7+7,7*1.618033-3), savename=None, figtype='png', 
-            conservation=False, plot='plot', ext=None, plottot=False):
+            conservation=False, plot='plot', ext=None, plottot=False, **kwargs):
         ''' Plots the CRM results for neutrals in a static background plasma
 
         Parameters
@@ -674,7 +744,7 @@ class Crumpet(Crm, RateData):
         # TODO: fix addext
         print('REVISE')
         ft = self.solve_crm(t, Te, ne, Ti, ni, E, Tm, Srec, gl=gl, 
-                            n=n0, Qres=Qres, densonly=density)#, addext=ext) 
+                            n=n0, Qres=Qres, densonly=density, **kwargs)#, addext=ext) 
         # TODO: allow passing of additional sources
         t = linspace(0, t, 250)
         xt = t*1e3
@@ -1584,9 +1654,10 @@ class Crumpet(Crm, RateData):
 
 
     def spectrum(
-            self, Te, ne, vol, E=0.1, Ti=None, ni=None, Srec=True, n0=None, 
+            self, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, n0=None, 
             ext=None, ioniz=0, units='l',write=False, norm=False, fig=None,
-            figsize=(10,10/1.618033), xlim=None, linewidth=1, split=False):
+            figsize=(10,10/1.618033), xlim=None, linewidth=1, split=False,
+            **kwargs):
         ''' Plots atomic and molecular spectra 
 
         Parameters
@@ -1682,15 +1753,15 @@ class Crumpet(Crm, RateData):
 
 
 
-        data = self.intensity(Te, ne, vol, E, Ti, ni, Srec, n0, ext, ioniz, 
-                units,False, norm)
+        data = self.intensity(Te, ne, E=E, Ti=Ti, ni=ni, Srec=Srec, n0=n0,  
+                        units=units, norm=norm, write=False, **kwargs)
         if split is True:
             species = ['atomic','molecular']
             for i in range(2):
                 ax = fig.add_subplot(3,1,i+1)
                 for d in range(len(data[i][0,:])):
                     if data[i][0, d] != 0:
-                        ax.plot([data[i][0, d], data[i][0, d]],
+                        ax.semilogy([data[i][0, d], data[i][0, d]],
                                 [0, data[i][1, d]],'k', linewidth=linewidth)
                 ax.set_ylim(0, 1.1*max(data[i][1,:]))
                 ax.set_xlim(xlim)
@@ -1709,14 +1780,18 @@ class Crumpet(Crm, RateData):
         else:
             n = 1
         for i in range(2):
-            ax.plot([], [], 'b-')
-            ax.plot([], [], 'r-')
+            ax.semilogy([], [], 'b-')
+            ax.semilogy([], [], 'r-')
             for d in range(len(data[i][0,:])):
                 if data[i][0, d] != 0:
-                    ax.plot([data[i][0, d], data[i][0, d]], 
+                    ax.semilogy([data[i][0, d], data[i][0, d]], 
                             [0,data[i][1, d]/n], linewidth=linewidth,
                             color=color[i])
-            ax.set_ylim((0, 1.1*max(max(data[0][1,:]), max(data[1][1,:]))/n))
+            try:
+                ax.set_ylim((0, 1.1*max(max(data[0][1,:]), max(data[1][1,:]))/n))
+            except: 
+                pass
+                #ax.set_ylim((0,None))
             ax.set_xlim(xlim)
             ax.set_xlabel(xunit)
             ax.set_ylabel(yunit)

@@ -51,7 +51,7 @@ class Crm(Tools):
     '''
 
 
-    def __init__(self, species, bg, reactionlist, path='.', 
+    def __init__(self, species, bg, reactions, path='.', 
                 rdata=None, settings = {}):
         ''' 
         Parameters
@@ -69,15 +69,15 @@ class Crm(Tools):
             reaction names/handles, which contains the reaction data.
             The reactions[database][reactionname] dict requires three
             keys:
-            'reactants' : list of strings
-                each element is a handle of the reactants. At least one
+            'educts' : list of strings
+                each element is a handle of the educts. At least one
                 of the species must be a background species, and only
-                two reactants are currently supported
+                two educts are currently supported
             'products' : list of strings
                 each element is a handle of the products
             'K' : string
                 a string of the net kinetic energy transfer for the 
-                background reactants to the products. Presently, all
+                background educts to the products. Presently, all
                 energy is assumed to end up as ion/atom kinetic energy.
                 Supports calculations in the string, e.g. '2*3+4'
         verbose : boolean
@@ -110,6 +110,8 @@ class Crm(Tools):
         from os import mkdir,getcwd
         from datetime import datetime
         from numpy import ones, zeros
+        from CRUMPET.reactions import Reaction
+        from copy import deepcopy
 
         # Store class objects
         self.species = species
@@ -162,7 +164,114 @@ class Crm(Tools):
         
         for i in range(self.N):
             self.evolvemat[i] *= self.evolvearr[i]
-        self.setup_reactions(reactionlist ,rdata)
+
+        '''
+        for database, subdatabase in reactionlist.items():
+            for h123, reactions in subdatabase.items():
+                for rname, data in reactions.items():
+                    print(database, h123, rname, data)
+        '''
+        
+        self.reactions = deepcopy(reactions)
+        for db, dbcontent in reactions.items():
+            if (db in ['AMJUEL', 'HYDHEL', 'H2VIBR']) and (db not in rdata.keys()):
+                print('Required database "{}" not found, aborting!'.format(db))
+                return
+            for h123, h123content in dbcontent.items():
+                for rea, reactiondata in h123content.items():
+                    # Split the definitions into names and databases
+                    reastr = reactiondata[0].upper()
+                    #del reactions[db][h123][rea]
+                    # Loop through states, if necessary. Dynamicallt set boundaries
+                    # according to electronic or vibrational transitions
+                    isn, isv  = ('N=$' in reastr), ('V=$' in reastr)
+                    if isn or isv:
+                        del self.reactions[db][h123][rea]
+                    for x in range(isn, 1 + isv*self.vmax + isn*self.nmax):
+                        # Vibrational/electronic dependence present
+                        if '$' in reastr:
+                            buff = reactiondata.copy()
+                            reabuff = rea
+                            # Substitute state into educts and product strings 
+                            buff[0] = self.XY2num(buff[0], x)
+                            reabuff = self.XY2num(reabuff, x)
+                            # %%% n- or v-dependent upper rate %%%
+                            if '&' in reastr:
+                                # Relaxation - only move down during reaction
+                                if h123.upper() == 'RELAXATION':
+                                    for y in range(int(isn), x):
+                                        rebuff = buff.copy()
+                                        rereabuff = reabuff
+                                        rebuff[0] = self.XY2num(rebuff[0], x, y) 
+                                        rereabuff = self.XY2num(rereabuff, x, y) 
+                                        try:
+                                            coeffs = rdata[db][h123][rereabuff.upper()]
+                                        except:
+                                            coeffs = (x, y)
+                                        self.reactions[db][h123][rereabuff] = \
+                                                Reaction(db, h123, 
+                                                rereabuff, rebuff, coeffs,
+                                                self.bg, self.species, 
+                                                self.isotope, self.mass)
+                                # Excitation - only move up during reaction
+                                elif h123.upper() == 'EXCITATION':
+                                    for y in range(x + 1, 1 + isn*self.nmax + 
+                                                        isv*self.vmax):
+                                        rebuff = buff.copy()
+                                        rereabuff = reabuff
+                                        rebuff[0] = self.XY2num(rebuff[0], x, y) 
+                                        rereabuff = self.XY2num(rereabuff, x, y) 
+                                        try:
+                                            coeffs = rdata[db][h123][rereabuff.upper()]
+                                        except:
+                                            coeffs = (x, y)
+                                        self.reactions[db][h123][rereabuff] = \
+                                                Reaction(db, h123, 
+                                                rereabuff, rebuff, coeffs,
+                                                self.bg, self.species, 
+                                                self.isotope, self.mass)
+                                # Ladder-like process assumed
+                                elif 'H.' in h123.upper():
+                                    for y in range(-1*('&' in buff[0]), 2, 2):
+                                        # Limit transitions to [0,vmax]
+                                        if x + y in range(self.vmax + 1):
+                                            rebuff = buff.copy()
+                                            rereabuff = reabuff
+                                            # Retain intial and final states in name
+                                            rebuff[0] = self.XY2num(rebuff[0], x, x + y) 
+                                            rereabuff = self.XY2num(rereabuff, x, x + y) 
+                                            try:
+                                                coeffs = rdata[db][h123][rereabuff.upper()]
+                                            except:
+                                                coeffs = (x, y)
+                                            self.reactions[db][h123][rereabuff] = \
+                                                    Reaction(db, h123, 
+                                                    rereabuff, rebuff, coeffs,
+                                                    self.bg, self.species, 
+                                                    self.isotope, self.mass)
+                                else:
+                                    print('Reaction specifier "{}" not' 
+                                        ' recognized. Omitting '
+                                        '{} {} {}'.format(h123, db, h123, rea))
+                            # Independent upprt state
+                            else:
+                                try:
+                                    coeffs = rdata[db][h123][reabuff.upper()]
+                                except:
+                                    coeffs = x
+                                self.reactions[db][h123][reabuff] = \
+                                        Reaction(db, h123, reabuff, buff,
+                                        coeffs, self.bg, self.species, 
+                                        self.isotope, self.mass)
+                        else:
+                            try:
+                                coeffs = rdata[db][h123][rea.upper()]
+                            except:
+                                coeffs = None
+                            self.reactions[db][h123][rea] = Reaction(db, h123, rea,
+                                        reactiondata, coeffs, self.bg, 
+                                        self.species, self.isotope, self.mass)
+
 
         # Define reactions for UEDGE raditation
         #self.ionizrad=Reaction('IONIZRAD','UE',
@@ -184,8 +293,9 @@ class Crm(Tools):
                 f.write('    {}\n'.format(i))
             f.write('Defined reactions:\n')
             for dkey, database in self.reactions.items():
-                for rkey, reaction in database.items():
-                    f.write('{}\n'.format(reaction.print_reaction(rkey)))
+                for hkey, h123 in database.items():
+                    for rkey, reaction in h123.items():
+                        f.write('{}\n'.format(reaction.print_reaction()))
         # Output to stdout if run verbosely
         if self.verbose:
             with open('logs/setup.log', 'rt') as f:
@@ -195,269 +305,8 @@ class Crm(Tools):
         # reaction correlations
         self.DIAGNOSTIC()
 
-# %%%%%%%%%%%%%% INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
-    def setup_ADAS(self, x, ID, rdata, data):
-        ''' Adds an ADAS reactions up to self.nmax'''
-        from CRUMPET.reactions import Reaction
-
-        if ID == 'EXCITATION': # Electron impact excitation
-            # Excitation only possible between current state and nmax
-            rn = range(x + 1, self.nmax + 1)   
-            fit = 'ADAS' # ADAS-type fit
-            Tarr = rdata[database]['T']  # Temperature array for interpolation
-        elif ID=='RELAXATION': # Radiative relaxation
-            rn = range(1, x)   # Relaxation only possible to lower states
-            fit = 'COEFFICIENT' # Coefficient-like decay
-            Tarr = None   # Not T-dependent
-        # Loop through each of the available final states
-        for y in rn:
-            try:
-                _name = '{}_{}-{}'.format(ID, x, y)
-                #Get coefficients
-                _ratecoeff = rdata['ADAS']['{}-{}'.format(x, y)] 
-                self.reactions['ADAS'][_name] = Reaction('ADAS',
-                        _ratecoeff, fit, data, bg, species, 
-                        self.isotope, self.mass, Tarr)
-            except:
-                pass
 
 
-    def setup_APID(self, x, ID, rdata):
-        ''' Adds an APID-style ionization reaction '''
-        from CRUMPET.reactions import Reaction
-        self.reactions['APID'][self.XY2num(ID,x)] = Reaction('APID', '', x, 
-                'APID', rdata, self.bg, self.species, self.isotope, self.mass)
-
-
-    def setup_Johnson(self, i, ID, r):
-        ''' Adds a Johnson-style relaxation reaction from state n=i'''
-        from CRUMPET.reactions import Reaction
-        from numpy import pi
-
-        def g(i, f):
-            g = [
-                    1.133*(f == 1) + 1.0785*(f == 2) + (0.9935 + 0.2328/f
-                    - 0.1296/f**2)*(f > 2),
-                    -0.4059*(f == 1) - 0.2319*(f==2) - ((0.6282 - 0.5598/f
-                    + 0.5299/f**2)/f)*(f > 2),
-                    0.07014*(f == 1) + 0.02947*(f == 2) + ((0.3887 - 1.181/f
-                    + 1.470/f**2)/f**2)*(f > 2) ]
-            x=1 - (f/i)**2
-            return g[0] + g[1]/x + g[2]/x**2
-
-        h = 1.054571596e-27
-        c = 2.99792458e10
-        me = 9.10938188e-28
-        e = 4.80274e-10
-        I = (me*e**4)/(2*h**2)
-        for f in range(1, i):
-            buff = r.copy()
-            res = (2**6 * e**2 * I**2)/(3**1.5*pi*me*c**3 * h**2)
-            freq = (1/f**2 - 1/i**2)
-            Afac = (res*g(i, f))/(freq*(i**5)*(f**3))
-            for label in ['reactants','fragments']:
-                buff[label] =  [self.XY2num(a, i, f) for a in buff[label]]
-            self.reactions['JOHNSON'][self.XY2num(ID, i, f)] = Reaction(
-                    'JOHNSON', '', Afac, 'COEFFICIENT', buff, self.bg, 
-                    self.species, self.isotope, self.mass)
-
-
-    def setup_reactions(self, reactionlist, rdata):
-        ''' Adds the reactions to the CRM
-
-        Called by __init__, adds the reactions from reactionlist to
-        self.reactions using the rates in rdata
-
-        Parameters
-        ----------
-        reactionlist : list 
-            a list of lists for setting up the CRM reactions. Each 
-            element is a list of the following data
-            handle : string
-                database_reaction as specified in the input
-            reactants : list of strings
-                each element is a handle of the reactants. At least one
-                of the species must be a background species, and only
-                two reactants are currently supported
-            products : list of strings
-                each element is a handle of the products
-            K : string
-                a string of the net kinetic energy transfer for the 
-                background reactants to the products. Presently, all
-                energy is assumed to end up as ion/atom kinetic energy.
-                Supports calculations in the string, e.g. '2*3+4'
-        rdata : RateData object, optional (default: None)
-            a RateData object that contains the databases and reactions
-            defined in the input file reactions
-
-        Returns
-        -------
-        None
-        '''
-        from CRUMPET.reactions import Reaction
-        from numpy import zeros, pi
-        
-
-        ''' LOOP OVER ALL THE DEFINED ReactionS '''
-        for database, dbreactions in reactionlist.items():
-            database = database.upper() 
-            try:
-                self.reactions[database]
-            except:
-                self.reactions[database] = {}
-            for rtype, reaction in dbreactions.items():
-                # Create database if not already created
-                for ID, data in reaction.items():
-                    # Split the definitions into names and databases
-                    ndep = ('N=$' in ''.join(data['reactants'] + 
-                            data['fragments']).upper())
-                    vdep = ('V=$' in ''.join(data['reactants'] + 
-                            data['fragments']).upper())
-                    # Loop through states, if necessary. Dynamicallt set boundaries
-                    # according to electronic or vibrational transitions
-                    for x in range(ndep, 1 + vdep*self.vmax + ndep*self.nmax):
-                        # Vibrational/electronic dependence present
-                        if '$' in ID:
-                            buff = data.copy()
-                            # Substitute state into reactants and product strings 
-                            for label in ['reactants', 'fragments']:
-                                buff[label] = [self.XY2num(i, x) for i in 
-                                        buff[label]]
-                            # %%% ADAS rates detected %%%
-                            if database == 'ADAS':
-                                self.setup_ADAS(x, ID, rdata, rlist, plist, 
-                                        data['K'])
-                            # %%% APID rates detected %%%
-                            elif database == 'APID':
-                                self.setup_APID(x, ID, buff)
-                            # %%% APID rates detected %%%
-                            elif database == 'JOHNSON':
-                                self.setup_Johnson(x, ID, buff)
-                            # %%% Neither of the above: rate for transitions %%%
-                            else:
-                                # Assume ladder-like vibrational transitions (+/-1)
-                                for y in range(-1*('&' in ID), 2, 2):
-                                    # Limit transitions to [0,vmax]
-                                    if x + y in range(self.vmax + 1):
-                                        rebuff = buff.copy()
-                                        # Retain intial and final states in name
-                                        vID = self.XY2num(ID, x, x + y) 
-                                        for label in ['reactants', 'fragments']:
-                                            rebuff[label] = [self.XY2num(i, x, 
-                                                    x + y) for i in rebuff[label]]
-                                        _name = vID
-                                        _database = database
-                                        _ratecoeff = rdata[database][rtype][
-                                                    vID.split('-')[0]] 
-                                        _rtype = 'RATE'
-                                        _rlist = rebuff
-                                        self.reactions[_database][_name] = \
-                                                Reaction(_database, rtype, 
-                                                _ratecoeff, _rtype, _rlist, 
-                                                self.bg, self.species, 
-                                                self.isotope, self.mass)
-                        #%%%%% Read user-defined rates %%%%%
-                        elif database == 'USER':
-                            print('ADD USER REACTION READ ROUTINE HERE')
-                
-                        #%%%%% Read custom rates %%%%%
-                        elif database == 'CUSTOM':
-                            self.setup_custom(ID.strip(), database)
-                        #%%% EIRENE/UEDGE-DEGAS rates %%%
-                        elif database in ['HYDHEL', 'AMJUEL', 'H2VIBR', 'UE']:
-                            self.reactions[database][ID] = Reaction(database, rtype, 
-                                    rdata[database][rtype][ID.upper()], 
-                                    'RATE'*(database != 'UE') + 
-                                    'UE'*(database == 'UE'), data, self.bg, 
-                                    self.species, self.isotope, self.mass)
-                        #%%% Fell through loop %%%
-                        else:
-                            print(  'Database "{}" not recognized!\n'
-                                    'Aborting.'.format(database))
-                            return
-
-
-    def setup_custom(self, fname, database):
-        ''' Adds the custom reactions defined in the input to the CRM
-        
-        Parses any custom input rate file defined in the input file
-        and adds their Reaction objects to the CRM.
-    
-        Parameters
-        ----------
-        fname : string
-            path to the custom rate setup file relative to Crm.path
-        database : string
-            database handle for the rates in the custom rate file
-        
-        Returns
-        -------
-        None
-        '''
-        from CRUMPET.reactions import Reaction
-        from numpy import zeros, pi
-        # Parse the custom rate file into a list and retain subcards
-        data, _, subcards = self.file2list(self.path, fname)
-        subcards = subcards[1:]
-        _database = data[0].split()[1].strip() # Database is defined as card
-        try:
-            self.reactions[_database]
-        except:
-            self.reactions[_database] = {}
-        # Loop through the rates, each a separate subcard
-        for i in range(len(subcards) - 1):
-            subc = subcards[i] # Helper index
-            # Rate typy, first subcard entry
-            fit = data[subc].split()[1].upper() 
-            name = data[subc].split()[2] # Name/ID of reacrtion - second entry
-            rdata = {
-                    'reactants': data[subc + 1].split(' > ')[0],
-                    'fragments': data[subc + 1].split(' > ')[1],
-                    'K': '0',
-                    }
-            # Execute if no vib dependence, loop if vibr. dep. process
-            for j in range(1 + ('$' in name)*self.vmax):
-                buff = rdata.copy()
-                # %%% Vibrationally dependent process %%%
-                if '$' in name:
-                    # Read kinetic energy for each process
-                    for m in range(0, 100):
-                        if data[m][0].upper() == 'K': 
-                            buff['K'] = data[m].strip().split('=')[-1]
-                        elif data[m][0].upper() == 'V':
-                            break
-                    # Write data
-                    _name = self.XY2num(name, j)
-                    for label in ['reactants', 'fragments']:
-                        buff[label] = self.XY2num(buff[label], 
-                                j).strip().split(' + ') 
-                    # Coefficients for v-level
-                    _ratecoeff = [float(x) for x in 
-                            data[subc + m+  j*2].split()] 
-                # %%% Specified rate %%%
-                else:
-                    # Read the kinetic energy of the process
-                    for m in range(2, 100):
-                        if data[subc + m][0] == 'K': 
-                            buff['K'] = data[subc + m].strip().split('=')[-1]
-                        else:
-                            break
-                    # Cross-section as defined in SAWADA 95 has special form
-                    if fit == 'SIGMA': 
-                        _ratecoeff = [float(x) for x in data[subc + m].split()] 
-                    # Other processes have pre-defined form
-                    else: 
-                        _ratecoeff = float(data[subc + m])
-                    # Write data
-                    _name = name
-                    for label in ['reactants', 'fragments']:
-                        buff[label] = buff[label].strip().split(' + ') 
-                # Store reaction
-                self.reactions[_database][_name] = Reaction(_database,
-                        _ratecoeff, fit, buff, self.bg, self.species,
-                        self.isotope, self.mass)
-
-# %%%%%%%%%%%%%% ENF OF INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
 
     def populate_EI(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=None):
         ''' Function populating and returning the rate matrix and source
@@ -508,42 +357,45 @@ class Crm(Tools):
         for i in range(N):
             #%%% Walk through each row (species) %%%
             for dkey, database in self.reactions.items():
-                for rkey, r in database.items():
-                    #%%% Sort the species of each reaction into %%%
-                    #%%%  the appropriate column %%%
-                    Sgl = r.getS(Te, Ti, Tm, E)
-                    # TODO: what if three-particle reaction?
-                    # Fix for writing AMJUEL 2.2.9 for high temperatures 
-                    # and density - required for UEDGE fits but
-                    # outside the polynomial fit range
-                    rate = r.rate(Te, Ti, E=E, ne=ne)
-                    if isinf(rate):
-                        rate = 1e20
-                    for frag in range(len(r.fragments)):    
-                        ''' SOURCE '''
-                        # Do nothing if background fragment
-                     #   if r.fragments[frag] not in self.slist: 
-                     #       continue
-                        # If fragment enters row, add in appropriate column as
-                        # defined by reactant
-                        if (r.fragments[frag] in self.slist) and (
-                                self.slist.index(r.fragments[frag]) == i):
-                            # External flag triggered, store to external source
-                            common = set(r.reactants).intersection(\
-                                    set(self.slist))
-                            if len(common) == 0:
-                                ''' EXTERNAL SOURCE '''
-                                rec_sourceI[i,:] += multiplier*((r.e*ne) * \
-                                    (r.p*ni))*rate*Sgl[-2:,0] 
-                                rec_sourceE[i,:] += multiplier*Sgl[-2:,0]
-                            # No trigger of external source, store to 
-                            # appropriate location in matrix
-                            else: 
-                                ''' INTERNAL SOURCE '''
-                                j = self.slist.index(common.pop())
-                                retI[i,j,:] += max(r.e*ne + r.p*ni, 1)*rate* \
-                                        (abs(Sgl[-2:,0]) > 0)   
-                                retE[i,j,:] += Sgl[-2:,0]
+                for h123, h123data in database.items():
+                    for rkey, r in h123data.items():
+                        #%%% Sort the species of each reaction into %%%
+                        #%%%  the appropriate column %%%
+                        Sgl = r.getS(Te, Ti, Tm, E)
+                        # TODO: what if three-particle reaction?
+                        # Fix for writing AMJUEL 2.2.9 for high temperatures 
+                        # and density - required for UEDGE fits but
+                        # outside the polynomial fit range
+                        rate = r.rate(Te, Ti, E=E, ne=ne)
+                        if isinf(rate):
+                            rate = 1e20
+                        for frag in range(len(r.products)):    
+                            ''' SOURCE '''
+                            # Do nothing if background fragment
+                         #   if r.products[frag] not in self.slist: 
+                         #       continue
+                            # If fragment enters row, add in appropriate column as
+                            # defined by reactant
+                            if (r.products[frag] in self.slist) and (
+                                    self.slist.index(r.products[frag]) == i):
+                                # External flag triggered, store to external source
+                                common = set(r.educts).intersection(\
+                                        set(self.slist))
+                                if len(common) == 0:
+                                    ''' EXTERNAL SOURCE '''
+                                    rec_sourceI[i,:] += ((r.e*ne) * \
+                                        (r.p*ni))*rate*Sgl[-2:,0] 
+                                    rec_sourceE[i,:] += Sgl[-2:,0]
+                                # No trigger of external source, store to 
+                                # appropriate location in matrix
+                                else: 
+                                    ''' INTERNAL SOURCE '''
+                                    j = self.slist.index(common.pop())
+                                    # TODO: Other check than positive energy change?
+                                    # How should "spontaneous excitation" be considered?
+                                    retI[i,j,:] += max(r.e*ne + r.p*ni, 1)*rate* \
+                                            (Sgl[-2:,0] > 0)   
+                                    retE[i,j,:] += Sgl[-2:,0]*(Sgl[-2:,0] >0)
         return retE, rec_sourceE, retI, rec_sourceI
 
 
@@ -592,41 +444,42 @@ class Crm(Tools):
         for i in range(N):
             #%%% Walk through each row (species) %%%
             for dkey, database in self.reactions.items():
-                for rkey, r in database.items():
-                    #%%% Sort the species of each reaction into %%%
-                    #%%%  the appropriate column %%%
-                    Sgl = r.getS(Te, Ti, Tm, E)
-                    # TODO: what if three-particle reaction?
-                    rate = r.rate(Te, Ti, E=E, ne=ne)
-                    # Fix for writing AMJUEL 2.2.9 for high temperatures 
-                    # and density - required for UEDGE fits but
-                    # outside the polynomial fit range
-                    if isinf(rate):
-                        rate = 1e20
-                    # Loop through the reaction fragments
-                    for frag in range(len(r.fragments)):    
-                        ''' SOURCE '''
-                        # Do nothing if background fragment
-                     #   if r.fragments[frag] not in self.slist: 
-                     #       continue
-                        # If fragment enters row, add in appropriate column as
-                        # defined by reactant
-                        if (r.fragments[frag] in self.slist) and (
-                                self.slist.index(r.fragments[frag]) == i):
-                            # External flag triggered, store to external source
-                            common = set(r.reactants).intersection(\
-                                    set(self.slist))
-                            if len(common) == 0:
-                                ''' EXTERNAL SOURCE '''
-                                rec_source[i,:] += multiplier*( \
-                                    (r.e*ne) * (r.p*ni))*rate*Sgl[:,0] + Sgl[:,1]
-                            # No trigger of external source, store to 
-                            # appropriate location in matrix
-                            else: 
-                                ''' INTERNAL SOURCE '''
-                                ret[i,self.slist.index(common.pop()),:] += \
-                                    max((r.e*ne + r.p*ni), 1)*rate*Sgl[:,0] \
-                                    + Sgl[:,1]
+                for h123, h123data in database.items():
+                    for rkey, r in h123data.items():
+                        #%%% Sort the species of each reaction into %%%
+                        #%%%  the appropriate column %%%
+                        Sgl = r.getS(Te, Ti, Tm, E)
+                        # TODO: what if three-particle reaction?
+                        rate = r.rate(Te, Ti, E=E, ne=ne)
+                        # Fix for writing AMJUEL 2.2.9 for high temperatures 
+                        # and density - required for UEDGE fits but
+                        # outside the polynomial fit range
+                        if isinf(rate):
+                            rate = 1e20
+                        # Loop through the reaction products
+                        for frag in range(len(r.products)):    
+                            ''' SOURCE '''
+                            # Do nothing if background fragment
+                         #   if r.products[frag] not in self.slist: 
+                         #       continue
+                            # If fragment enters row, add in appropriate column as
+                            # defined by reactant
+                            if (r.products[frag] in self.slist) and (
+                                    self.slist.index(r.products[frag]) == i):
+                                # External flag triggered, store to external source
+                                common = set(r.educts).intersection(\
+                                        set(self.slist))
+                                if len(common) == 0:
+                                    ''' EXTERNAL SOURCE '''
+                                    rec_source[i,:] += multiplier*( \
+                                        (r.e*ne) * (r.p*ni))*rate*Sgl[:,0] + Sgl[:,1]
+                                # No trigger of external source, store to 
+                                # appropriate location in matrix
+                                else: 
+                                    ''' INTERNAL SOURCE '''
+                                    ret[i,self.slist.index(common.pop()),:] += \
+                                        max((r.e*ne + r.p*ni), 1)*rate*Sgl[:,0] \
+                                        + Sgl[:,1]
         return ret, rec_source
 
 
@@ -670,46 +523,46 @@ class Crm(Tools):
         for i in range(N):
             #%%% Walk through each row (species) %%%
             for dkey, database in self.reactions.items():
-                for rkey, r in database.items():
-                    #%%% Sort the species of each reaction into %%%
-                    #%%%  the appropriate column %%%
-                    # TODO: what if three-particle reaction?
-                    rate = r.rate(Te, Ti, E=E, ne=ne)
-                    # Fix for writing AMJUEL 2.2.9 for high temperatures 
-                    # and density - required for UEDGE fits but
-                    # outside the polynomial fit range
-                    if isinf(rate):
-                        rate = 1e20
-                    # Specify density for external source
-                    bgm = ((r.e*ne) * (r.p*ni))*rate
-                    # Assure that auto-processes are considered
-                    bg = max(r.e*ne + r.p*ni, 1)*rate
-                    # Loop through each reaction defined in the CRM
-                    if self.slist[i] in r.reactants:
-                        ret[i,i]-=r.r_mult[r.reactants.index(self.slist[i])]*bg                         
-                    # Loop through the reaction fragments
-                    for frag in range(len(r.fragments)):    
-                        ''' SOURCE '''
-                        # Do nothing if background fragment
-                     #   if r.fragments[frag] not in self.slist: 
-                     #       continue
-                        # If fragment enters row, add in appropriate column as
-                        # defined by reactant
-                        if (r.fragments[frag] in self.slist) and (
-                                self.slist.index(r.fragments[frag]) == i):
-                            multiplier = r.f_mult[frag]
-                            # External flag triggered, store to external source
-                            common = set(r.reactants).intersection(\
-                                    set(self.slist))
-                            if len(common) == 0:
-                                ''' EXTERNAL SOURCE '''
-                                rec_source[i] += multiplier*bgm 
-                            # No trigger of external source, store to 
-                            # appropriate location in matrix
-                            else: 
-                                ''' INTERNAL SOURCE '''
-                                ret[i,self.slist.index(common.pop())] += \
-                                    multiplier*bg 
+                for h123, h123data in database.items():
+                    for rkey, r in h123data.items():
+                        #%%% Sort the species of each reaction into %%%
+                        #%%%  the appropriate column %%%
+                        # TODO: what if three-particle reaction?
+                        rate = r.rate(Te, Ti, E=E, ne=ne)
+                        # Fix for writing AMJUEL 2.2.9 for high temperatures 
+                        # and density - required for UEDGE fits but
+                        # outside the polynomial fit range
+                        if isinf(rate):
+                            rate = 1e20
+                        # Specify density for external source
+                        bgm = ((r.e*ne) * (r.p*ni))*rate
+                        # Assure that auto-processes are considered
+                        bg = max(r.e*ne + r.p*ni, 1)*rate
+                        # Loop through each reaction defined in the CRM
+                        if self.slist[i] in r.educts:
+                            ret[i,i]-=r.e_mult[r.educts.index(self.slist[i])]*bg                         
+                        # Loop through the reaction products
+                        for frag in range(len(r.products)):    
+                            ''' SOURCE '''
+                            # Do nothing if background fragment
+                         #   if r.products[frag] not in self.slist: 
+                         #       continue
+                            # If fragment enters row, add in appropriate column as
+                            # defined by reactant
+                            if (r.products[frag] in self.slist) and (
+                                    self.slist.index(r.products[frag]) == i):
+                                # External flag triggered, store to external source
+                                common = set(r.educts).intersection(\
+                                        set(self.slist))
+                                if len(common) == 0:
+                                    ''' EXTERNAL SOURCE '''
+                                    rec_source[i] += r.p_mult[frag]*bgm 
+                                # No trigger of external source, store to 
+                                # appropriate location in matrix
+                                else: 
+                                    ''' INTERNAL SOURCE '''
+                                    ret[i,self.slist.index(common.pop())] += \
+                                        r.p_mult[frag]*bg 
 
         return ret, rec_source
 
@@ -753,42 +606,43 @@ class Crm(Tools):
         for i in range(N):
             #%%% Walk through each row (species) %%%
             for dkey, database in self.reactions.items():
-                for rkey, r in database.items():
-                    #%%% Sort the species of each reaction into %%%
-                    #%%%  the appropriate column %%%
-                    # TODO: what if three-particle reaction?
-                    rate = r.rate(Te, Ti, E=E, ne=ne)
-                    # Fix for writing AMJUEL 2.2.9 for high temperatures 
-                    # and density - required for UEDGE fits but
-                    # outside the polynomial fit range
-                    if isinf(rate):
-                        rate = 1e20
-                    # Loop through each reaction defined in the CRM
-                    if self.slist[i] in r.reactants:
-                        ret[i,i]-=r.r_mult[r.reactants.index(self.slist[i])]*\
-                            rate 
-                    # Loop through the reaction fragments
-                    for frag in range(len(r.fragments)):    
-                        ''' SOURCE '''
-                        # Do nothing if background fragment
-                     #   if r.fragments[frag] not in self.slist: 
-                     #       continue
-                        # If fragment enters row, add in appropriate column as
-                        # defined by reactant
-                        if (r.fragments[frag] in self.slist) and (
-                                self.slist.index(r.fragments[frag]) == i):
-                            # External flag triggered, store to external source
-                            common = set(r.reactants).intersection(\
-                                    set(self.slist))
-                            if len(common) == 0:
-                                ''' EXTERNAL SOURCE '''
-                                rec_source[i] += r.f_mult[frag]*rate
-                            # No trigger of external source, store to 
-                            # appropriate location in matrix
-                            else: 
-                                ''' INTERNAL SOURCE '''
-                                ret[i,self.slist.index(common.pop())] += \
-                                    r.f_mult[frag]*rate
+                for h123, h123data in database.items():
+                    for rkey, r in h123data.items():
+                        #%%% Sort the species of each reaction into %%%
+                        #%%%  the appropriate column %%%
+                        # TODO: what if three-particle reaction?
+                        rate = r.rate(Te, Ti, E=E, ne=ne)
+                        # Fix for writing AMJUEL 2.2.9 for high temperatures 
+                        # and density - required for UEDGE fits but
+                        # outside the polynomial fit range
+                        if isinf(rate):
+                            rate = 1e20
+                        # Loop through each reaction defined in the CRM
+                        if self.slist[i] in r.educts:
+                            ret[i,i]-=r.e_mult[r.educts.index(self.slist[i])]*\
+                                rate 
+                        # Loop through the reaction products
+                        for frag in range(len(r.products)):    
+                            ''' SOURCE '''
+                            # Do nothing if background fragment
+                         #   if r.products[frag] not in self.slist: 
+                         #       continue
+                            # If fragment enters row, add in appropriate column as
+                            # defined by reactant
+                            if (r.products[frag] in self.slist) and (
+                                    self.slist.index(r.products[frag]) == i):
+                                # External flag triggered, store to external source
+                                common = set(r.educts).intersection(\
+                                        set(self.slist))
+                                if len(common) == 0:
+                                    ''' EXTERNAL SOURCE '''
+                                    rec_source[i] += r.p_mult[frag]*rate
+                                # No trigger of external source, store to 
+                                # appropriate location in matrix
+                                else: 
+                                    ''' INTERNAL SOURCE '''
+                                    ret[i,self.slist.index(common.pop())] += \
+                                        r.p_mult[frag]*rate
         return ret, rec_source
 
 
@@ -824,41 +678,42 @@ class Crm(Tools):
         for i in range(N):
             #%%% Walk through each row (species) %%%
             for dkey, database in self.reactions.items():
-                for rkey, r in database.items():
-                    #%%% Sort the species of each reaction into %%%
-                    #%%%  the appropriate column %%%
-                    # TODO: what if three-particle reaction?
-                    bg = r.e*ne + r.p*ni # Specify density for reactions
-                    # Loop through each reaction defined in the CRM
-                    if self.slist[i] in r.reactants:
-                        ret[i][i].append('-{}*{}_{}{}'.format(
-                                r.r_mult[r.reactants.index(self.slist[i])], 
-                                dkey, rkey, bg))
-                    # Loop through the reaction fragments
-                    for frag in range(len(r.fragments)):    
-                        ''' SOURCE '''
-                        # Do nothing if background fragment
-                     #   if r.fragments[frag] not in self.slist: 
-                     #       continue
-                        # If fragment enters row, add in appropriate column as
-                        # defined by reactant
-                        if (r.fragments[frag] in self.slist) and (
-                                self.slist.index(r.fragments[frag]) == i):
-                            # External flag triggered, store to external source
-                            common = set(r.reactants).intersection(\
-                                    set(self.slist))
-                            if len(common) == 0:
-                                ''' EXTERNAL SOURCE '''
-                                ''' Diagnostic matrix '''
-                                rec_source[i].append('+{}*{}_{}{}'.format(
-                                        r.f_mult[frag], dkey, rkey, bg))
-                            # No trigger of external source, store to 
-                            # appropriate location in matrix
-                            else: 
-                                ''' INTERNAL SOURCE '''
-                                ''' Diagnostic matrix '''
-                                ret[i][i].append('+{}*{}_{}{}'.format(
-                                        r.f_mult[frag], dkey, rkey, bg))
+                for h123, h123data in database.items():
+                    for rkey, r in h123data.items():
+                        #%%% Sort the species of each reaction into %%%
+                        #%%%  the appropriate column %%%
+                        # TODO: what if three-particle reaction?
+                        bg = r.e*ne + r.p*ni # Specify density for reactions
+                        # Loop through each reaction defined in the CRM
+                        if self.slist[i] in r.educts:
+                            ret[i][i].append('-{}*{}_{}{}'.format(
+                                    r.e_mult[r.educts.index(self.slist[i])], 
+                                    dkey, rkey, bg))
+                        # Loop through the reaction products
+                        for frag in range(len(r.products)):    
+                            ''' SOURCE '''
+                            # Do nothing if background fragment
+                         #   if r.products[frag] not in self.slist: 
+                         #       continue
+                            # If fragment enters row, add in appropriate column as
+                            # defined by reactant
+                            if (r.products[frag] in self.slist) and (
+                                    self.slist.index(r.products[frag]) == i):
+                                # External flag triggered, store to external source
+                                common = set(r.educts).intersection(\
+                                        set(self.slist))
+                                if len(common) == 0:
+                                    ''' EXTERNAL SOURCE '''
+                                    ''' Diagnostic matrix '''
+                                    rec_source[i].append('+{}*{}_{}{}'.format(
+                                            r.p_mult[frag], dkey, rkey, bg))
+                                # No trigger of external source, store to 
+                                # appropriate location in matrix
+                                else: 
+                                    ''' INTERNAL SOURCE '''
+                                    ''' Diagnostic matrix '''
+                                    ret[i][i].append('+{}*{}_{}{}'.format(
+                                            r.p_mult[frag], dkey, rkey, bg))
         return ret, rec_source
 
         
@@ -1156,7 +1011,7 @@ class Crm(Tools):
         return ret
 
 
-    def I(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, write=False):
+    def EI(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, write=False):
         ''' Returns the photon intensity in s**-1
 
         Parameters
@@ -1195,62 +1050,16 @@ class Crm(Tools):
             Ti=Te # Check for Ti, set if necessary
         if ni is None: 
             ni=ne # Check for ni, set if necessary
-        _, _, mat, ext = self.populate_EI(Te, ne, Ti, ni, E, Tm=Tm)    
+        matE, extE, matI, extI = self.populate_EI(Te, ne, Ti, ni, E, Tm=Tm)    
         if write:
-            title=['Ia', 'Im']
+            title=['a', 'm']
             for i in range(5):
-                self.write_matrix(mat[:,:,i], ext[:,i], title[i], Te, ne, Ti,
+                self.write_matrix(matI[:,:,i], extI[:,i], 'I'+title[i], Te, ne, Ti,
                         ni, E, form='{:1.2E}')
-        return  [[mat[:,:,0], ext[:,0]], [mat[:,:,1], ext[:,1]]]
-
-
-    def E(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, write=False):
-        ''' Returns the photon power in eV s**-1
-
-        Parameters
-        ----------
-        Te : float
-            electron temperature in eV
-        ne : float
-            electron density in cm**3
-        Ti : float, optional (default: None)
-            ion temperature in eV. Defaults to Ti=Te
-        ni : float, optional (default: None)
-            ion density in cm**-3. Defaults to ni=ne
-        E : float, optional (default: 0.1)
-            molecular energy in eV for rates
-        sparse : boolean, optional (default: False)
-            Switch to use sparse arrays (True) or not (False)
-        write : boolean, optional (default: True)
-            Switch for writing the R-matrix to the logs
-            
-        Returns
-        -------
-        # TODO: remove external sources? No menaing
-        [ [mata, exta], [matm, extm]]
-        mata : ndarray
-            Power of atomic lines between the row- and column
-            species
-        exta : ndarray
-            Power of atomic lines from external source
-        matm : ndarray
-            Power of molecular lines between the row- and column
-            species
-        extm : ndarray
-            Power of molecular lines from external source
-        '''
-        if Ti is None: 
-            Ti=Te # Check for Ti, set if necessary
-        if ni is None: 
-            ni=ne # Check for ni, set if necessary
-        mat, ext, _, _ = self.populate_EI( Te, ne, Ti, ni, E, Tm=Tm)    
-        if write:
-            title=['Ea', 'Em']
-            for i in range(5):
-                self.write_matrix(mat[:,:,i], ext[:,i], title[i], Te, ne, Ti,
+                self.write_matrix(matE[:,:,i], extE[:,i], 'E'+title[i], Te, ne, Ti,
                         ni, E, form='{:1.2E}')
-        return  [[mat[:,:,0], ext[:,0]], [mat[:,:,1], ext[:,1]]]
-
+        return  [[matE[:,:,0], extE[:,0]], [matE[:,:,1], extE[:,1]]], \
+                [[matI[:,:,0], extI[:,0]], [matI[:,:,1], extI[:,1]]]
  
     def solve_crm(self, t, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, Srec=True, gl=True,
             n=None, Qres=True, densonly=False,  **kwargs):
@@ -1835,8 +1644,8 @@ class Crm(Tools):
 
         
     def intensity(
-            self, Te, ne, vol, E=0.1, Ti=None, ni=None, Srec=True, n0=None, 
-            ext=None, ioniz=0, units='l',write=False, norm=False):
+            self, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, n0=None, 
+            units='l', norm=False, write=False, **kwargs):
         ''' Returns energy and gammas and the respective counts at SS
 
         Parameters
@@ -1899,10 +1708,10 @@ class Crm(Tools):
         from matplotlib.pyplot import figure
 
 
-        n_ss = self.steady_state(Te, ne, vol, E, Ti, ni, Srec, False, False, 
-                n0, ext, ioniz)
-        x = self.E(Te, ne, Ti, Te, E, write=False)
-        y = self.I(Te, ne, Ti, Te, E, write=False)
+        n_ss = self.steady_state(Te, ne, E=E, Ti=Ti, ni=ni, Srec=Srec, 
+                        gl=False, plot=False, n0=n0, dt=True, **kwargs)
+        x,y = self.EI(Te, ne, Ti, Te, E, write=False)
+        print(y)
         if write:
             self.write_matrix(y[0][0], n, 'Ia', Te, ne, Ti, ni, E, 
                     form='{:1.2E}')
@@ -1971,12 +1780,13 @@ class Crm(Tools):
             ni = ne
         ret = 0
         for dkey, database in self.reactions.items():
-            mult = 1
-            for rkey, r in database.items():
-                if species in r.reactants:
-                    if r.type == 'COEFFICIENT':
-                        mult = 1/ne
-                    ret += r.rate(Te, Ti, E=E, ne=ne)*mult
+            for h123, h123db in database.items():
+                for rkey, r in h123db.items():
+                    if species in r.educts:
+                        if r.type == 'RELAXATION':
+                            ret += r.rate(Te, Ti, E=E, ne=ne)/ne
+                        else:
+                            ret += r.rate(Te, Ti, E=E, ne=ne)
         return ret
 
 
@@ -1992,23 +1802,25 @@ class Crm(Tools):
         return ret
 
 
-    def get_reaction(self, database, name):
+    def get_reaction(self, database, h123, name):
         ''' Returns the Reaction object for the requested reaction
         
         Parameters
         ----------
         database : string
             the database where to look for the reaction
+        h123 : string
+            the reaction type
         name : string
             the reaction name/handle to look for
         '''
          
-        return self.reactions[database][name]
+        return self.reactions[database][h123][name]
 
 
     def get_rate(self, database, name, T, n, E=0.1):
         ''' **INCOMPLETE** Returns the rate of the requested reaction '''
-        return self.get_reaction(database,name).rate(T, T, E, n)
+        return self.get_reaction(database,name).rate(T, T, E=E, n=n)
 
 
     def write_YACORA(self, modelname, path='.', dirname='YACORArun', 
@@ -2080,71 +1892,72 @@ class Crm(Tools):
 
             mf.write('\n\nREACTIONS')
             for database, reactions in self.reactions.items():
-                for handle, rate in reactions.items():
-                    mf.write('\n\n')
-                    # Write reaction block to file
-                    mf.write('    {:<16}{:<16}{:<10}'.format('EDUCTS',rate.reactants[1],
-                            str(int(rate.r_mult[1]))))
-                    if rate.reactants[0] == 'e':
-                        filefac = 'NE'
-                    else:
-                        filefac = 'NI1'
-                    mf.write('\n')
-
-                    mf.write('    {:<16}'.format('PRODUCTS'))
-                    for fi in range(len(rate.fragments)):
-                        species = rate.fragments[fi].replace('p', 'H+')
-                        if rate.fragments[fi] == rate.reactants[0]:
-                            if rate.fragments[fi] == 'e':
-                                pass
-                            elif rate.f_mult[fi] > rate.r_mult[0]:
-                                mf.write('{:<16}{:<10}'.format(species, str(int(rate.f_mult[fi] - rate.r_mult[0]))))
-                            else: 
-                                pass
+                for h123, h123db in reactions.items():
+                    for handle, rate in h123db.items():
+                        mf.write('\n\n')
+                        # Write reaction block to file
+                        mf.write('    {:<16}{:<16}{:<10}'.format('EDUCTS',rate.educts[1],
+                                str(int(rate.e_mult[1]))))
+                        if rate.educts[0] == 'e':
+                            filefac = 'NE'
                         else:
-                            mf.write('{:<16}{:<10}'.format(species, str(int(rate.f_mult[fi]))))
-                    mf.write('\n')                
+                            filefac = 'NI1'
+                        mf.write('\n')
 
-                    if rate.fittype == 'H.4':
-                        ratepath =  '../../ratecoefficients/{:.2E}/{}-{}.txt'.format(n,database, handle)
-                        commentstr = '{} rate coefficient for reaction {} at ne={:.2E}'.format(database, handle, n)
-                    else:
-                        ratepath = '../../ratecoefficients/{}-{}.txt'.format(database, handle)
-                        commentstr = '{} rate coefficient for reaction {}'.format(database, handle)
-                    mf.write('    {:<16}{:<16}{:<56}    {}\n'.format('PROBABILITY','FILEFACTORS', ratepath, filefac))
-                    mf.write('    {:<16}{}'.format('COMMENT', commentstr))
+                        mf.write('    {:<16}'.format('PRODUCTS'))
+                        for fi in range(len(rate.products)):
+                            species = rate.products[fi].replace('p', 'H+')
+                            if rate.products[fi] == rate.educts[0]:
+                                if rate.products[fi] == 'e':
+                                    pass
+                                elif rate.p_mult[fi] > rate.e_mult[0]:
+                                    mf.write('{:<16}{:<10}'.format(species, str(int(rate.p_mult[fi] - rate.e_mult[0]))))
+                                else: 
+                                    pass
+                            else:
+                                mf.write('{:<16}{:<10}'.format(species, str(int(rate.p_mult[fi]))))
+                        mf.write('\n')                
 
-                    if write_reac is True:
-                        dbpath='{}/{}/ratecoefficients'.format(path, dirname)
-                        if rate.fittype == 'H.4': # Density-dependent rate
-                            ndbpath = '{}/{:.2E}'.format(dbpath,n)
-                            Path(ndbpath).mkdir(parents=True, exist_ok=True)
-                            f = open('{}/{}-{}.txt'.format(ndbpath, database, 
-                                handle),'w')
-                            f.write('RATE_COEFFICIENT\n')
-                            f.write('VALUES\n')
-                            f.write((8*' ').join(['Te','X\n']))
-                            for T in Trange:
-                                f.write('{:.5E}  {:.5E}\n'.format(T, 
-                                    1e-6*rate.rate(T, T, ne=n*1e-6)))
-                        elif rate.fittype == 'H.3': # Energy-dependent rate
-                            f = open('{}/{}-{}.txt'.format(dbpath, database, 
-                                handle),'w')
-                            f.write('RATE_COEFFICIENT\n')
-                            f.write('VALUES\n')
-                            f.write((8*' ').join(['Te','X\n']))
-                            for T in Trange:
-                                f.write('{:.5E}  {:.5E}\n'.format(T, 
-                                    rate.rate(T, T, E=0.1)))
+                        if rate.fittype == 'H.4':
+                            ratepath =  '../../ratecoefficients/{:.2E}/{}-{}.txt'.format(n,database, handle)
+                            commentstr = '{} rate coefficient for reaction {} at ne={:.2E}'.format(database, handle, n)
                         else:
-                            f = open('{}/{}-{}.txt'.format(dbpath, database, 
-                                handle),'w')
-                            f.write('RATE_COEFFICIENT\n')
-                            f.write('VALUES\n')
-                            f.write((8*' ').join(['Te','X\n']))
-                            for T in Trange:
-                                f.write('{:.5E}  {:.5E}\n'.format(T, 
-                                    rate.rate(T, T, 0.1)))
+                            ratepath = '../../ratecoefficients/{}-{}.txt'.format(database, handle)
+                            commentstr = '{} rate coefficient for reaction {}'.format(database, handle)
+                        mf.write('    {:<16}{:<16}{:<56}    {}\n'.format('PROBABILITY','FILEFACTORS', ratepath, filefac))
+                        mf.write('    {:<16}{}'.format('COMMENT', commentstr))
+
+                        if write_reac is True:
+                            dbpath='{}/{}/ratecoefficients'.format(path, dirname)
+                            if rate.fittype == 'H.4': # Density-dependent rate
+                                ndbpath = '{}/{:.2E}'.format(dbpath,n)
+                                Path(ndbpath).mkdir(parents=True, exist_ok=True)
+                                f = open('{}/{}-{}.txt'.format(ndbpath, database, 
+                                    handle),'w')
+                                f.write('RATE_COEFFICIENT\n')
+                                f.write('VALUES\n')
+                                f.write((8*' ').join(['Te','X\n']))
+                                for T in Trange:
+                                    f.write('{:.5E}  {:.5E}\n'.format(T, 
+                                        1e-6*rate.rate(T, T, ne=n*1e-6)))
+                            elif rate.fittype == 'H.3': # Energy-dependent rate
+                                f = open('{}/{}-{}.txt'.format(dbpath, database, 
+                                    handle),'w')
+                                f.write('RATE_COEFFICIENT\n')
+                                f.write('VALUES\n')
+                                f.write((8*' ').join(['Te','X\n']))
+                                for T in Trange:
+                                    f.write('{:.5E}  {:.5E}\n'.format(T, 
+                                        rate.rate(T, T, E=0.1)))
+                            else:
+                                f = open('{}/{}-{}.txt'.format(dbpath, database, 
+                                    handle),'w')
+                                f.write('RATE_COEFFICIENT\n')
+                                f.write('VALUES\n')
+                                f.write((8*' ').join(['Te','X\n']))
+                                for T in Trange:
+                                    f.write('{:.5E}  {:.5E}\n'.format(T, 
+                                        rate.rate(T, T, 0.1)))
 
         # Runfile
         e2k = 1.160451812e4
@@ -2314,16 +2127,16 @@ class Crm(Tools):
                 j=None # Set flag to identify external sources
 
                 # Loop through each reaction defined in the CRM
-                for rea in range(len(r.reactants)):
-                    # Find the column into which the fragments goes: if background mark external
+                for rea in range(len(r.educts)):
+                    # Find the column into which the products goes: if background mark external
                     try:
-                        j=self.slist.index(r.reactants[rea])  # Get the product species index of the correct column
+                        j=self.slist.index(r.educts[rea])  # Get the product species index of the correct column
                     except:
                         continue
             
-                    multiplier=r.r_mult[rea] # Get the reaction multiplier for the density
+                    multiplier=r.e_mult[rea] # Get the reaction multiplier for the density
 
-                    if self.slist[i]==r.reactants[rea]:   # If the species (row index) is a reactant, r is a depletion process 
+                    if self.slist[i]==r.educts[rea]:   # If the species (row index) is a reactant, r is a depletion process 
                         ''' DEPLETION '''
 
                         if mode=='diagnostic':
@@ -2332,22 +2145,22 @@ class Crm(Tools):
 
                         elif mode=='R':
                             ''' Rate coefficient matrix '''
-                            ret[i,i]-=multiplier*r.rate(Te,Ti,E,ne) # Calculate the Rate coefficient and store appropriately
+                            ret[i,i]-=multiplier*r.rate(Te,Ti,E=E,ne=ne) # Calculate the Rate coefficient and store appropriately
 
                         elif mode=='M':
                             ''' Rate matrix '''
-                            ret[i,i]-=multiplier*r.rate(Te,Ti,E,ne)*bg # Calculate the rate and store appropriately
+                            ret[i,i]-=multiplier*r.rate(Te,Ti,E=E,ne=ne)*bg # Calculate the rate and store appropriately
 
-                for frag in range(len(r.fragments)):    # Loop through the reaction fragments
+                for frag in range(len(r.products)):    # Loop through the reaction products
                     ''' SOURCE '''
-                    multiplier=r.f_mult[frag]   # Fragment multiplier
+                    multiplier=r.p_mult[frag]   # Fragment multiplier
 
                     # Do nothing if background fragment
-                    if r.fragments[frag] not in self.slist: 
+                    if r.products[frag] not in self.slist: 
                         continue
                     
                     # If fragment enters row, add in appropriate column as defined by reactant
-                    elif self.slist.index(r.fragments[frag])==i:
+                    elif self.slist.index(r.products[frag])==i:
                             if j is None: # External flag triggered, store to external source
                                 ''' EXTERNAL SOURCE '''
 
@@ -2357,19 +2170,19 @@ class Crm(Tools):
 
                                 elif mode=='R':
                                     ''' Rate coefficient matrix '''
-                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E,ne)
+                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E=E,ne=ne)
 
                                 elif mode=='M':
                                     ''' Rate matrix '''
-                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E,ne)*bgm
+                                    ext_source[i]+=multiplier*r.rate(Te,Ti,E=E,ne=ne)*bgm
 
                                 elif mode=='Sgl':
                                     ''' Energy source matrix in Greenland form '''
-                                    ext_source[i,:]+=r.rate(Te,Ti,E,ne)*bgm*Sgl[:,0]+Sgl[:,1]
+                                    ext_source[i,:]+=r.rate(Te,Ti,E=E,ne=ne)*bgm*Sgl[:,0]+Sgl[:,1]
             
                                 elif mode=='I':
                                     ''' Intensity matrix '''
-                                    ext_source[i,:]+=r.rate(Te,Ti,E,ne)*bgm*Sgl[:,0]
+                                    ext_source[i,:]+=r.rate(Te,Ti,E=E,ne=ne)*bgm*Sgl[:,0]
 
                                 elif mode=='E':
                                     ''' Intensity matrix '''
@@ -2385,19 +2198,19 @@ class Crm(Tools):
                             
                                 elif mode=='R':
                                     ''' Rate coefficient matrix '''
-                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E,ne)
+                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E=E,ne=ne)
 
                                 elif mode=='M':
                                     ''' Rate matrix '''
-                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E,ne)*bg
+                                    ret[i,j]+=multiplier*r.rate(Te,Ti,E=E,ne=ne)*bg
 
                                 elif mode=='Sgl': 
                                     ''' Energy source matrix in Greenland form '''
-                                    ret[i,j,:]+=r.rate(Te,Ti,E,ne)*bg*Sgl[:,0]+Sgl[:,1]
+                                    ret[i,j,:]+=r.rate(Te,Ti,E=E,ne=ne)*bg*Sgl[:,0]+Sgl[:,1]
 
                                 elif mode=='I':
                                     ''' Correlation matrix '''    
-                                    ret[i,j,:]+=r.rate(Te,Ti,E,ne)*bg*(abs(Sgl[:,0])>0)
+                                    ret[i,j,:]+=r.rate(Te,Ti,E=E,ne=ne)*bg*(abs(Sgl[:,0])>0)
 
                                 elif mode=='E':
                                     ''' Correlation matrix '''    
@@ -2656,40 +2469,40 @@ class Crm(Tools):
                         bg = Sgl[-2:,0]  
                     j = None # Set flag to identify external sources
                     # Loop through each reaction defined in the CRM
-                    for rea in range(len(r.reactants)):
-                        # Find the column into which the fragments goes: 
+                    for rea in range(len(r.educts)):
+                        # Find the column into which the products goes: 
                         # if background mark external
                         try:
                             # Get the product species index of the 
                             # correct column
-                            j = self.slist.index(r.reactants[rea])  
+                            j = self.slist.index(r.educts[rea])  
                         except:
                             continue
                         # If the species (row index) is a reactant, r is a 
                         # depletion process 
-                        if self.slist[i] == r.reactants[rea]:   
+                        if self.slist[i] == r.educts[rea]:   
                             ''' DEPLETION '''
                             if mode == 'diagnostic':
                                 ''' Diagnostic matrix '''
                                 # Print the rate to the correct element
                                 ret[i][i].append('-{}*{}_{}{}'.format(
-                                        r.r_mult[rea], dkey, rkey, bg))
+                                        r.e_mult[rea], dkey, rkey, bg))
                             elif mode in ['R','M']:
                                 ''' Rate coefficient matrix '''
                                 # Calculate the Rate coefficient and store 
                                 # appropriately
-                                ret[i,i]-=r.r_mult[rea]*bg 
-                    # Loop through the reaction fragments
-                    for frag in range(len(r.fragments)):    
+                                ret[i,i]-=r.e_mult[rea]*bg 
+                    # Loop through the reaction products
+                    for frag in range(len(r.products)):    
                         ''' SOURCE '''
                         # Do nothing if background fragment
-                     #   if r.fragments[frag] not in self.slist: 
+                     #   if r.products[frag] not in self.slist: 
                      #       continue
                         # If fragment enters row, add in appropriate column as
                         # defined by reactant
-                        if (r.fragments[frag] in self.slist) and (
-                                self.slist.index(r.fragments[frag]) == i):
-                            multiplier = r.f_mult[frag]**(mode not in 
+                        if (r.products[frag] in self.slist) and (
+                                self.slist.index(r.products[frag]) == i):
+                            multiplier = r.p_mult[frag]**(mode not in 
                                     ['Sgl', 'I', 'E'])   # Fragment multiplier
                             # External flag triggered, store to external source
                             if j is None: 

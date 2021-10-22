@@ -44,7 +44,7 @@ class Reaction:
         'UE' : UEDGE-type interpolation
     reactants : list of strings
         a list of the reactant species handles
-    fragments : list of strings
+    products : list of strings
         a list of the fragment species handles
     Vp : float
         the total potential of the products
@@ -103,9 +103,9 @@ class Reaction:
         not
     p : boolean 
         marker whether the reaction is and proton-impact reaction or not
-    f_mult : int
-        list of fragment mutipliers, same length as fragments
-    r_mult : int
+    p_mult : int
+        list of fragment mutipliers, same length as products
+    e_mult : int
         list of product mutipliers, same length as products
     
     Methods
@@ -113,8 +113,8 @@ class Reaction:
     '''
 
 
-    def __init__(self, database, rtype, coeffs, typ, data, bg, species,
-            isotope='H', mass=1, Tarr=0):
+    def __init__(self, database, rtype, name, data, coeffs=None, bg=None,
+                    species=None, isotope='H', mass=1, Tarr=0):
         ''' 
         Parameters 
         ----------
@@ -142,7 +142,7 @@ class Reaction:
             following keys:
             'reactants' : list of strings
                 reactant handles
-            'fragments' : list of strings
+            'products' : list of strings
                 fragment handles
             'K' : string
                 string of kinetic energy information
@@ -161,16 +161,79 @@ class Reaction:
         from scipy.interpolate import interp2d, interp1d
         from numpy import array
 
-        self.parseS(data, bg, species, isotope)
-        self.database = database
-        self.isotope = isotope
+        self.database = database.upper()
+        self.isotope = isotope.upper()
+        self.name = name
+        self.type = rtype.upper()
         self.mass = mass
-#        self.coeffs = coeffs
-        self.coeffs = array(coeffs)
-        self.type = typ
-        self.fittype = rtype
+        self.K = '0'
+
+        reaction = data.pop(0)
+        self.educts = [x.strip() for x in \
+                            reaction.split(' > ')[0].split(' + ')]
+        self.products = [x.strip() for x in \
+                            reaction.split(' > ')[1].split(' + ')]
+        self.e_mult, self.p_mult = [],[]
+
+        for i in range(len(self.educts)):
+            if '*' in self.educts[i]:
+                m, s = self.educts[i].split('*')
+                self.educts[i] = s.strip()
+                self.e_mult.append(float(m))
+            else:
+                self.e_mult.append(1)
+
+        for i in range(len(self.products)):
+            if '*' in self.products[i]:
+                m, s = self.products[i].split('*')
+                self.products[i] = s.strip()
+                self.p_mult.append(float(m))
+            else:
+                self.p_mult.append(1)
+
+        self.e_mult = array(self.e_mult)
+        self.p_mult = array(self.p_mult)
+       # print(database, rtype, name, data, coeffs)
+        # Make indices array if the reaction is a direct EIRENE rate taken 
+        # from a database
+        # Read user input rates
+        self.coeffs = coeffs
+        if self.database == 'USER':
+            self.coeffs = []
+            if self.type == 'H.2':
+                self.coeffs = list(map(int, data.pop(0).split()))
+            elif self.type in ['H.3', 'H.4']:
+                for i in range(9):
+                    self.coeffs.append(list(map(int, data.pop(0).split())))
+                self.coeffs = array(self.coeffs)
+            else:
+                self.coeffs = float(data.pop(0))
+                    
+        # If user-defined, get it from data
+#        if database.upper() == 'USER':
+#            self.coeffs = data.pop(0) 
+
+        for s in data:
+            if ('K=' in s) or ('K =' in s):
+                self.K = s.split('=')[1].strip()
+#                try:
+#                    self.K = eval(self.K)
+#                except:
+#                    pass
+
+
+
+
+
         self.Tarr = array(Tarr)
+        self.parseS(data, bg, species, isotope)
         self.rate = self.pick_rate()
+        '''
+        print('==============')
+        print(self.database, self.type, self.name)
+        print(self.coeffs)
+        print(self.rate(1,1,ne=1e12,E=0.1))
+        print(self.rate(10,10,ne=1e13,E=1))'''
 
 
     def parseS(self, data, bg, species, isotope):
@@ -198,37 +261,8 @@ class Reaction:
         '''
         from numpy import ones
 
-        r = data['reactants']
-        p = data['fragments']
-        rdata = data['data']
-        if any('K=' in entry for entry in rdata) or \
-            any('K =' in entry for entry in rdata):
-            kstr = rdata[[i for i, s in enumerate(rdata) if ('K=' in s) or \
-                    ('K =' in s)][0]] 
-            K = kstr.split('=')[1].strip()
-        else:
-            K = 0
-        self.r_mult = ones((len(r),))
-        self.f_mult = ones((len(p),))
-        self.reactants = r
-        self.fragments = p
-        for i in range(len(r)):
-            if '*' in r[i]:
-                self.r_mult[i] = r[i].split('*')[0]
-                self.reactants[i] = r[i].split('*')[1]
-        
-        for i in range(len(p)):
-            if '*' in p[i]:
-                self.f_mult[i] = p[i].split('*')[0]
-                self.fragments[i] = p[i].split('*')[1]
-        try:
-            self.K = eval(K) # Convert number to kin. E change
-            self.Kdep = False
-        except:
-            self.K = K
-            self.Kdep = True
-        self.e = ('e' in self.reactants)
-        self.p = ('p' in self.reactants)
+        self.e = ('e' in self.educts)
+        self.p = ('p' in self.educts)
         self.absorption = False    # Electron absorption
         self.prode = False         # Electron production (not conserving Ee)
         self.radrelax = False      # Radiative relaxation
@@ -238,14 +272,14 @@ class Reaction:
         # Check if reaction is an electron absorption reaction
         if self.e:
             try:
-                for x in self.reactants:
+                for x in self.educts:
                     if x in list(bg): 
                         b = x
-                if b not in self.fragments:
+                if b not in self.products:
                     self.absorption = True
                     # Account for two-step processes where electron is absorbed
                     # creating a non-stable particle that decays
-                    if len(self.f_mult) > len(self.r_mult): 
+                    if len(self.p_mult) > len(self.e_mult): 
                         self.decay = True
             except:
                 pass
@@ -254,28 +288,28 @@ class Reaction:
         #   the reactant electron
         else:
             # Proton-impact ionization
-            if 'e' in p:
+            if 'e' in self.products:
                 self.prode = True
         # Radiative relaxation when one particle changes state
-        if sum(self.r_mult) == 1 and sum(self.f_mult == 1): 
+        if sum(self.e_mult) == 1 and sum(self.p_mult == 1): 
             self.radrelax=True
         # Non-radiative decay when one particle becomes many
-        if sum(self.r_mult) == 1 and sum(self.f_mult) > 1:  
+        if sum(self.e_mult) == 1 and sum(self.p_mult) > 1:  
             self.decay = True
         # TODO: catches for UEDGE ionization and relaxation
         # Total potential of reactants and products
         self.Vr = 0
         self.Vp = 0
-        for i in range(len(self.reactants)):
+        for i in range(len(self.educts)):
             try:
-                self.Vr += self.r_mult[i]*species[self.reactants[i]]['V']
+                self.Vr += self.e_mult[i]*species[self.educts[i]]['V']
             except:
-                self.Vr += self.r_mult[i]*bg[self.reactants[i]]['V']
-        for i in range(len(self.fragments)):
+                self.Vr += self.e_mult[i]*bg[self.educts[i]]['V']
+        for i in range(len(self.products)):
             try:
-                self.Vp += self.f_mult[i]*species[self.fragments[i]]['V']
+                self.Vp += self.p_mult[i]*species[self.products[i]]['V']
             except:
-                self.Vp += self.f_mult[i]*bg[self.fragments[i]]['V']
+                self.Vp += self.p_mult[i]*bg[self.products[i]]['V']
         self.S_r = self.ret0
         self.S_V = self.ret0
         self.S_g = self.ret0
@@ -283,15 +317,9 @@ class Reaction:
         # Reactant energy loss
         if self.radrelax is False:
             if self.decay is False:
-                if self.Kdep:
-                    self.S_r = self.depSr
-                else:
-                    self.S_r = self.indepSr
+                self.S_r = self.Sr
             else: # Spontaneous decay
-                if self.Kdep:
-                    self.S_r = self.depdecaySr
-                else:
-                    self.S_r = self.indepdecaySr
+                self.S_r = self.decaySr
             self.S_V = self.fSV
         else:
             self.S_V = self.fSV
@@ -314,7 +342,7 @@ class Reaction:
             ext = self.ret0
             if (i != 2):
                 self.Smat.append([Sl[i], ext])
-            elif (i == 2)*('{}2'.format(isotope) in ''.join(self.reactants)):
+            elif (i == 2)*('{}2'.format(isotope) in ''.join(self.educts)):
                 self.Smat.append([self.ret0, self.ret0])
                 self.Smat.append([Sl[i], ext])
             else:
@@ -373,44 +401,43 @@ class Reaction:
         return self.Vr - self.Vp
 
 
-    def depSr(self, Te=0, Ti=0, Tm=0):
-        ''' Temperature-dependent reactant sink '''
+    def Sr(self, Te=0, Ti=0, Tm=0):
+        ''' Temperature-dependent reactant sink 
+        try:
+            ret = self.Vr - self.Vp - eval(self.K)
+        except:
+            ret = self.Vr - self.Vp - self.K
+        return ret'''
         return self.Vr - self.Vp - eval(self.K)
-
     
-    def indepSr(self, *args):
-        ''' Temperautre-independent reactant sink '''
-        return self.Vr - self.Vp - self.K
-
-
-    def depdecaySr(self, Te=0, Ti=0, Tm=0):
-        ''' Temperature-dependent fragmentation '''
+    def decaySr(self, Te=0, Ti=0, Tm=0):
+        ''' Temperature-dependent fragmentation 
+        # TODO: IS SIGN MISMATCH WARRANTED??!
+        try:
+            ret = -eval(self.K)
+        except:
+            ret = self.K
+        return ret'''
         return -eval(self.K)
-
-
-    def indepdecaySr(self, *args):
-        ''' Temperature-independent fragmentation '''
-        return self.K
-
 
     def depSe(self, Te, *args):
         ''' Electron energy gain '''
         return Te
 
     
-    def print_reaction(self, name):
+    def print_reaction(self):
         ''' Returns formatted a string with the reaction '''
-        ret = '{}_{}_{}: '.format(self.database, self.fittype, name) # Append reaction ID
-        for i in range(len(self.reactants)):    # Loop through all reactants
-            ret += (self.r_mult[i] != 1)*'{}*'.format(self.r_mult[i])\
-                    + '{}'.format(self.reactants[i])\
-                    + (i+1 != len(self.reactants))*'+ '
+        ret = '{}_{}_{}: '.format(self.database, self.type, self.name) # Append reaction ID
+        for i in range(len(self.educts)):    # Loop through all reactants
+            ret += (self.e_mult[i] != 1)*'{}*'.format(self.e_mult[i])\
+                    + '{}'.format(self.educts[i])\
+                    + (i+1 != len(self.educts))*'+ '
         ret += ' => ' # Add reactants to string
-        for i in range(len(self.fragments)):    # Loop through all fragmetns
-            ret += (self.f_mult[i] != 1)*'{}*'.format(self.f_mult[i])\
-                    + '{}'.format(self.fragments[i])\
-                    + (i+1 != len(self.fragments))*'+ ' 
-            # Add fragments to string
+        for i in range(len(self.products)):    # Loop through all fragmetns
+            ret += (self.p_mult[i] != 1)*'{}*'.format(self.p_mult[i])\
+                    + '{}'.format(self.products[i])\
+                    + (i+1 != len(self.products))*'+ ' 
+            # Add products to string
         
         return ret 
 
@@ -419,24 +446,44 @@ class Reaction:
         ''' Initialization of the rate attribute '''
         # TODO: Dynamically choose between ni and ne in reaction
         from scipy.interpolate import interp2d,interp1d
-        if self.type == 'RATE': 
-            return self.polyfit
-        elif self.type == 'COEFFICIENT': 
-            return self.coeff_rate
-        elif self.type == 'SIGMA': 
-            return self.SAWADASIGMA_rate
-        elif self.type == 'ADAS': 
-            # Create 1D interpolation function
-            self.interpolation = interp1d(
-                    self.Tarr, self.coeffs, kind='slinear')   
-            return self.ADAS_rate
-        elif self.type == 'UE': 
-            t = [i for i in range(self.coeffs.shape[0])]
-            n = [i for i in range(self.coeffs.shape[1])]
-            # Create 2D interpolation function
-            self.interpolation = interp2d(n, t, self.coeffs, kind='linear') 
-            return self.UE_rate
-        elif self.type == 'APID': 
+        from numpy import pi
+        if self.database == 'ADAS': 
+            # TODO: verify ADAS
+            print('TBD')
+            '''
+            if ID == 'EXCITATION': # Electron impact excitation
+                # Excitation only possible between current state and nmax
+                rn = range(x + 1, self.nmax + 1)   
+                fit = 'ADAS' # ADAS-type fit
+                Tarr = rdata[database]['T']  # Temperature array for interpolation
+            elif ID=='RELAXATION': # Radiative relaxation
+                rn = range(1, x)   # Relaxation only possible to lower states
+                fit = 'COEFFICIENT' # Coefficient-like decay
+                Tarr = None   # Not T-dependent
+            # Loop through each of the available final states
+            for y in rn:
+                try:
+                    _name = '{}_{}-{}'.format(ID, x, y)
+                    #Get coefficients
+                    _ratecoeff = rdata['ADAS']['{}-{}'.format(x, y)] 
+                    self.reactions['ADAS'][_name] = Reaction('ADAS',
+                            _ratecoeff, fit, data, bg, species, 
+                            self.isotope, self.mass, Tarr)
+                except:
+                    pass
+                # Create 1D interpolation function
+                self.interpolation = interp1d(
+                        self.Tarr, self.coeffs, kind='slinear')   
+                return self.ADAS_rate'''
+        elif self.database == 'UE': 
+            # TODO: verify UE
+            print('TBD')
+#            t = [i for i in range(self.coeffs.shape[0])]
+#            n = [i for i in range(self.coeffs.shape[1])]
+#            # Create 2D interpolation function
+#            self.interpolation = interp2d(n, t, self.coeffs, kind='linear') 
+#            return self.UE_rate
+        elif self.database == 'APID': 
             x = self.coeffs
             self.apidA =  0.14784*(x == 2) + 0.058463*(x == 3) 
             self.apidB = [
@@ -450,13 +497,83 @@ class Reaction:
                             0.0714*(x > 3)
                         ]
             return self.APID_rate
-        else: 
-            print('Unknown type "{}"'.format(self.type))
+        elif self.database == 'JOHNSON':
+            (i, f) = self.coeffs
+            def g(i, f):
+                g = [
+                        1.133*(f == 1) + 1.0785*(f == 2) + (0.9935 + 0.2328/f
+                        - 0.1296/f**2)*(f > 2),
+                        -0.4059*(f == 1) - 0.2319*(f==2) - ((0.6282 - 0.5598/f
+                        + 0.5299/f**2)/f)*(f > 2),
+                        0.07014*(f == 1) + 0.02947*(f == 2) + ((0.3887 - 1.181/f
+                        + 1.470/f**2)/f**2)*(f > 2) ]
+                x=1 - (f/i)**2
+                return g[0] + g[1]/x + g[2]/x**2
 
-    
+            h = 1.054571596e-27
+            c = 2.99792458e10
+            me = 9.10938188e-28
+            e = 4.80274e-10
+            I = (me*e**4)/(2*h**2)
+            res = (2**6 * e**2 * I**2)/(3**1.5*pi*me*c**3 * h**2)
+            freq = (1/f**2 - 1/i**2)
+            Afac = (res*g(i, f))/(freq*(i**5)*(f**3))
+            self.coeffs = Afac
+            return self.coeff_rate
+
+        elif 'H.' in self.type.upper(): 
+            if self.type.upper() == 'H.0':
+                print('Potential: TBD')
+                return
+            elif self.type.upper() == 'H.1':
+                print('Cross-section vs energy: TBD')
+                return
+            elif self.type.upper() == 'H.2':
+                return self.polyfit_H2
+            elif self.type.upper() == 'H.3':
+                return self.polyfit_H3
+            elif self.type.upper() == 'H.4':
+                return self.polyfit_H4
+            elif self.type.upper() == 'H.5':
+                print('Momentum-weighted rates vs. temperature, not in use')
+                return
+            elif self.type.upper() == 'H.6':
+                print('Momentum-weighted rates vs. temperaturei and energy: TBD')
+                return
+            elif self.type.upper() == 'H.7':
+                print('Momentum-weighted rates vs. temperature and density, not in use')
+                return
+            elif self.type.upper() == 'H.8':
+                print('Energy-weighted rates vs. temperature: TBD')
+                return
+            elif self.type.upper() == 'H.9':
+                print('Energy-weighted rates vs. temperature and energy, not in use')
+                return
+            elif self.type.upper() == 'H.10':
+                print('Energy-weighted rates vs. temperature and density: TBD')
+                return
+            elif self.type.upper() == 'H.11':
+                print('Other data: TBD')
+                return
+            elif self.type.upper() == 'H.12':
+                print('Other data: TBD')
+                return
+            else:
+                print('Unknown fit: {}, {}, {}'.format(
+                        self.database,self.type,self.name))
+        elif self.type.upper() in ['COEFFICIENT', 'RELAXATION']: 
+            return self.coeff_rate
+        elif self.type.upper() == 'SIGMA': 
+            # TODO: verify SIGMA
+            print('TBD')
+            return self.SAWADASIGMA_rate
+        else: 
+            print('Unknown type "{} {}"'.format(self.database, self.type))
+
+
     def ADAS_rate(self, Te, Ti, omegaj=1, **kwargs):
         ''' Function returning the ADAS rate for T '''
-        T = Te*self.e + Ti*self.p
+        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
         if T < self.Tarr[0]:
             Tuse = self.Tarr[0]
             coeff = T/Tuse
@@ -472,6 +589,54 @@ class Reaction:
         return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse)
 
 
+    def extrapolate_polyfit(self, fittype, E, ne):
+        from numpy import log, exp, log10
+        dx=1e-1
+        b = log10(fittype(0.5,0.5,E,ne))
+        dy = log10(fittype(0.5+dx,0.5+dx,E,ne)-10**b)
+        k = dy/log10(dx)
+        return 10**(k*(log10(T)-log10(0.5))+b)#(k*(T-0.5) + b) 
+
+
+    def polyfit_H2(self, Te, Ti, E=None, ne=None, **kwargs):
+        ''' Function returning the EIRENE rate for T '''
+        from numpy import log, exp, log10
+        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ret = 0
+        if T < 0.5:   
+            return self.extrapolate_polyfit(self.polyfit_H2, E, ne)
+        # Rate coefficient vs temperature
+        for i in range(9):
+            ret += self.coeffs[i]*(log(T)**i)    
+        return exp(ret)
+    
+    def polyfit_H3(self, Te, Ti, E=None, ne=None, **kwargs):
+        ''' Function returning the EIRENE rate for T '''
+        from numpy import log, exp, log10
+        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ret = 0
+        if T < 0.5:   
+            return self.extrapolate_polyfit(self.polyfit_H3, E, ne)
+        # Rate coefficient vs temperature and energy
+        for i in range(9):
+            for j in range(9):
+                ret += self.coeffs[i,j]*(log(T)**i)*(log(E)**j)
+        return exp(ret)
+
+    def polyfit_H4(self, Te, Ti, E=None, ne=None, **kwargs):
+        ''' Function returning the EIRENE rate for T '''
+        from numpy import log, exp, log10
+        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ret = 0
+        if T < 0.5:   
+            return self.extrapolate_polyfit(self.polyfit_H4, E, ne)
+        # Rate coefficient vs temperature and density
+        for i in range(9):
+            for j in range(9):
+                ret += self.coeffs[i,j]*(log(T)**i)*(log(ne*1e-8)**j)
+        return exp(ret)
+
+    """
     def polyfit(self, Te, Ti, E=None, ne=None, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
@@ -483,55 +648,55 @@ class Reaction:
             dy = log10(self.polyfit(0.5+dx,0.5+dx,E,ne)-10**b)
             k = dy/log10(dx)
             return 10**(k*(log10(T)-log10(0.5))+b)#(k*(T-0.5) + b) 
-        if self.fittype == 'H.0':
+        if self.type == 'H.0':
             print('Potential: TBD')
             return
-        elif self.fittype == 'H.1':
+        elif self.type == 'H.1':
             print('Cross-section vs energy: TBD')
             return
-        elif self.fittype == 'H.2':
+        elif self.type == 'H.2':
             # Rate coefficient vs temperature
             for i in range(9):
                 ret += self.coeffs[i]*(log(T)**i)    
-        elif self.fittype == 'H.3':
+        elif self.type == 'H.3':
             # Rate coefficient vs temperature and energy
             for i in range(9):
                 for j in range(9):
                     ret += self.coeffs[i,j]*(log(T)**i)*(log(E)**j)
-        elif self.fittype == 'H.4':
+        elif self.type == 'H.4':
             # Rate coefficient vs temperature and density
             for i in range(9):
                 for j in range(9):
                     ret += self.coeffs[i,j]*(log(T)**i)*(log(ne*1e-8)**j)
-        elif self.fittype == 'H.5':
+        elif self.type == 'H.5':
             print('Momentum-weighted rates vs. temperature, not in use')
             return
-        elif self.fittype == 'H.6':
+        elif self.type == 'H.6':
             print('Momentum-weighted rates vs. temperaturei and energy: TBD')
             return
-        elif self.fittype == 'H.7':
+        elif self.type == 'H.7':
             print('Momentum-weighted rates vs. temperature and density, not in use')
             return
-        elif self.fittype == 'H.8':
+        elif self.type == 'H.8':
             print('Energy-weighted rates vs. temperature: TBD')
             return
-        elif self.fittype == 'H.9':
+        elif self.type == 'H.9':
             print('Energy-weighted rates vs. temperature and energy, not in use')
             return
-        elif self.fittype == 'H.10':
+        elif self.type == 'H.10':
             print('Energy-weighted rates vs. temperature and density: TBD')
             return
-        elif self.fittype == 'H.11':
+        elif self.type == 'H.11':
             print('Other data: TBD')
             return
-        elif self.fittype == 'H.12':
+        elif self.type == 'H.12':
             print('Other data: TBD')
             return
         else:
             print('Unknown fit: {}, {}, {}'.format(
                     self.database,self.name,self.fittype))
         return exp(ret)
-
+        """
 
     def coeff_rate(self, *args, **kwargs):
         return self.coeffs
@@ -557,7 +722,7 @@ class Reaction:
         ''' Function returning the Sawada-Sigma rate for T '''
         from numpy import sqrt,pi,inf,exp
         from scipy.integrate import quad
-        T = Te*self.e + Ti*self.p
+        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
         # TODO Extend to general species?
         mm = self.mass*2*1.6735575e-27 
         me = 9.10938356e-31   # Assume electron is reactant 2
@@ -586,7 +751,7 @@ class Reaction:
     def APID_rate(self, Te, Ti, **kwargs):
         ''' Function returning the APID rate for T '''
         from numpy import exp, sqrt, log, pi
-        T = Te*self.e + Ti*self.p
+        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
         ''' The APID-4 rates are taken from Janev's 1993 IAEA paper, the 
             analytic solutions from Stotler's svlib routine used in DEGAS2 '''
         I = 13.6/self.coeffs**2
@@ -688,4 +853,210 @@ class Reaction:
 
         return ret
             
+
+# %%%%%%%%%%%%%% INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
+
+
+    def setup_Johnson(self, i, ID, r):
+        ''' Adds a Johnson-style relaxation reaction from state n=i'''
+        from CRUMPET.reactions import Reaction
+ 
+
+    def setup_reactions(self, reactionlist, rdata):
+        ''' Adds the reactions to the CRM
+
+        Called by __init__, adds the reactions from reactionlist to
+        self.reactions using the rates in rdata
+
+        Parameters
+        ----------
+        reactionlist : list 
+            a list of lists for setting up the CRM reactions. Each 
+            element is a list of the following data
+            handle : string
+                database_reaction as specified in the input
+            reactants : list of strings
+                each element is a handle of the reactants. At least one
+                of the species must be a background species, and only
+                two reactants are currently supported
+            products : list of strings
+                each element is a handle of the products
+            K : string
+                a string of the net kinetic energy transfer for the 
+                background reactants to the products. Presently, all
+                energy is assumed to end up as ion/atom kinetic energy.
+                Supports calculations in the string, e.g. '2*3+4'
+        rdata : RateData object, optional (default: None)
+            a RateData object that contains the databases and reactions
+            defined in the input file reactions
+
+        Returns
+        -------
+        None
+        '''
+        from CRUMPET.reactions import Reaction
+        from numpy import zeros, pi
+        
+
+        ''' LOOP OVER ALL THE DEFINED ReactionS '''
+        for database, dbreactions in reactionlist.items():
+            database = database.upper() 
+            try:
+                self.reactions[database]
+            except:
+                self.reactions[database] = {}
+            for rtype, reaction in dbreactions.items():
+                # Create database if not already created
+                for ID, data in reaction.items():
+                    # Split the definitions into names and databases
+                    ndep = ('N=$' in ''.join(data['reactants'] + 
+                            data['fragments']).upper())
+                    vdep = ('V=$' in ''.join(data['reactants'] + 
+                            data['fragments']).upper())
+                    # Loop through states, if necessary. Dynamicallt set boundaries
+                    # according to electronic or vibrational transitions
+                    for x in range(ndep, 1 + vdep*self.vmax + ndep*self.nmax):
+                        # Vibrational/electronic dependence present
+                        if '$' in ID:
+                            buff = data.copy()
+                            # Substitute state into reactants and product strings 
+                            for label in ['reactants', 'fragments']:
+                                buff[label] = [self.XY2num(i, x) for i in 
+                                        buff[label]]
+                            # %%% ADAS rates detected %%%
+                            if database == 'ADAS':
+                                self.setup_ADAS(x, ID, rdata, rlist, plist, 
+                                        data['K'])
+                            # %%% APID rates detected %%%
+                            elif database == 'APID':
+                                self.setup_APID(x, ID, buff)
+                            # %%% APID rates detected %%%
+                            elif database == 'JOHNSON':
+                                self.setup_Johnson(x, ID, buff)
+                            # %%% Neither of the above: rate for transitions %%%
+                            else:
+                                # Assume ladder-like vibrational transitions (+/-1)
+                                for y in range(-1*('&' in ID), 2, 2):
+                                    # Limit transitions to [0,vmax]
+                                    if x + y in range(self.vmax + 1):
+                                        rebuff = buff.copy()
+                                        # Retain intial and final states in name
+                                        vID = self.XY2num(ID, x, x + y) 
+                                        for label in ['reactants', 'fragments']:
+                                            rebuff[label] = [self.XY2num(i, x, 
+                                                    x + y) for i in rebuff[label]]
+                                        _name = vID
+                                        _database = database
+                                        _ratecoeff = rdata[database][rtype][
+                                                    vID.split('-')[0]] 
+                                        _rtype = 'RATE'
+                                        _rlist = rebuff
+                                        self.reactions[_database][_name] = \
+                                                Reaction(_database, rtype, 
+                                                _ratecoeff, _rtype, _rlist, 
+                                                self.bg, self.species, 
+                                                self.isotope, self.mass)
+                        #%%%%% Read user-defined rates %%%%%
+                        elif database == 'USER':
+                            print('ADD USER REACTION READ ROUTINE HERE')
+                
+                        #%%%%% Read custom rates %%%%%
+                        elif database == 'CUSTOM':
+                            self.setup_custom(ID.strip(), database)
+                        #%%% EIRENE/UEDGE-DEGAS rates %%%
+                        elif database in ['HYDHEL', 'AMJUEL', 'H2VIBR', 'UE']:
+                            self.reactions[database][ID] = Reaction(database, rtype, 
+                                    rdata[database][rtype][ID.upper()], 
+                                    'RATE'*(database != 'UE') + 
+                                    'UE'*(database == 'UE'), data, self.bg, 
+                                    self.species, self.isotope, self.mass)
+                        #%%% Fell through loop %%%
+                        else:
+                            print(  'Database "{}" not recognized!\n'
+                                    'Aborting.'.format(database))
+                            return
+
+
+    def setup_custom(self, fname, database):
+        ''' Adds the custom reactions defined in the input to the CRM
+        
+        Parses any custom input rate file defined in the input file
+        and adds their Reaction objects to the CRM.
+    
+        Parameters
+        ----------
+        fname : string
+            path to the custom rate setup file relative to Crm.path
+        database : string
+            database handle for the rates in the custom rate file
+        
+        Returns
+        -------
+        None
+        '''
+        from CRUMPET.reactions import Reaction
+        from numpy import zeros, pi
+        # Parse the custom rate file into a list and retain subcards
+        data, _, subcards = self.file2list(self.path, fname)
+        subcards = subcards[1:]
+        _database = data[0].split()[1].strip() # Database is defined as card
+        try:
+            self.reactions[_database]
+        except:
+            self.reactions[_database] = {}
+        # Loop through the rates, each a separate subcard
+        for i in range(len(subcards) - 1):
+            subc = subcards[i] # Helper index
+            # Rate typy, first subcard entry
+            fit = data[subc].split()[1].upper() 
+            name = data[subc].split()[2] # Name/ID of reacrtion - second entry
+            rdata = {
+                    'reactants': data[subc + 1].split(' > ')[0],
+                    'fragments': data[subc + 1].split(' > ')[1],
+                    'K': '0',
+                    }
+            # Execute if no vib dependence, loop if vibr. dep. process
+            for j in range(1 + ('$' in name)*self.vmax):
+                buff = rdata.copy()
+                # %%% Vibrationally dependent process %%%
+                if '$' in name:
+                    # Read kinetic energy for each process
+                    for m in range(0, 100):
+                        if data[m][0].upper() == 'K': 
+                            buff['K'] = data[m].strip().split('=')[-1]
+                        elif data[m][0].upper() == 'V':
+                            break
+                    # Write data
+                    _name = self.XY2num(name, j)
+                    for label in ['reactants', 'fragments']:
+                        buff[label] = self.XY2num(buff[label], 
+                                j).strip().split(' + ') 
+                    # Coefficients for v-level
+                    _ratecoeff = [float(x) for x in 
+                            data[subc + m+  j*2].split()] 
+                # %%% Specified rate %%%
+                else:
+                    # Read the kinetic energy of the process
+                    for m in range(2, 100):
+                        if data[subc + m][0] == 'K': 
+                            buff['K'] = data[subc + m].strip().split('=')[-1]
+                        else:
+                            break
+                    # Cross-section as defined in SAWADA 95 has special form
+                    if fit == 'SIGMA': 
+                        _ratecoeff = [float(x) for x in data[subc + m].split()] 
+                    # Other processes have pre-defined form
+                    else: 
+                        _ratecoeff = float(data[subc + m])
+                    # Write data
+                    _name = name
+                    for label in ['reactants', 'fragments']:
+                        buff[label] = buff[label].strip().split(' + ') 
+                # Store reaction
+                self.reactions[_database][_name] = Reaction(_database,
+                        _ratecoeff, fit, buff, self.bg, self.species,
+                        self.isotope, self.mass)
+
+# %%%%%%%%%%%%%% ENF OF INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
+
 
