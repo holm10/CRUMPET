@@ -82,7 +82,8 @@ class Crumpet(Crm, RateData):
                         l = l.split('#')[0].strip() # Discard comments
                         if '**' in l[:3]: # Card
                             card = l.split()[1].upper()
-                            data[card] = {}
+                            if card not in list(data):
+                                data[card] = {}
                             subcard = None
                         elif '*' in l[:3]: # Subcard
                             if l.split()[1].strip().upper() == 'INCLUDE':
@@ -109,7 +110,6 @@ class Crumpet(Crm, RateData):
         # Parse the input file into the dict data
         data = {} # Hierarchy: Card - Subcard - Data
         parse_file(path, fname, data)
-
         '''
         with open('{}/{}'.format(path, fname)) as f:  # Open the file
             for l in f:
@@ -1655,7 +1655,7 @@ class Crumpet(Crm, RateData):
 
     def spectrum(
             self, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, n0=None, 
-            ext=None, ioniz=0, units='l',write=False, norm=False, fig=None,
+            intensity=None, units='l',write=False, norm=False, fig=None,
             figsize=(10,10/1.618033), xlim=None, linewidth=1, split=False,
             **kwargs):
         ''' Plots atomic and molecular spectra 
@@ -1753,8 +1753,11 @@ class Crumpet(Crm, RateData):
 
 
 
-        data = self.intensity(Te, ne, E=E, Ti=Ti, ni=ni, Srec=Srec, n0=n0,  
-                        units=units, norm=norm, write=False, **kwargs)
+        if intensity is None:
+            data = self.intensity(Te, ne, E=E, Ti=Ti, ni=ni, Srec=Srec, n0=n0,
+                            units=units, norm=norm, write=False, **kwargs)
+        else:
+            data = intensity
         if split is True:
             species = ['atomic','molecular']
             for i in range(2):
@@ -1788,7 +1791,7 @@ class Crumpet(Crm, RateData):
                             [0,data[i][1, d]/n], linewidth=linewidth,
                             color=color[i])
             try:
-                ax.set_ylim((0, 1.1*max(max(data[0][1,:]), max(data[1][1,:]))/n))
+                ax.set_ylim((None, 1.1*max(max(data[0][1,:]), max(data[1][1,:]))/n))
             except: 
                 pass
                 #ax.set_ylim((0,None))
@@ -1801,7 +1804,7 @@ class Crumpet(Crm, RateData):
 
 
     def plotrate(
-            self, database, name, T, n, E=0.1, logx=True, logy=True, res=200, 
+            self, database, h123, name, T, n, E=0.1, logx=True, logy=True, res=200, 
             color='k', linestyle='-', figsize=(12,13/1.618033), title='',
             ylim=[1e-14,1e-6], linewidth=2, savename=None, figtype='png',
             xlim=None, ncol=3, ax=None):
@@ -1869,13 +1872,13 @@ class Crumpet(Crm, RateData):
             pf = ax.semilogx
             try:
                 x = logspace(log10(T[0]), log10(T[1]),res)
-                y = [self.get_rate(database, name, i, n, E) for i in x]
+                y = [self.get_rate(database, h123, name, i, n, E) for i in x]
                 xlabel = 'Temperature [eV]'.format(T)
                 titapp = (', '*(len(title) > 0) + r'n={:.2E} '.format(n)
                         + r'$\rm{{cm^{{-3}}}}$')
             except:
                 x = logspace(log10(T[0]), log10(T[1]),res)
-                y = [self.get_rate(database, name, T, i, E) for i in x]
+                y = [self.get_rate(database, h123, name, T, i, E) for i in x]
                 xlabel = r'Density [$\rm{cm^{-3}}$]'
                 titapp = ', '*(title != '') + r'T={} eV'.format(T)
             if logy is True:
@@ -1884,13 +1887,13 @@ class Crumpet(Crm, RateData):
             pf = ax.plot
             try:
                 x = linspace(T[0], T[1], res)
-                y = [self.get_rate(database, name, i, n, E) for i in x]
+                y = [self.get_rate(database, h123, name, i, n, E) for i in x]
                 xlabel = 'Temperature [eV]'.format(T)
                 titapp= ', '*(len(title) > 0) + r'n={:.2E} '.format(n)+\
                         r'$\rm{{cm^{{-3}}}}$'
             except:
                 x = linspace(T[0], T[1], res)
-                y = [self.get_rate(database, name, T, i, E) for i in x]
+                y = [self.get_rate(database, h123, name, T, i, E) for i in x]
                 xlabel = r'Density [$\rm{cm^{-3}}$]'
                 titapp = ', '*(title != '') + r'T={} eV'.format(T)
             if logy is True:

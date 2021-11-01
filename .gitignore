@@ -1,4 +1,5 @@
 archive/
+yac_bench/
 output/*
 rates/ehr1.dat
 rates/ehr2.dat
@@ -20,3 +21,4 @@ output/.DS_Store
 *.dat
 output/.DS_Store
 .DS_Store
+benchmark.py

@@ -201,7 +201,7 @@ class Reaction:
         if self.database == 'USER':
             self.coeffs = []
             if self.type == 'H.2':
-                self.coeffs = list(map(int, data.pop(0).split()))
+                self.coeffs = list(map(float, data.pop(0).split()))
             elif self.type in ['H.3', 'H.4']:
                 for i in range(9):
                     self.coeffs.append(list(map(int, data.pop(0).split())))
@@ -228,6 +228,7 @@ class Reaction:
         self.Tarr = array(Tarr)
         self.parseS(data, bg, species, isotope)
         self.rate = self.pick_rate()
+
         '''
         print('==============')
         print(self.database, self.type, self.name)
@@ -353,7 +354,7 @@ class Reaction:
                 self.Smat.append([self.ret0, self.ret0])
             
 
-    def getS(self, Te, Ti, Tm, E):
+    def getS(self, Te, Ti, Tm, E, marker=False):
         ''' Evaluates Smat at given Te, Ti, Tm, and E
         
         Parameters
@@ -383,6 +384,10 @@ class Reaction:
                 [S[2] + S[6]],
                 [S[3] + S[7]] ],
                 )[:,0,:]
+        if marker is True:
+            ret[ret<0]=0
+            ret[ret!=0]=1
+            # Only return positive values
         return ret
                
 
@@ -424,6 +429,18 @@ class Reaction:
         ''' Electron energy gain '''
         return Te
 
+    def get_nsum(self, ne, ni):
+        return max(1,self.e*ne + self.p*ni)
+    
+    def get_n(self, ne, ni):
+        return max(self.e*ne * self.p*ni,1)
+        if self.e is True: # Electron impact: assume to use for rec. as well
+            return ne
+        elif self.p is True: # Proton impact
+            return ni
+        else: # Neither electron or ion impact: assume spontaneous
+            return 1
+        
     
     def print_reaction(self):
         ''' Returns formatted a string with the reaction '''
@@ -573,7 +590,8 @@ class Reaction:
 
     def ADAS_rate(self, Te, Ti, omegaj=1, **kwargs):
         ''' Function returning the ADAS rate for T '''
-        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ep = ((self.e + self.p) ==2)
+        T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         if T < self.Tarr[0]:
             Tuse = self.Tarr[0]
             coeff = T/Tuse
@@ -589,52 +607,54 @@ class Reaction:
         return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse)
 
 
-    def extrapolate_polyfit(self, fittype, E, ne):
+    def extrapolate_polyfit(self, T, fittype, E, ne, ni=None, frequency = False):
         from numpy import log, exp, log10
         dx=1e-1
         b = log10(fittype(0.5,0.5,E,ne))
         dy = log10(fittype(0.5+dx,0.5+dx,E,ne)-10**b)
         k = dy/log10(dx)
-        return 10**(k*(log10(T)-log10(0.5))+b)#(k*(T-0.5) + b) 
+        return self.get_n(ne, ni)**frequency*10**(k*(log10(T)-log10(0.5))+b)#(k*(T-0.5) + b) 
 
-
-    def polyfit_H2(self, Te, Ti, E=None, ne=None, **kwargs):
+    def polyfit_H2(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
-        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ep = ((self.e + self.p) ==2)
+        T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
         if T < 0.5:   
-            return self.extrapolate_polyfit(self.polyfit_H2, E, ne)
+            return self.extrapolate_polyfit(T, self.polyfit_H2, E, ne, ni)
         # Rate coefficient vs temperature
         for i in range(9):
             ret += self.coeffs[i]*(log(T)**i)    
-        return exp(ret)
+        return self.get_n(ne,ni)**frequency*exp(ret)
     
-    def polyfit_H3(self, Te, Ti, E=None, ne=None, **kwargs):
+    def polyfit_H3(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
-        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ep = ((self.e + self.p) ==2)
+        T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
         if T < 0.5:   
-            return self.extrapolate_polyfit(self.polyfit_H3, E, ne)
+            return self.extrapolate_polyfit(T, self.polyfit_H3, E, ne)
         # Rate coefficient vs temperature and energy
         for i in range(9):
             for j in range(9):
                 ret += self.coeffs[i,j]*(log(T)**i)*(log(E)**j)
-        return exp(ret)
+        return self.get_n(ne,ni)**frequency*exp(ret)
 
-    def polyfit_H4(self, Te, Ti, E=None, ne=None, **kwargs):
+    def polyfit_H4(self, Te, Ti, E=None, ne=None, ni=None, frequency=False,**kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
-        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ep = ((self.e + self.p) ==2)
+        T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
         if T < 0.5:   
-            return self.extrapolate_polyfit(self.polyfit_H4, E, ne)
+            return self.extrapolate_polyfit(T, self.polyfit_H4, E, ne)
         # Rate coefficient vs temperature and density
         for i in range(9):
             for j in range(9):
                 ret += self.coeffs[i,j]*(log(T)**i)*(log(ne*1e-8)**j)
-        return exp(ret)
+        return self.get_n(ne,ni)**frequency*exp(ret)
 
     """
     def polyfit(self, Te, Ti, E=None, ne=None, **kwargs):
@@ -698,7 +718,8 @@ class Reaction:
         return exp(ret)
         """
 
-    def coeff_rate(self, *args, **kwargs):
+    def coeff_rate(self, *args, frequency=False, ne=None, ni=None, **kwargs):
+        # NOTE: These are always assumed to be in 1/s 
         return self.coeffs
             
 
@@ -722,7 +743,8 @@ class Reaction:
         ''' Function returning the Sawada-Sigma rate for T '''
         from numpy import sqrt,pi,inf,exp
         from scipy.integrate import quad
-        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ep = ((self.e + self.p) ==2)
+        T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         # TODO Extend to general species?
         mm = self.mass*2*1.6735575e-27 
         me = 9.10938356e-31   # Assume electron is reactant 2
@@ -748,13 +770,15 @@ class Reaction:
                 quad(R, 0, inf, args=(T, self.coeffs))[0]
     
 
-    def APID_rate(self, Te, Ti, **kwargs):
+    def APID_rate(self, Te, Ti, ne=None, ni=None, frequency=False, **kwargs):
         ''' Function returning the APID rate for T '''
         from numpy import exp, sqrt, log, pi
-        T = (Te*self.e + Ti*self.p)/(self.e+self.p)
+        ep = ((self.e + self.p) ==2)
+        T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ''' The APID-4 rates are taken from Janev's 1993 IAEA paper, the 
             analytic solutions from Stotler's svlib routine used in DEGAS2 '''
         I = 13.6/self.coeffs**2
+        n = self.get_n(ne, ni)**frequency
 
         def expint(k, p):
             a = [-0.57721566, 0.99999193, -0.24991055, 0.05519968, -0.00976004,
@@ -763,13 +787,13 @@ class Reaction:
             b = [9.5733223454, 25.6329561486, 21.0996530827, 3.9584969228]
 
             def en(zn, z):
-                return exp(-p)*( 1 + kp/(kp+p)**2 + kp*(kp - 2*p)/(kp + p)**4 +
+                return n*exp(-p)*( 1 + kp/(kp+p)**2 + kp*(kp - 2*p)/(kp + p)**4 +
                         kp*(6*p**2 - 8*kp*p+kp**2)/(kp + p)**6 )/(kp + p)
 
             if p < 0 or (p == 0 and k == 1): 
                 return None
             elif k*p == 0: 
-                return (k == 0)*exp(-p)/p + (p == 0)*(1/(k-1))
+                return n*(k == 0)*exp(-p)/p + (p == 0)*(1/(k-1))
 
             elif p < 8 or k == 1:
                 if p < 1:
@@ -787,12 +811,12 @@ class Reaction:
                     ze1 = exp(-p)*znum/(zden*p)
 
                 if k == 1:
-                    return ze1
+                    return n*ze1
                 else:
                     zek = ze1
                     for i in range(2, k+1):
                         zek = (exp(-p) - p*zek)/(i - 1)
-                    return zek
+                    return n*zek
             
             else:
                 kp = int(p + 0.5)
@@ -802,7 +826,7 @@ class Reaction:
                     zek = en(kp, p)
                     for i in range(kp - 1, k - 1, -1): 
                         zek=(exp(-p) - i*zek)/p
-                    return zek
+                    return n*zek
             
                 else: return en(k, p)
             return 'Fell through'
@@ -827,7 +851,7 @@ class Reaction:
                 zi1 += zmul[i]*zeint[i + 1]
             zi2 = self.apidA*zeint[0]
             zi3 = 1e-13/(I*T)
-            return 6.692e7*sqrt(T)*zi3*(zi1 + zi2)
+            return n*6.692e7*sqrt(T)*zi3*(zi1 + zi2)
 
         # Higher n, evaluate from formulae
         else:
@@ -851,7 +875,7 @@ class Reaction:
             zint3 = 1.76e-16 * zn**2 * zyn**2
             ret = 6.692e7 * sqrt(T) * zint3 * (zint1 + zint2)
 
-        return ret
+        return n*ret
             
 
 # %%%%%%%%%%%%%% INPUT FILE READING TOOLS %%%%%%%%%%%%%%%%%
