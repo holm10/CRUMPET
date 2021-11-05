@@ -1,4 +1,6 @@
 archive/
+rates/
+runs/
 yac_bench/
 output/*
 rates/ehr1.dat

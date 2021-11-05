@@ -87,7 +87,7 @@ class Crumpet(Crm, RateData):
                             subcard = None
                         elif '*' in l[:3]: # Subcard
                             if l.split()[1].strip().upper() == 'INCLUDE':
-                                parse_file(path, ' '.join(l.split()[2:]), data)
+                                parse_file('', ' '.join(l.split()[2:]), data)
                             elif card == 'REACTIONS':
                                 [subcard, h123, reaction] = l.split()[1:]
                                 merge_reactions(data[card], build_reactions(l.split()[1:]))
@@ -1872,7 +1872,7 @@ class Crumpet(Crm, RateData):
             pf = ax.semilogx
             try:
                 x = logspace(log10(T[0]), log10(T[1]),res)
-                y = [self.get_rate(database, h123, name, i, n, E) for i in x]
+                y = [self.get_rate(database, h123, name, Te=i,Ti=i, ne=n , ni=n, E=E) for i in x]
                 xlabel = 'Temperature [eV]'.format(T)
                 titapp = (', '*(len(title) > 0) + r'n={:.2E} '.format(n)
                         + r'$\rm{{cm^{{-3}}}}$')
@@ -1893,7 +1893,7 @@ class Crumpet(Crm, RateData):
                         r'$\rm{{cm^{{-3}}}}$'
             except:
                 x = linspace(T[0], T[1], res)
-                y = [self.get_rate(database, h123, name, T, i, E) for i in x]
+                y = [self.get_rate(database, h123, name, Te=i,Ti=i, ne=n , ni=n, E=E) for i in x]
                 xlabel = r'Density [$\rm{cm^{-3}}$]'
                 titapp = ', '*(title != '') + r'T={} eV'.format(T)
             if logy is True:

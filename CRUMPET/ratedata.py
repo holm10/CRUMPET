@@ -55,7 +55,30 @@ class RateData:
         '''
         # Create a loop that reads the EIRENE tex files, compatible with
         # Jan 2020 versions
-        self.reactions = {}
+        self.reactions = {'FCF':{},'AIK':{}}
+        for database, subpath  in rates.items():
+            if (database.upper() == 'AMJUEL') and (subpath is not None):
+                self.reactions[database.upper()] = {}
+                self.read_EIRENE(subpath, self.reactions[database], 
+                        [500, ['b0','0','a0','h0','p0','k0'], ['a0','h0',
+                        'p0','k0'], 45],  path=path)
+            elif (database.upper() == 'HYDHEL') and (subpath is not None):
+                self.reactions[database.upper()] = {}
+                self.read_EIRENE(subpath, self.reactions[database], [150, 
+                        ['b0','0','a0','h0'], ['a0','h0'], 80], path=path)
+            elif (database.upper() == 'H2VIBR') and (subpath is not None):
+                self.reactions[database.upper()] = {}
+                self.read_EIRENE(subpath, self.reactions[database], [0, 
+                        ['b0','0','a0','h0'], ['a0','h0'], 20], path=path)
+            elif database[:3].upper() == 'FCF':
+                self.reactions['FCF'][database.split('_')[1].strip()] = \
+                        self.read_factors(subpath)
+            elif database[:3].upper() == 'AIK':
+                self.reactions['AIK'][database.split('_')[1].strip()] = \
+                        self.read_factors(subpath)
+                
+
+        '''
         if ('AMJUEL' in list(rates)) and (rates['AMJUEL'] is not None):
             self.reactions['AMJUEL'] = { 'settings' : [500, 
                             ['b0','0','a0','h0','p0','k0'],
@@ -92,8 +115,22 @@ class RateData:
                 self.read_UE(rates['UE'],self.reactions['UE'],path=path)
             except:
                 print(  'Database UE not found in {}/{}. Omitting'
-                        ''.format(path, UE))
+                        ''.format(path, UE)) '''
 
+
+    def read_factors(self, fname):
+        from numpy import array, transpose
+        data = []
+        with open(fname, 'r') as f:
+            i = 0
+            for line in f:
+                if i>0:
+                    data.append([float(x) for x in line.split()])
+                i += 1
+        data = array(data)
+
+        return transpose(array(data))[1:]
+        
 
     def read_EIRENE(self, fname, reactions, settings, path='.'):
         ''' Reads reaction coefficents from EIRENE databases

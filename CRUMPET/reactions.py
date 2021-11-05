@@ -114,7 +114,7 @@ class Reaction:
 
 
     def __init__(self, database, rtype, name, data, coeffs=None, bg=None,
-                    species=None, isotope='H', mass=1, Tarr=0):
+                    species=None, isotope='H', mass=1, Tarr=0, fcf=1):
         ''' 
         Parameters 
         ----------
@@ -158,8 +158,7 @@ class Reaction:
         mass : float
             The isotope mass in AMU, used for calculations in Crm 
         '''
-        from scipy.interpolate import interp2d, interp1d
-        from numpy import array
+        from numpy import array, log10
 
         self.database = database.upper()
         self.isotope = isotope.upper()
@@ -167,6 +166,7 @@ class Reaction:
         self.type = rtype.upper()
         self.mass = mass
         self.K = '0'
+        self.fcf = fcf
 
         reaction = data.pop(0)
         self.educts = [x.strip() for x in \
@@ -206,8 +206,29 @@ class Reaction:
                 for i in range(9):
                     self.coeffs.append(list(map(int, data.pop(0).split())))
                 self.coeffs = array(self.coeffs)
-            else:
+            elif self.type.upper() == 'RELAXATION':
                 self.coeffs = float(data.pop(0))
+            elif self.type.upper() == 'INTERPOLATION':
+                # Read the number of data points defined
+                self.coeffs = []
+                for i in range(int(data.pop(0))):
+                    self.coeffs.append([float(x) for x in data.pop(0).strip().split()])
+                self.coeffs=log10(array(self.coeffs))
+            else:
+                print('Reaction database "{}" and type "{}"'
+                        ' not recognized!'.format(self.database, self.type))
+
+        if self.database == 'FCF':
+            if self.type.upper() == 'INTERPOLATION':
+                # Read the number of data points defined
+                self.coeffs = []
+                for i in range(int(data.pop(0))):
+                    self.coeffs.append([float(x) for x in data.pop(0).strip().split()])
+                self.coeffs=array(self.coeffs)
+                self.coeffs[:,1] *= fcf # FCF scaling
+                self.coeffs=log10(array(self.coeffs))
+
+            
                     
         # If user-defined, get it from data
 #        if database.upper() == 'USER':
@@ -433,7 +454,9 @@ class Reaction:
         return max(1,self.e*ne + self.p*ni)
     
     def get_n(self, ne, ni):
-        return max(self.e*ne * self.p*ni,1)
+#        if (self.e is True) and (self.p is True):
+#            print(self.name)
+#        return max(self.e*ne * self.p*ni,1)
         if self.e is True: # Electron impact: assume to use for rec. as well
             return ne
         elif self.p is True: # Proton impact
@@ -515,6 +538,8 @@ class Reaction:
                         ]
             return self.APID_rate
         elif self.database == 'JOHNSON':
+            ''' L.C.JOHNSON, ASTROPHYS. J. 174, 227 (1972). '''
+            # TODO: verify against Eirene's COLRAD!
             (i, f) = self.coeffs
             def g(i, f):
                 g = [
@@ -580,6 +605,10 @@ class Reaction:
                         self.database,self.type,self.name))
         elif self.type.upper() in ['COEFFICIENT', 'RELAXATION']: 
             return self.coeff_rate
+        elif self.type.upper() == 'INTERPOLATION': 
+            self.Tl, self.Tu = 10**self.coeffs[0,0], 10**self.coeffs[-1,0]
+            self.coeffs = interp1d(self.coeffs[:,0], self.coeffs[:,1])
+            return self.loglog_interp
         elif self.type.upper() == 'SIGMA': 
             # TODO: verify SIGMA
             print('TBD')
@@ -655,6 +684,18 @@ class Reaction:
             for j in range(9):
                 ret += self.coeffs[i,j]*(log(T)**i)*(log(ne*1e-8)**j)
         return self.get_n(ne,ni)**frequency*exp(ret)
+
+    def loglog_interp(self, Te, Ti=0, E=None, ne=None, ni=None, frequency=False, **kwargs):
+        from numpy import log10
+        ep = ((self.e + self.p) ==2)
+        T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
+        if (T >= self.Tl) and (T <= self.Tu):
+            fit = self.coeffs(log10(T))
+        elif T < self.Tl:
+            fit = self.coeffs(log10(self.Tl))
+        elif T > self.Tu:
+            fit = self.coeffs(log10(self.Tu))
+        return (self.get_n(ne,ni)**frequency)*10**fit
 
     """
     def polyfit(self, Te, Ti, E=None, ne=None, **kwargs):
@@ -787,13 +828,13 @@ class Reaction:
             b = [9.5733223454, 25.6329561486, 21.0996530827, 3.9584969228]
 
             def en(zn, z):
-                return n*exp(-p)*( 1 + kp/(kp+p)**2 + kp*(kp - 2*p)/(kp + p)**4 +
+                return exp(-p)*( 1 + kp/(kp+p)**2 + kp*(kp - 2*p)/(kp + p)**4 +
                         kp*(6*p**2 - 8*kp*p+kp**2)/(kp + p)**6 )/(kp + p)
 
             if p < 0 or (p == 0 and k == 1): 
                 return None
             elif k*p == 0: 
-                return n*(k == 0)*exp(-p)/p + (p == 0)*(1/(k-1))
+                return (k == 0)*exp(-p)/p + (p == 0)*(1/(k-1))
 
             elif p < 8 or k == 1:
                 if p < 1:
@@ -811,12 +852,12 @@ class Reaction:
                     ze1 = exp(-p)*znum/(zden*p)
 
                 if k == 1:
-                    return n*ze1
+                    return ze1
                 else:
                     zek = ze1
                     for i in range(2, k+1):
                         zek = (exp(-p) - p*zek)/(i - 1)
-                    return n*zek
+                    return zek
             
             else:
                 kp = int(p + 0.5)
@@ -826,7 +867,7 @@ class Reaction:
                     zek = en(kp, p)
                     for i in range(kp - 1, k - 1, -1): 
                         zek=(exp(-p) - i*zek)/p
-                    return n*zek
+                    return zek
             
                 else: return en(k, p)
             return 'Fell through'
@@ -953,6 +994,7 @@ class Reaction:
                                         data['K'])
                             # %%% APID rates detected %%%
                             elif database == 'APID':
+                                print('TBD: check that this works as intended!')
                                 self.setup_APID(x, ID, buff)
                             # %%% APID rates detected %%%
                             elif database == 'JOHNSON':

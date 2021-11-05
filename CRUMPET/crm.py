@@ -52,7 +52,7 @@ class Crm(Tools):
 
 
     def __init__(self, species, bg, reactions, path='.', 
-                rdata=None, settings = {}):
+                rdata=None, settings = {}, writelog=False):
         ''' 
         Parameters
         ----------
@@ -192,63 +192,87 @@ class Crm(Tools):
                 for rea, reactiondata in h123content.items():
                     # Split the definitions into names and databases
                     reastr = reactiondata[0].upper()
-                    #del reactions[db][h123][rea]
-                    # Loop through states, if necessary. Dynamicallt set boundaries
-                    # according to electronic or vibrational transitions
-                    isn, isv  = ('N=$' in reastr), ('V=$' in reastr)
-                    if isn or isv:
+                    if db in ['FCF', 'AIK']:
+                        ''' Branch for vibrational H2 transitions by factors '''
                         del self.reactions[db][h123][rea]
-                    for x in range(isn, 1 + isv*self.vmax + isn*self.nmax):
-                        # Vibrational/electronic dependence present
-                        if '$' in reastr:
-                            buff = reactiondata.copy()
-                            reabuff = rea
-                            # Substitute state into educts and product strings 
-                            buff[0] = self.XY2num(buff[0], x)
-                            reabuff = self.XY2num(reabuff, x)
-                            # %%% n- or v-dependent upper rate %%%
-                            if '&' in reastr:
-                                # Relaxation - only move down during reaction
-                                if h123.upper() == 'RELAXATION':
-                                    for y in range(int(isn), x):
-                                        rebuff = buff.copy()
-                                        rereabuff = reabuff
-                                        rebuff[0] = self.XY2num(rebuff[0], x, y) 
-                                        rereabuff = self.XY2num(rereabuff, x, y) 
-                                        coeffs = set_coeffs(db, h123, rereabuff.upper(), rdata)
-                                        if coeffs is False:
-                                            coeffs = (x, y)
-                                        self.reactions[db][h123][rereabuff] = \
+                        datafile = reactiondata[1]
+                        if db == 'AIK':
+                            [ve, vp] = [int(x) for x in reactiondata[2].split()]
+                            # Read table of Einstein coefficients
+                            for x in range(ve+1):
+                                for y in range(vp+1):
+                                    reabuff = self.XY2num(rea,x,y)
+#                                    print(rdata[db][datafile][y,x])
+                                    self.reactions[db][h123][reabuff] = \
+                                            Reaction(db, h123, 
+                                            reabuff, [self.XY2num(reactiondata[0],x,y)], 
+                                            rdata[db][datafile][y,x],
+                                            self.bg, self.species, 
+                                            self.isotope, self.mass)
+                        elif db == 'FCF':
+                            # Read table of Franck-Condon factors
+                            vl = [int(x) for x in reactiondata[2].split()]
+                            vu = [int(x) for x in reactiondata[3].split()]
+                            if len(vl) == 1:
+                                x = vl[0]
+                                # Only upper state to be read from FCFs
+                                for y in range(vu[0], vu[1]+1):
+                                    reabuff = self.XY2num(rea,y)
+                                    self.reactions[db][h123][reabuff] = \
+                                            Reaction(db, h123, 
+                                            reabuff, [self.XY2num(reactiondata[0],y)]+reactiondata[4:], 
+                                            0,
+                                            self.bg, self.species, 
+                                            self.isotope, self.mass, fcf=rdata[db][datafile][x,y])
+                            elif len(vu) == 1:
+                                # Only lower state to be read from FCFs
+                                y = vu[0]
+                                for x in range(vl[0], vl[1]+1):
+                                    reabuff = self.XY2num(rea,y)
+                                    self.reactions[db][h123][reabuff] = \
+                                            Reaction(db, h123, 
+                                            reabuff, [self.XY2num(reactiondata[0],y)]+reactiondata[4:], 
+                                            0,
+                                            self.bg, self.species, 
+                                            self.isotope, self.mass, fcf=rdata[db][datafile][x,y])
+                                # Only lower state to be read from FCFs
+                            else:
+                                # Both upper and lower states are to be read
+                                for x in range(vl[0], vl[1]+1):
+                                    for y in range(vu[0], vu[1]+1):
+                                        reabuff = self.XY2num(rea,x,y)
+                                        self.reactions[db][h123][reabuff] = \
                                                 Reaction(db, h123, 
-                                                rereabuff, rebuff, coeffs,
+                                                reabuff, [self.XY2num(reactiondata[0],x,y)]+reactiondata[4:], 
+                                                0,
                                                 self.bg, self.species, 
-                                                self.isotope, self.mass)
-                                # Excitation - only move up during reaction
-                                elif h123.upper() == 'EXCITATION':
-                                    for y in range(x + 1, 1 + isn*self.nmax + 
-                                                        isv*self.vmax):
-                                        rebuff = buff.copy()
-                                        rereabuff = reabuff
-                                        rebuff[0] = self.XY2num(rebuff[0], x, y) 
-                                        rereabuff = self.XY2num(rereabuff, x, y) 
-                                        coeffs = set_coeffs(db, h123, rereabuff.upper(), rdata)
-                                        if coeffs is False:
-                                            coeffs = (x, y)
-                                        self.reactions[db][h123][rereabuff] = \
-                                                Reaction(db, h123, 
-                                                rereabuff, rebuff, coeffs,
-                                                self.bg, self.species, 
-                                                self.isotope, self.mass)
-                                # Ladder-like process assumed
-                                elif 'H.' in h123.upper():
-                                    for y in range(-1*('&' in buff[0]), 2, 2):
-                                        # Limit transitions to [0,vmax]
-                                        if x + y in range(self.vmax + 1):
+                                                self.isotope, self.mass, fcf=rdata[db][datafile][x,y])
+    
+        
+                    else:
+                        ''' Branch for ground-state transitions '''
+                        # Loop through states, if necessary. Dynamicallt set boundaries
+                        # according to electronic or vibrational transitions
+                        isn, isv  = ('N=$' in reastr), ('V=$' in reastr)
+                        if isn or isv:
+                            del self.reactions[db][h123][rea]
+                        for x in range(isn, 1 + isv*self.vmax + isn*self.nmax):
+                            # Vibrational/electronic dependence present
+                            if '$' in reastr:
+                                buff = reactiondata.copy()
+                                reabuff = rea
+                                # Substitute state into educts and product strings 
+                                buff[0] = self.XY2num(buff[0], x)
+                                reabuff = self.XY2num(reabuff, x)
+                                # %%% n- or v-dependent upper rate %%%
+                                if '&' in reastr:
+                                    # Relaxation - only move down during reaction
+                                    if h123.upper() == 'RELAXATION':
+                                        for y in range(int(isn), x):
                                             rebuff = buff.copy()
                                             rereabuff = reabuff
-                                            # Retain intial and final states in name
-                                            rebuff[0] = self.XY2num(rebuff[0], x, x + y) 
-                                            rereabuff = self.XY2num(rereabuff, x, x + y) 
+                                            rebuff[0] = self.XY2num(rebuff[0], x, y) 
+                                            rereabuff = self.XY2num(rereabuff, x, y) 
                                             coeffs = set_coeffs(db, h123, rereabuff.upper(), rdata)
                                             if coeffs is False:
                                                 coeffs = (x, y)
@@ -257,26 +281,60 @@ class Crm(Tools):
                                                     rereabuff, rebuff, coeffs,
                                                     self.bg, self.species, 
                                                     self.isotope, self.mass)
+                                    # Excitation - only move up during reaction
+                                    elif h123.upper() == 'EXCITATION':
+                                        for y in range(x + 1, 1 + isn*self.nmax + 
+                                                            isv*self.vmax):
+                                            rebuff = buff.copy()
+                                            rereabuff = reabuff
+                                            rebuff[0] = self.XY2num(rebuff[0], x, y) 
+                                            rereabuff = self.XY2num(rereabuff, x, y) 
+                                            coeffs = set_coeffs(db, h123, rereabuff.upper(), rdata)
+                                            if coeffs is False:
+                                                coeffs = (x, y)
+                                            self.reactions[db][h123][rereabuff] = \
+                                                    Reaction(db, h123, 
+                                                    rereabuff, rebuff, coeffs,
+                                                    self.bg, self.species, 
+                                                    self.isotope, self.mass)
+                                    # Ladder-like process assumed
+                                    elif 'H.' in h123.upper():
+                                        for y in range(-1*('&' in buff[0]), 2, 2):
+                                            # Limit transitions to [0,vmax]
+                                            if x + y in range(self.vmax + 1):
+                                                rebuff = buff.copy()
+                                                rereabuff = reabuff
+                                                # Retain intial and final states in name
+                                                rebuff[0] = self.XY2num(rebuff[0], x, x + y) 
+                                                rereabuff = self.XY2num(rereabuff, x, x + y) 
+                                                coeffs = set_coeffs(db, h123, rereabuff.upper(), rdata)
+                                                if coeffs is False:
+                                                    coeffs = (x, y)
+                                                self.reactions[db][h123][rereabuff] = \
+                                                        Reaction(db, h123, 
+                                                        rereabuff, rebuff, coeffs,
+                                                        self.bg, self.species, 
+                                                        self.isotope, self.mass)
+                                    else:
+                                        print('Reaction specifier "{}" not' 
+                                            ' recognized. Omitting '
+                                            '{} {} {}'.format(h123, db, h123, rea))
+                                # Independent upprt state
                                 else:
-                                    print('Reaction specifier "{}" not' 
-                                        ' recognized. Omitting '
-                                        '{} {} {}'.format(h123, db, h123, rea))
-                            # Independent upprt state
+                                    coeffs = set_coeffs(db, h123, reabuff.upper(), rdata)
+                                    if coeffs is False:
+                                        coeffs = x
+                                    self.reactions[db][h123][reabuff] = \
+                                            Reaction(db, h123, reabuff, buff,
+                                            coeffs, self.bg, self.species, 
+                                            self.isotope, self.mass)
                             else:
-                                coeffs = set_coeffs(db, h123, reabuff.upper(), rdata)
+                                coeffs = set_coeffs(db, h123, rea.upper(), rdata)
                                 if coeffs is False:
-                                    coeffs = x
-                                self.reactions[db][h123][reabuff] = \
-                                        Reaction(db, h123, reabuff, buff,
-                                        coeffs, self.bg, self.species, 
-                                        self.isotope, self.mass)
-                        else:
-                            coeffs = set_coeffs(db, h123, rea.upper(), rdata)
-                            if coeffs is False:
-                                coeffs = None
-                            self.reactions[db][h123][rea] = Reaction(db, h123, rea,
-                                        reactiondata, coeffs, self.bg, 
-                                        self.species, self.isotope, self.mass)
+                                    coeffs = None
+                                self.reactions[db][h123][rea] = Reaction(db, h123, rea,
+                                            reactiondata, coeffs, self.bg, 
+                                            self.species, self.isotope, self.mass)
 
 
         # Define reactions for UEDGE raditation
@@ -285,9 +343,13 @@ class Crm(Tools):
                 #['','',None,None,[0,0,0,0]])
         #self.recrad=Reaction('RECRAD','UE',self.get_coeff('UE','RECRAD'),
                 #'UE',['','',''],bg,species,['','',None,None,[0,0,0,0]])
+        #return
         # Create the rate matrix M based on the input
+        print('Constructing functional rate matrix')
         self.create_M()
+        print('Constructing functional emissivity matrix')
         self.create_EI()
+        print('Constructing functional energy transfer matrix')
         self.create_Sgl()
 
 
@@ -296,18 +358,19 @@ class Crm(Tools):
             mkdir('{}/logs'.format(self.path))
         except:
             pass
-        # Write a log of the CRM setup path/logs
-        with open('{}/logs/setup.log'.format(self.path), 'w') as f:
-            f.write('CRUMPET run in {} on {}\n'.format(getcwd(),
-                    str(datetime.now())[:-7]))
-            f.write('Defined species:\n')
-            for i in self.slist:
-                f.write('    {}\n'.format(i))
-            f.write('Defined reactions:\n')
-            for dkey, database in self.reactions.items():
-                for hkey, h123 in database.items():
-                    for rkey, reaction in h123.items():
-                        f.write('{}\n'.format(reaction.print_reaction()))
+        if writelog is True:
+            # Write a log of the CRM setup path/logs
+            with open('{}/logs/setup.log'.format(self.path), 'w') as f:
+                f.write('CRUMPET run in {} on {}\n'.format(getcwd(),
+                        str(datetime.now())[:-7]))
+                f.write('Defined species:\n')
+                for i in self.slist:
+                    f.write('    {}\n'.format(i))
+                f.write('Defined reactions:\n')
+                for dkey, database in self.reactions.items():
+                    for hkey, h123 in database.items():
+                        for rkey, reaction in h123.items():
+                            f.write('{}\n'.format(reaction.print_reaction()))
         # Output to stdout if run verbosely
         if self.verbose:
             with open('logs/setup.log', 'rt') as f:
@@ -324,6 +387,7 @@ class Crm(Tools):
         '''
         from numpy import zeros,array,sum,transpose
         from math import isinf
+        from tqdm import tqdm
         
         N = len(self.species)
         E = []
@@ -339,7 +403,7 @@ class Crm(Tools):
                 E[i].append([])
                 I[i].append([])
 
-        for i in range(N):
+        for i in tqdm(range(N)):
             #%%% Walk through each row (species) %%%
             for dkey, database in self.reactions.items():
                 for h123, h123data in database.items():
@@ -427,6 +491,7 @@ class Crm(Tools):
         '''
         from numpy import zeros,array,sum,transpose
         from math import isinf
+        from tqdm import tqdm
         
         N = len(self.species)
         S = []
@@ -446,7 +511,7 @@ class Crm(Tools):
                 SS[i].append([])
 
         count=0
-        for i in range(N):
+        for i in tqdm(range(N)):
             #%%% Walk through each row (species) %%%
             for dkey, database in self.reactions.items():
                 for h123, h123data in database.items():
@@ -572,6 +637,7 @@ class Crm(Tools):
         '''
         from numpy import zeros,array,sum,transpose
         from math import isinf
+        from tqdm import tqdm
         
         N = len(self.species)
         # Setup a matrix and vector
@@ -589,7 +655,7 @@ class Crm(Tools):
                 M_mult[i].append([])
 #        ret = zeros((N, N))
 #        rec_source = zeros(N)
-        for i in range(N):
+        for i in tqdm(range(N)):
             #%%% Walk through each row (species) %%%
             for dkey, database in self.reactions.items():
                 for h123, h123data in database.items():
@@ -1278,7 +1344,7 @@ class Crm(Tools):
 
     def steady_state(
             self, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, 
-            gl=False, plot=False, n0=None, dt=False, **kwargs):
+            gl=False, plot=False, n0=None, dt=False, store=True,**kwargs):
         ''' TODO: update documentation
 
         Solves the steady-state population of atoms and molecules
@@ -1368,12 +1434,19 @@ class Crm(Tools):
             f.show()
         if dt is False:
             mat, ext = self.evolve(mat, ext)
-            return self.fill_static(matmul(inv(mat),-ext))
+            ret = self.fill_static(matmul(inv(mat),-ext))
+            if store is True:
+                for i in range(self.N):
+                    self.species[self.slist[i]]['nss'] = ret[i]
+            return ret
             #return fsolve(self.ddt, n0, args=(0, mat, ext))  
         else: 
-            return solve_ivp(lambda x,y: self.ddt(y, x, mat, ext), (0, 1e10), 
+            ret = solve_ivp(lambda x,y: self.ddt(y, x, mat, ext), (0, 1e10), 
                     n0, 'LSODA', dense_output=True).y[:,-1]
-
+            if store is True:
+                for i in range(self.N):
+                    self.species[self.slist[i]]['nss'] = ret[i]
+            return ret
 
     def gl_crm(self, mat, ext, Srec=True, n0=None):
         ''' Returns the P-space matrices according to Greenland 2001
@@ -1792,9 +1865,9 @@ class Crm(Tools):
         return self.reactions[database][h123][name]
 
 
-    def get_rate(self, database, h123, name, T, n, E=0.1):
+    def get_rate(self, database, h123, name, Te, Ti, ne, ni, E=0.1):
         ''' **INCOMPLETE** Returns the rate of the requested reaction '''
-        return self.get_reaction(database,h123,name).rate(T, T, E=E, n=n)
+        return self.get_reaction(database,h123,name).rate(Te=Te, Ti=Ti, ne=ne, ni=ni, E=E)
 
 
     def write_YACORA(self, modelname, path='.', dirname='YACORArun', 
@@ -2515,7 +2588,7 @@ class Crm(Tools):
         # Set densities to one to get rate coefficients as output
         ni=1
         ne=1
-        R, ext = self.eval_R(Te=Te, ne=0, Ti=i, ni=0, E=E)
+        R, ext = self.eval_R(Te=Te, ne=0, Ti=Ti, ni=0, E=E)
         if write: # Write to log if requested
             self.write_matrix(R, ext, 'R', Te, 0, Ti, 0, E)
             if self.verbose: # Print rate matrix to stdout if running verbose
