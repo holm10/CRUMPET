@@ -167,6 +167,7 @@ class Reaction:
         self.mass = mass
         self.K = '0'
         self.fcf = fcf
+        self.tag = '{} {} {}'.format(self.database, self.type, self.name)
 
         reaction = data.pop(0)
         self.educts = [x.strip() for x in \
@@ -214,6 +215,8 @@ class Reaction:
                 for i in range(int(data.pop(0))):
                     self.coeffs.append([float(x) for x in data.pop(0).strip().split()])
                 self.coeffs=log10(array(self.coeffs))
+            elif self.type.upper() == 'COEFFICIENT':
+                self.coeffs = float(data[0])
             else:
                 print('Reaction database "{}" and type "{}"'
                         ' not recognized!'.format(self.database, self.type))
@@ -561,7 +564,7 @@ class Reaction:
             freq = (1/f**2 - 1/i**2)
             Afac = (res*g(i, f))/(freq*(i**5)*(f**3))
             self.coeffs = Afac
-            return self.coeff_rate
+            return self.coeff_constant
 
         elif 'H.' in self.type.upper(): 
             if self.type.upper() == 'H.0':
@@ -604,7 +607,10 @@ class Reaction:
                 print('Unknown fit: {}, {}, {}'.format(
                         self.database,self.type,self.name))
         elif self.type.upper() in ['COEFFICIENT', 'RELAXATION']: 
-            return self.coeff_rate
+            if ('e' in self.educts) or ('p' in self.educts):
+                return self.coeff_rate
+            else:
+                return self.coeff_constant
         elif self.type.upper() == 'INTERPOLATION': 
             self.Tl, self.Tu = 10**self.coeffs[0,0], 10**self.coeffs[-1,0]
             self.coeffs = interp1d(self.coeffs[:,0], self.coeffs[:,1])
@@ -636,49 +642,52 @@ class Reaction:
         return 2.1716e-8*(1/omegaj)*sqrt(13.6048/Tuse)*self.interpolation(Tuse)
 
 
-    def extrapolate_polyfit(self, T, fittype, E, ne, ni=None, frequency = False):
+    def extrapolate_polyfit(self, T, fittype, E, ne, ni, frequency = False):
         from numpy import log, exp, log10
+        x = log10(T)
         dx=1e-1
-        b = log10(fittype(0.5,0.5,E,ne))
-        dy = log10(fittype(0.5+dx,0.5+dx,E,ne)-10**b)
-        k = dy/log10(dx)
-        return self.get_n(ne, ni)**frequency*10**(k*(log10(T)-log10(0.5))+b)#(k*(T-0.5) + b) 
+        x1 = 0.5
+        y1 = log10(fittype(Te=x1,Ti=x1,E=E,ne=ne,ni=ni))
+        dy = log10(fittype(Te=x1+dx,Ti=x1+dx,E=E,ne=ne,ni=ni))
+        k = -(y1-dy)/(log10(x1+dx)-log10(x1))
+        b = y1 - k*log10(x1)
+        return self.get_n(ne, ni)**frequency*(10**(k*x+b))
 
-    def polyfit_H2(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, **kwargs):
+    def polyfit_H2(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, extrapolate = True, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
         ep = ((self.e + self.p) ==2)
         T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
-        if T < 0.5:   
-            return self.extrapolate_polyfit(T, self.polyfit_H2, E, ne, ni)
+        if (T < 0.5) and (extrapolate is True):   
+            return self.extrapolate_polyfit(T, self.polyfit_H2, E, ne, ni, frequency)
         # Rate coefficient vs temperature
         for i in range(9):
             ret += self.coeffs[i]*(log(T)**i)    
         return self.get_n(ne,ni)**frequency*exp(ret)
     
-    def polyfit_H3(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, **kwargs):
+    def polyfit_H3(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, extrapolate=True, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
         ep = ((self.e + self.p) ==2)
         T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
-        if T < 0.5:   
-            return self.extrapolate_polyfit(T, self.polyfit_H3, E, ne)
+        if (T < 0.5) and (extrapolate is True):   
+            return self.extrapolate_polyfit(T, self.polyfit_H3, E, ne, ni, frequency)
         # Rate coefficient vs temperature and energy
         for i in range(9):
             for j in range(9):
                 ret += self.coeffs[i,j]*(log(T)**i)*(log(E)**j)
         return self.get_n(ne,ni)**frequency*exp(ret)
 
-    def polyfit_H4(self, Te, Ti, E=None, ne=None, ni=None, frequency=False,**kwargs):
+    def polyfit_H4(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, extrapolate=True, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
         ep = ((self.e + self.p) ==2)
         T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
-        if T < 0.5:   
-            return self.extrapolate_polyfit(T, self.polyfit_H4, E, ne)
+        if (T < 0.5) and (extrapolate is True):   
+            return self.extrapolate_polyfit(T, self.polyfit_H4, E, ne, ni, frequency)
         # Rate coefficient vs temperature and density
         for i in range(9):
             for j in range(9):
@@ -759,9 +768,13 @@ class Reaction:
         return exp(ret)
         """
 
-    def coeff_rate(self, *args, frequency=False, ne=None, ni=None, **kwargs):
+    def coeff_constant(self, *args, frequency=False, ne=None, ni=None, **kwargs):
         # NOTE: These are always assumed to be in 1/s 
         return self.coeffs
+            
+    def coeff_rate(self, *args, frequency=False, ne=None, ni=None, **kwargs):
+        # NOTE: These are always assumed to be in 1/s 
+        return self.coeffs*self.get_n(ne,ni)**frequency
             
 
     def UE_rate(self, Te, *args, E=None, ne=None, **kwargs):

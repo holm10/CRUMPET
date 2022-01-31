@@ -1799,7 +1799,7 @@ class Crumpet(Crm, RateData):
             ax.set_xlabel(xunit)
             ax.set_ylabel(yunit)
             ax.set_title('Total radiation from molecular processes')
-            ax.legend(['Atomic bands', 'Molceular bands'])
+            #ax.legend(['Atomic bands', 'Molceular bands'])
         fig.show()
 
 
@@ -1807,7 +1807,7 @@ class Crumpet(Crm, RateData):
             self, database, h123, name, T, n, E=0.1, logx=True, logy=True, res=200, 
             color='k', linestyle='-', figsize=(12,13/1.618033), title='',
             ylim=[1e-14,1e-6], linewidth=2, savename=None, figtype='png',
-            xlim=None, ncol=3, ax=None):
+            xlim=None, ncol=3, ax=None, **kwargs):
         ''' Plots the rate of the requested reaction
 
         Parameters
@@ -1872,13 +1872,13 @@ class Crumpet(Crm, RateData):
             pf = ax.semilogx
             try:
                 x = logspace(log10(T[0]), log10(T[1]),res)
-                y = [self.get_rate(database, h123, name, Te=i,Ti=i, ne=n , ni=n, E=E) for i in x]
+                y = [self.get_rate(database, h123, name, Te=i,Ti=i, ne=n , ni=n, E=E, **kwargs) for i in x]
                 xlabel = 'Temperature [eV]'.format(T)
                 titapp = (', '*(len(title) > 0) + r'n={:.2E} '.format(n)
                         + r'$\rm{{cm^{{-3}}}}$')
             except:
                 x = logspace(log10(T[0]), log10(T[1]),res)
-                y = [self.get_rate(database, h123, name, T, i, E) for i in x]
+                y = [self.get_rate(database, h123, name, Te=i, Ti=i, ne=n, ni=n, E=E, **kwargs) for i in x]
                 xlabel = r'Density [$\rm{cm^{-3}}$]'
                 titapp = ', '*(title != '') + r'T={} eV'.format(T)
             if logy is True:

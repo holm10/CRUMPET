@@ -176,7 +176,10 @@ class Crm(Tools):
                 try:
                     return rdata[db][h123][r.upper()]
                 except:
-                    print('Reaction "{}" of type "{}" not '
+                    if '-' in r:
+                        return rdata[db][h123][r.split('-')[0].upper()]
+                    else: 
+                        print('Reaction "{}" of type "{}" not '
                             'found in database "{}"!'.format(r, h123, db))
                     return False
             else:
@@ -329,6 +332,13 @@ class Crm(Tools):
                                             coeffs, self.bg, self.species, 
                                             self.isotope, self.mass)
                             else:
+#                                if db.upper() == 'USER':
+ #                                   if h123.upper() == 'COEFFICIENT':
+  #                                      print(reactiondata, rea)
+   #                                     self.reactions[db][h123][rea] = Reaction(db, h123, rea,
+    #                                                reactiondata, coeffs, self.bg, 
+     #                                               self.species, self.isotope, self.mass)
+      #                          else:
                                 coeffs = set_coeffs(db, h123, rea.upper(), rdata)
                                 if coeffs is False:
                                     coeffs = None
@@ -887,12 +897,12 @@ class Crm(Tools):
                 for m in f:
                     print(m.strip())
 
-    def S(self, Te, ne, Ti=None, ni=None, E=0.1,
+    def getS(self, Te, ne, Ti=None, ni=None, E=0.1,
                                 Tm=0,write=False):
         if Ti is None: Ti=Te # Check for Ti, set if necessary
         if ni is None: ni=ne # Check for ni, set if necessary
 
-        mat,ext=self.eval_Sgl(Te=Te,ne=ne,Ti=Ti,ni=ni,E=E,Tm=Tm)    
+        mat,ext=self.eval_Sgl(Te=Te,ne=ne,Ti=Ti,ni=ni,Energy=E,Tm=Tm)    
 
 
         if write:
@@ -1184,7 +1194,7 @@ class Crm(Tools):
             M, G, n0 = self.gl_crm(M, G, Srec, n0)
             sfunc = self.Sgl
         else:
-            sfunc = self.S
+            sfunc = self.getS
         if densonly is False:
             U=sfunc(Te, ne, Ti, ni, E, Tm)
             if Qres is True: 
@@ -1229,118 +1239,23 @@ class Crm(Tools):
         return solve_ivp(lambda x, y: self.ddt(y, x, mat, ext), (0, t),
                 n, 'LSODA', dense_output=True)
 
-    def old_steady_state(
-            self, Te, ne, na, nm, diva, divm, srca, srcm, bga, bgm, psor,
-            psorgc, vol, E=0.1, Ti=None, ni=None, Srec=True, gl=False,
-            plot=False):
-        ''' Solves the steady-state population of atoms and molecules
-        Returns the ground state atom, molecule, and total vibrationally
-        excited molecule populations. Assumes the reactions defined for 
-        in Crm and the external sinks and sources defined and simulates 
-        the population for 10s, assuming steady-staten to be achieved by
-        that time.
-        Parameters
-        ----------
-        Te : float
-            electron temperature in J
-        ne : float
-            electron density in m**-3
-        na : float
-            initial guess for atom density in m**-3
-        nm : float
-            initial guess for molecule density in m**-3
-        diva : float
-            atom divergence of domain (transport in/out) in s**-1
-        divm : float
-            molecule divergence of domain (transport in/out) in s**-1
-        srca : float
-            atom particle source in domain in s**-1
-        srcm : float
-            molecule particle source in domain in s**-1
-        bga : float
-            atom background source in domain in s**-1
-        bgm : float
-            molecule background source in domain in s**-1
-        psor : float
-            ionization sink in domain in s**-1
-        psorgc : float
-            recombination source in domain in s**-1
-        vol : float
-            volume of the domain in m**3
-        Ti : float, optional (default: None)
-            ion temperature in eV. Default sets Ti=Te
-        ni : float, optional (default: None)
-            ion density in cm**-3. Default sets ni=ne
-        E : float, optional (default: E=0.1)
-            molecular energy in eV for rates
-        Srec : boolean, optional (default: True)
-            switch for considering 'external' sinks/sources (e.g. 
-            re-association)
-        gl : boolean, optional (default: False)
-            switch determining wheter to evaluate the Np x Np 
-            Greenland CRM (True) or solve the full NxN system of ODEs (False)
-        plot : boolean, optional (default: False)
-            show a plot of the 10s time-evolution
-        Returns
-        -------
-        na, nm, nmvib
-        na : float
-            steady-state atom density in m**-3
-        nm : float
-            steady-state atom density in m**-3
-        nmvib - float
-            total density of all vibrationally excited molecular species 
-            in m**-3
-        '''
-        # TODO: Solve steady-state from dn/dt=0!
-        from numpy import log, ones, matmul, polyfit, zeros, exp, sum
-        from scipy.optimize import fsolve, minimize
-        from scipy.linalg import norm
-        from scipy.integrate import solve_ivp
-        from matplotlib.pyplot import figure
 
-        def dt(t, n, mat, ext, n0):
-            return matmul(mat, n) + ext
 
-        Te /= 1.602e-19
-        ne /= 1e6
-        # Set volume to be cm**3
-        vol *= 1e6
-        # Set initial density in [1/cm**3]
-        n = zeros((len(self.n0()),))
-        n[0] = 1e-6*na
-        n[1] = 1e-6*nm
-        # Get the rate matrices 
-        mat, ext = self.getM(Te, ne, Ti, ni, E, write=True) 
-        if gl is True:
-            # Get matrices and eigenvalues
-            mat, ext, n = self.gl_crm(mat, ext, n=n) 
-        # Set external sources to be [1/cm**3/s]
-        ext[0] = (psorgc + diva + srca + bga)/vol
-        ext[1] = (divm + srcm + bgm)/vol
-        # Normalize ionzation rate to UEDGE values 
-        mat[0,0] = (psor/ne)/vol
-        # Simulate to SS
-        ss_sol = solve_ivp(lambda x,y: dt(x, y, mat, ext, n), (0, 10), n,
-                'LSODA', dense_output=True)
-        if plot is True:
-            f = figure(figsize = (7,7))
-            ax = f.add_subplot(111)
-            for i in range(len(n)):
-                line = '-' + '-'*('H2' in self.slist[i])
-                ax.semilogx(ss_sol.t, ss_sol.y[i,:], line, label=self.slist[i])
-                if i == 0:
-                    ax.semilogx(ss_sol.t, ss_sol.y[i,:], 'k.', 
-                            label=self.slist[i]) 
-            ax.legend(ncol=3)
-            ax.set_xlabel('Time [s]')
-            ax.set_ylabel('Density [cm**-3]')
-        return [ss_sol.y[0,-1]*1e6, ss_sol.y[1,-1]*1e6, 
-                1e6*self.totmol(ss_sol.y[:,-1])]
+    def get_transition(self, wavelength, unit='angstrom'):
+        from numpy import divide, zeros_like, where
+        matE, _, _, _ = self.eval_EI(1,1,1,1,0.1,1)    
 
-    def get_relv(self, Te, ne, E=0.1, Ti=None, ni=None):
-        sol = self.steady_state(Te, ne, E, Ti, ni)
-        return sol/sol[0]
+        matE = divide(1239.84193, matE, out=zeros_like(matE), where=matE!=0)
+        matE = abs(matE-wavelength/(10**(unit=='angstrom')))
+        atE = matE[:,:,0]
+        molE = matE[:,:,1]
+        atl, atu = where(atE == atE.min())
+        moll, molu = where(molE == molE.min())
+        print('Closest atom transition: {} => {}'.format(self.slist[atu[0]], self.slist[atl[0]]))
+        print('Closest molecule transition: {} => {}'.format(self.slist[molu[0]], self.slist[moll[0]]))
+        return ((atl[0], atu[0]), (moll[0], molu[0]))
+        
+
 
     def steady_state(
             self, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, 
@@ -1448,7 +1363,7 @@ class Crm(Tools):
                     self.species[self.slist[i]]['nss'] = ret[i]
             return ret
 
-    def gl_crm(self, mat, ext, Srec=True, n0=None):
+    def gl_crm(self, te, ne, n0=None, **kwargs):
         ''' Returns the P-space matrices according to Greenland 2001
 
         Parameters
@@ -1485,9 +1400,17 @@ class Crm(Tools):
         eigenvalues : ndarray
             The eigenvalues of the supplied rate matrix
         '''
-        from numpy import matmul, diag, real
+        from numpy import matmul, diag, real, ones
         from numpy.linalg import inv, eig
 
+        # CIRCUMVENT STATIC SPECIES WHICH MAKE MATRICES SINGULAR
+        oldarr = self.evolvearr.copy()
+        oldmat = self.evolvemat.copy()
+        self.evolvearr = ones(self.evolvearr.shape)
+        self.evolvemat = ones(self.evolvemat.shape)
+        mat, ext = self.getM(te, ne, **kwargs)
+        self.evolvearr = oldarr
+        self.evolvemat = oldmat 
         # Use input n0 as default unless explict n0 requested
         if n0 is None: 
             n0 = self.n0() 
@@ -1528,7 +1451,8 @@ class Crm(Tools):
         nP0p = real(n0[:self.Np] - matmul(matmul(Delta, inv(TQ)), 
                 n0[self.Np:])) 
         #nP0p = n0[:self.Np]
-        return Meff, (Srec is True)*GPp, nP0p
+
+        return Meff, GPp, nP0p
 
   
     def ddt(self, n, t, mat, ext):
@@ -1751,6 +1675,7 @@ class Crm(Tools):
         ''' 
         from numpy import reshape, zeros, multiply, where, nonzero
         from numpy import transpose, matmul, array, mean, all, diag
+        from numpy import divide, zeros_like, where
         from scipy.optimize import minimize
         from scipy.integrate import solve_ivp
         from matplotlib.pyplot import figure
@@ -1774,6 +1699,7 @@ class Crm(Tools):
             arr[:,1] = reshape(Y, (1, len(n_ss)**2))
             # Drop non-radiative entries
             #arr = transpose(arr[~all(abs(arr) < 1e-8, axis=1)])
+            """''' OLD '''
             for nzi in nonzero(arr[:,0]):
                 if units == 'v':    
                     arr[nzi,0]=(1e7*arr[nzi,0])/1239.84193
@@ -1783,12 +1709,27 @@ class Crm(Tools):
                     arr[nzi,0]=1239.84193/arr[nzi,0]
                 elif units == 'Å':
                     arr[nzi,0]=12398.4193/arr[nzi,0]
+            """''' NEW '''
+            if units == 'v':    
+                arr[:,0]=(1e7*arr[:,0])/1239.84193
+            elif units == 'f':
+                arr[:,0]=241.798*arr[:,0]
+            elif units == 'l':
+                arr[:,0] = divide(1239.84193, arr[:,0], out=zeros_like(arr[:,0]), where=arr[:,0]!=0)
+            elif units == 'Å':
+                arr[:,0] = divide(12398.4193, arr[:,0], out=zeros_like(arr[:,0]), where=arr[:,0]!=0)
             if norm is True:
                 nrm = sum(arr[:,1])
             else:
                 nrm = 1
             arr[:,1] = arr[:,1]/nrm
-            ret.append(transpose(arr))
+            arr = transpose(arr)
+            ''' FILTERING START '''
+            arr = arr[arr!=0]
+            arr = arr.reshape(2,int(len(arr)/2))
+            ''' FILTERING END '''
+            ret.append(arr)
+
         return ret
             
 
@@ -1865,15 +1806,16 @@ class Crm(Tools):
         return self.reactions[database][h123][name]
 
 
-    def get_rate(self, database, h123, name, Te, Ti, ne, ni, E=0.1):
+    def get_rate(self, database, h123, name, Te, Ti, ne, ni, E=0.1, **kwargs):
         ''' **INCOMPLETE** Returns the rate of the requested reaction '''
-        return self.get_reaction(database,h123,name).rate(Te=Te, Ti=Ti, ne=ne, ni=ni, E=E)
+        return self.get_reaction(database,h123,name).rate(Te=Te, Ti=Ti, ne=ne, ni=ni, E=E, **kwargs)
 
 
     def write_YACORA(self, modelname, path='.', dirname='YACORArun', 
                     Trange=None, write_reac=True, Tlist=None, nlist=None):
         from pathlib import Path
         from numpy import logspace, linspace
+        from tqdm import tqdm
 
         # TODO: spacing, etc
 
@@ -1965,7 +1907,7 @@ class Crm(Tools):
                                 mf.write('{:<16}{:<10}'.format(species, str(int(rate.p_mult[fi]))))
                         mf.write('\n')                
 
-                        if rate.fittype == 'H.4':
+                        if rate.type == 'H.4':
                             ratepath =  '../../ratecoefficients/{:.2E}/{}-{}.txt'.format(n,database, handle)
                             commentstr = '{} rate coefficient for reaction {} at ne={:.2E}'.format(database, handle, n)
                         else:
@@ -1976,7 +1918,7 @@ class Crm(Tools):
 
                         if write_reac is True:
                             dbpath='{}/{}/ratecoefficients'.format(path, dirname)
-                            if rate.fittype == 'H.4': # Density-dependent rate
+                            if rate.type == 'H.4': # Density-dependent rate
                                 ndbpath = '{}/{:.2E}'.format(dbpath,n)
                                 Path(ndbpath).mkdir(parents=True, exist_ok=True)
                                 f = open('{}/{}-{}.txt'.format(ndbpath, database, 
@@ -1986,8 +1928,8 @@ class Crm(Tools):
                                 f.write((8*' ').join(['Te','X\n']))
                                 for T in Trange:
                                     f.write('{:.5E}  {:.5E}\n'.format(T, 
-                                        1e-6*rate.rate(T, T, ne=n*1e-6)))
-                            elif rate.fittype == 'H.3': # Energy-dependent rate
+                                        1e-6*rate.rate(Te=T, Ti=T, ne=n*1e-6, ni=n*1e-6, E=0.1)))
+                            elif rate.type == 'H.3': # Energy-dependent rate
                                 f = open('{}/{}-{}.txt'.format(dbpath, database, 
                                     handle),'w')
                                 f.write('RATE_COEFFICIENT\n')
@@ -2004,7 +1946,7 @@ class Crm(Tools):
                                 f.write((8*' ').join(['Te','X\n']))
                                 for T in Trange:
                                     f.write('{:.5E}  {:.5E}\n'.format(T, 
-                                        rate.rate(T, T, 0.1)))
+                                        1e-6*rate.rate(Te=T, Ti=T, ne=n*1e-6, ni=n*1e-6, E=0.1)))
 
         # Runfile
         e2k = 1.160451812e4
@@ -2942,5 +2884,119 @@ class Crm(Tools):
                                     retE[i,j,:] += Sgl[-2:,0]*(Sgl[-2:,0] >0)
         return retE, rec_sourceE, retI, rec_sourceI
 
+
+
+    def old_steady_state(
+            self, Te, ne, na, nm, diva, divm, srca, srcm, bga, bgm, psor,
+            psorgc, vol, E=0.1, Ti=None, ni=None, Srec=True, gl=False,
+            plot=False):
+        ''' Solves the steady-state population of atoms and molecules
+        Returns the ground state atom, molecule, and total vibrationally
+        excited molecule populations. Assumes the reactions defined for 
+        in Crm and the external sinks and sources defined and simulates 
+        the population for 10s, assuming steady-staten to be achieved by
+        that time.
+        Parameters
+        ----------
+        Te : float
+            electron temperature in J
+        ne : float
+            electron density in m**-3
+        na : float
+            initial guess for atom density in m**-3
+        nm : float
+            initial guess for molecule density in m**-3
+        diva : float
+            atom divergence of domain (transport in/out) in s**-1
+        divm : float
+            molecule divergence of domain (transport in/out) in s**-1
+        srca : float
+            atom particle source in domain in s**-1
+        srcm : float
+            molecule particle source in domain in s**-1
+        bga : float
+            atom background source in domain in s**-1
+        bgm : float
+            molecule background source in domain in s**-1
+        psor : float
+            ionization sink in domain in s**-1
+        psorgc : float
+            recombination source in domain in s**-1
+        vol : float
+            volume of the domain in m**3
+        Ti : float, optional (default: None)
+            ion temperature in eV. Default sets Ti=Te
+        ni : float, optional (default: None)
+            ion density in cm**-3. Default sets ni=ne
+        E : float, optional (default: E=0.1)
+            molecular energy in eV for rates
+        Srec : boolean, optional (default: True)
+            switch for considering 'external' sinks/sources (e.g. 
+            re-association)
+        gl : boolean, optional (default: False)
+            switch determining wheter to evaluate the Np x Np 
+            Greenland CRM (True) or solve the full NxN system of ODEs (False)
+        plot : boolean, optional (default: False)
+            show a plot of the 10s time-evolution
+        Returns
+        -------
+        na, nm, nmvib
+        na : float
+            steady-state atom density in m**-3
+        nm : float
+            steady-state atom density in m**-3
+        nmvib - float
+            total density of all vibrationally excited molecular species 
+            in m**-3
+        '''
+        # TODO: Solve steady-state from dn/dt=0!
+        from numpy import log, ones, matmul, polyfit, zeros, exp, sum
+        from scipy.optimize import fsolve, minimize
+        from scipy.linalg import norm
+        from scipy.integrate import solve_ivp
+        from matplotlib.pyplot import figure
+
+        def dt(t, n, mat, ext, n0):
+            return matmul(mat, n) + ext
+
+        Te /= 1.602e-19
+        ne /= 1e6
+        # Set volume to be cm**3
+        vol *= 1e6
+        # Set initial density in [1/cm**3]
+        n = zeros((len(self.n0()),))
+        n[0] = 1e-6*na
+        n[1] = 1e-6*nm
+        # Get the rate matrices 
+        mat, ext = self.getM(Te, ne, Ti, ni, E, write=True) 
+        if gl is True:
+            # Get matrices and eigenvalues
+            mat, ext, n = self.gl_crm(mat, ext, n=n) 
+        # Set external sources to be [1/cm**3/s]
+        ext[0] = (psorgc + diva + srca + bga)/vol
+        ext[1] = (divm + srcm + bgm)/vol
+        # Normalize ionzation rate to UEDGE values 
+        mat[0,0] = (psor/ne)/vol
+        # Simulate to SS
+        ss_sol = solve_ivp(lambda x,y: dt(x, y, mat, ext, n), (0, 10), n,
+                'LSODA', dense_output=True)
+        if plot is True:
+            f = figure(figsize = (7,7))
+            ax = f.add_subplot(111)
+            for i in range(len(n)):
+                line = '-' + '-'*('H2' in self.slist[i])
+                ax.semilogx(ss_sol.t, ss_sol.y[i,:], line, label=self.slist[i])
+                if i == 0:
+                    ax.semilogx(ss_sol.t, ss_sol.y[i,:], 'k.', 
+                            label=self.slist[i]) 
+            ax.legend(ncol=3)
+            ax.set_xlabel('Time [s]')
+            ax.set_ylabel('Density [cm**-3]')
+        return [ss_sol.y[0,-1]*1e6, ss_sol.y[1,-1]*1e6, 
+                1e6*self.totmol(ss_sol.y[:,-1])]
+
+    def get_relv(self, Te, ne, E=0.1, Ti=None, ni=None):
+        sol = self.steady_state(Te, ne, E, Ti, ni)
+        return sol/sol[0]
 
 
