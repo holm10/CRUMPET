@@ -4,6 +4,28 @@
 # 200205 - Separated from CRUMPET.py #holm10
 from .crm import Crm
 from .ratedata import RateData
+from cycler import cycler
+import matplotlib.pyplot as plt
+# Colorblind-compliant color cycle
+colors = [  '#377eb8', 
+            '#ff7f00', 
+            '#4daf4a',
+            '#f781bf',
+            '#a65628',
+            '#984ea3',
+            '#999999',
+            '#e41a1c',
+            '#dede00',
+            ]*4
+
+lines = (['-' for x in range(9)]
+        +['--' for x in range(9)]
+        +[':' for x in range(9)]
+        +['-.' for x in range(9)])
+
+plt.rc('axes', prop_cycle=(cycler(color=colors) +
+                  cycler(linestyle=lines)))
+
 
 
 class Crumpet(Crm, RateData):
@@ -23,7 +45,7 @@ class Crumpet(Crm, RateData):
 
 
     def __init__(
-            self, fname='input/CRUMPET.dat', path='.', vmax=14, nmax=8,
+            self, fname='input/CRUMPET.dat', path='./', vmax=14, nmax=8,
             verbose=False, NP=2, isotope='H', mass=1):
         '''
         Parameters
@@ -74,7 +96,7 @@ class Crumpet(Crm, RateData):
 
         def parse_file(path, fname, data):
             ''' Parses file to dict '''
-            with open('{}/{}'.format(path, fname)) as f:  # Open the file
+            with open('{}{}'.format(path, fname)) as f:  # Open the file
                 for l in f:
                     # Omit empty and comment lines
                     l=l.strip()
@@ -87,6 +109,8 @@ class Crumpet(Crm, RateData):
                             subcard = None
                         elif '*' in l[:3]: # Subcard
                             if l.split()[1].strip().upper() == 'INCLUDE':
+                                fnamepath = ' '.join(l.split()[2:])
+                                 
                                 parse_file('', ' '.join(l.split()[2:]), data)
                             elif card == 'REACTIONS':
                                 [subcard, h123, reaction] = l.split()[1:]
@@ -110,40 +134,6 @@ class Crumpet(Crm, RateData):
         # Parse the input file into the dict data
         data = {} # Hierarchy: Card - Subcard - Data
         parse_file(path, fname, data)
-        '''
-        with open('{}/{}'.format(path, fname)) as f:  # Open the file
-            for l in f:
-                # Omit empty and comment lines
-                l=l.strip()
-                if len(l)>0 and l[0] != '#':
-                    l = l.split('#')[0].strip() # Discard comments
-                    if '**' in l[:3]: # Card
-                        card = l.split()[1].upper()
-                        data[card] = {}
-                        subcard = None
-                    elif '*' in l[:3]: # Subcard
-                        if card == 'REACTIONS':
-                            print(l)
-                            if len(l.split()) == 2:
-                                if l.split()[1].strip().upper() == 'INCLUDE':
-                                    print('INCLUDING')
-                            else:
-                                [subcard, h123, reaction] = l.split()[1:]
-                                merge_reactions(data[card], build_reactions(l.split()[1:]))
-                        else:
-                            subcard = l.split()[1]
-                            data[card][subcard] = [] 
-                            if len(l.split()) > 2:
-                                data[card][subcard] = l.split()[2]
-                    else:
-                        if subcard is None: # Direct data input w/o subcard
-                            data[card][l.split()[0].strip()] = \
-                                    ' '.join(l.split()[1:])
-                        else:
-                            if card == 'REACTIONS':
-                                data[card][subcard][h123][reaction].append(l)
-                            else:
-                                data[card][subcard].append(l)'''
                     
         ''' Store required input parameters '''
         # Species
@@ -159,35 +149,7 @@ class Crumpet(Crm, RateData):
         # Reactions
         rlist = data.pop('REACTIONS', None)
 
-        '''
-        rlist = {}
-        print(reactions)
-        for key, value in data.pop('REACTIONS', None).items():
-            # Store reaction
-            rea = [x.strip() for x in key.split('_')]
-            reaction = value.pop(0)
-            [reactants, products] = [x.strip() for x in reaction.split(' > ')]
-            # Non-EIRENE db structure
-            if len(rea) == 2:
-                [db, reaction] = rea
-                if db not in list(rlist):
-                    rlist[db] = {}
-                rlist[db][reaction] = {
-                        'reactants':[x.strip() for x in reactants.split(' + ')],
-                        'fragments':[x.strip() for x in products.split(' + ')],
-                        'data':value }
-            # EIRENE db structure
-            elif len(rea) == 3:
-                [db, h123, reaction] = rea
-                if db not in list(rlist):
-                    rlist[db] = {}
-                if h123 not in list(rlist[db]):
-                    rlist[db][h123] = {}
-                rlist[db][h123][reaction] = {
-                        'reactants':[x.strip() for x in reactants.split(' + ')],
-                        'fragments':[x.strip() for x in products.split(' + ')],
-                        'data':value }
-        ''' 
+
 
         ''' Store optional input parameters '''
         # Settings
@@ -214,169 +176,6 @@ class Crumpet(Crm, RateData):
         for key, values in data:
             print('Unrecognized card {}.\nIgnoring.'.format(setting))
 
-        '''
-        # Read the input file into a list
-        lines, cards, subcards = self.file2list(path, fname)
-        # %%%%%%%%%% LOOP THROUGH THE DEFINED CARDS %%%%%%%%%%%
-        for i in range(len(cards) - 1):
-            # %%%% Store species from species card to temporary list %%%%
-            if lines[cards[i]].split()[1].upper() == 'SPECIES':
-                species = {}
-                # Loop through each subcard
-                for j in range(
-                            subcards.index(cards[i]) + 1,
-                            subcards.index(cards[i + 1])  ):
-                    buff = {'V':0}
-                    ind = subcards[j]
-
-                    
-                    # Loop through the lines following the  declaration 
-                    # looking for the potential energy
-                    for m in range(subcards[j] + 1, subcards[j + 1]): 
-                        if lines[m].split()[0].strip().upper()=='V':
-                            buff['V'] = float(lines[m].split()[1].strip() )
-
-
-                    species[lines[ind].split()[1].strip()] = buff
-                    
-            # %%% Store the reactions requested to temporary reaction list %%%
-            elif lines[cards[i]].split()[1].upper() == 'REACTIONS':
-                rlst = {}
-
-                # Look between this card and the next: two lines per reactions
-                for k in range(
-                            subcards.index(cards[i]) + 1, 
-                            subcards.index(cards[i + 1])):
-
-                    # Store the reaction name, discard subcard marker
-                    rname = lines[subcards[k]].split()[1].upper() 
-                    [db, h123, rnm] = rname.split('_')
-                    # Create database dict if it doesn't exist
-                    try:
-                        rlst[db]
-                    except:
-                        rlst[db] = {}
-                    try:
-                        rlst[db][h123]
-                    except:
-                        rlst[db][h123] = {}
-
-                    # Check if custom reaction deck called
-                    if rname.upper() == 'CUSTOM': 
-                        # Store name and path to custom file
-                        rlst[rname.split('_')[0]] = {
-                                lines[subcards[k] + 1].strip():{
-                                'reactants': '',
-                                'fragments': '',
-                                }}
-                    # Regular reaction
-                    else:
-                        # Define energy sink/source
-                        if subcards[k] + 2 == subcards[k + 1]: K='0' 
-                                                            # No sink/source
-                        for m in range( 
-                                    subcards[k] + 2, subcards[k+1]): 
-                                                            # Read sink/source
-                            K = lines[m].strip().split('=')[-1] 
-                        # Extract the reactants and fragments from the input
-                        reactant, fragment = [x.strip().split(' + ') for x 
-                                    in lines[subcards[k] + 1].split(' > ')]
-                        rlst[db][h123][rnm] = {
-                                'reactants': reactant,
-                                'fragments': fragment,
-                                'K' : K,
-                                }
-
-            # %%%%%% Set paths of the standard rate data files %%%%%
-            elif lines[cards[i]].split()[1].upper() == 'RATES':
-                for j in range(cards[i] + 1, cards[i + 1]): # Look between this card and the next
-                    # Extract the database type and path
-                    [db, nm] = lines[j].split()
-                    db = db.upper()
-                    if db == 'ADAS':
-                        ADAS = nm
-                    elif db == 'UE':      
-                        UE = nm
-                    elif db == 'AMJUEL':
-                        amjuel = nm
-                    elif db == 'HYDHEL':  
-                        hydhel = nm
-                    elif db == 'H2VIBR':  
-                        h2vibr = nm
-                    else:
-                        print('Unrecognized database type {}.\n'
-                              'Ignoring.'.format(db))
-                        continue
-
-                # Create RATE_DATA class object based on the above files paths
-                RateData.__init__(self, rates, path)
-            # %%%% Define CRM settings %%%%
-            elif lines[cards[i]].split()[1].upper() == 'SETTINGS':
-                # Search this card only
-                for j in range(cards[i] + 1, cards[i + 1]): 
-                    # Create setting based on card type
-                    linein = lines[j].upper().split()
-                    if len(linein) == 3:
-                        [c, setting, value] = linein
-                    elif len(linein) == 2: 
-                        [c, setting] = linein
-                    elif len(linein) == 1:
-                        [setting] = linein
-                    if c != '*': 
-                        continue # Ensure that we are reading subcards
-                    elif setting == 'VMAX':
-                        vmax = int(value)
-                    elif setting == 'NMAX':
-                        nmax = int(value)
-                    elif setting == 'VERBOSE':
-                        verbose = bool(int(value))
-                    elif setting == 'NP': 
-                        Np = int(value)
-                    elif setting == 'N0':
-                        # Loop through all defined initial densities
-                        for k in range(j + 1, subcards[subcards.index(j) + 1]): 
-                            # Store the density in the location of n0 that 
-                            # corresponds to the species requested
-                            species[lines[k].split()[0]]['n']=float(
-                                                        lines[k].split()[1]) 
-                    elif setting == 'ISOTOPE':
-                        # Set isotope handle
-                        isotope = value
-                    elif setting == 'MASS':
-                        # Isotope mass in AMU
-                        mass = int(value)
-                    elif setting == 'STATIC':
-                        print('Here')
-                        # Static intial density species
-                        # Loop through all species set to be static
-                        static = []
-                        print(subcards, cards, j)
-                        for k in range(j + 1, subcards[subcards.index(j) + 1]): 
-                            static.append([lines[k].split()[0].strip()])
-                    else:
-                        print(   'Unrecognized setting {}.\n'
-                                 'Ignoring.'.format(setting))
-                        continue
-            # %%%% Define the plasma background species %%%%
-            elif lines[cards[i]].split()[1].upper() == 'BACKGROUND':
-                bg = {}
-                # Loop through each subcard
-                for j in range(subcards.index(cards[i]) + 1,
-                               subcards.index(cards[i + 1])  ):
-                    buff = {'V':0}
-                    ind = subcards[j]
-                    # Loop through the lines following the declaration 
-                    # looking for the background species potential
-                    for m in range(subcards[j] + 1, subcards[j + 1]): 
-                        if lines[m].split()[0].strip().upper()=='V':
-                            buff['V'] = float(lines[m].split()[1].strip() )
-                    bg[lines[ind].split()[1].strip()] = buff
-            # %%%%% Unknown card, abort %%%%%%
-            else:
-                print('Unknown card "{}": ' 
-                      'aborting!'.format(lines[cards[i]].split()[1]))
-                return
-        '''
 
         # %%%% Set up the CRM %%%%
         Crm.__init__(self, species, bg, rlist, path, self.reactions, settings)
@@ -656,8 +455,8 @@ class Crumpet(Crm, RateData):
 
     def plot_crm_dt(
             self, t, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, Qres=True, 
-            Tm=0, gl=False, density=False, fig=None, n0=None, title=None,
-            figsize=(7+7,7*1.618033-3), savename=None, figtype='png', 
+            Tm=0, gl=False, density=True, fig=None, n0=None, title=None,
+            figsize=(7+7,7*1.618033-3), savename=None, figtype='png',plotspecies=None,
             conservation=False, plot='plot', ext=None, plottot=False, **kwargs):
         ''' Plots the CRM results for neutrals in a static background plasma
 
@@ -723,8 +522,9 @@ class Crumpet(Crm, RateData):
         matplotlib.pyplot.figure
             if fig=None, else returns None
         '''
+        # TODO: revise coding
         from matplotlib.pyplot import figure
-        from numpy import sum, zeros, linspace, split, mod, concatenate
+        from numpy import sum, zeros, linspace, split, mod, concatenate, logspace, log10, array
         from numpy.linalg import inv
         from os import mkdir
         # TODO: Allow manual definition of ylim       
@@ -742,20 +542,30 @@ class Crumpet(Crm, RateData):
             return
         # Solve the problem up to T
         # TODO: fix addext
-        print('REVISE')
         ft = self.solve_crm(t, Te, ne, Ti, ni, E, Tm, Srec, gl=gl, 
                             n=n0, Qres=Qres, densonly=density, **kwargs)#, addext=ext) 
         # TODO: allow passing of additional sources
-        t = linspace(0, t, 250)
+        if ('logx' in plot) or ('loglog' in plot):
+            t = logspace(-8, log10(t), 250)
+        else:
+            t = linspace(0, t, 250)
         xt = t*1e3
         # Solve densities only
         if density is True:
-            nt = ft.sol(t)
+            if plotspecies is None:
+                nt = ft.sol(t)
+                legend = self.slist
+            else:
+                inds = []
+                for s in plotspecies:
+                    inds.append(self.slist.index(s))
+                nt = ft.sol(t)[inds]
+                legend = list(array(self.slist)[inds])
             fig.subplots_adjust(hspace=0, right=.8 + 0.13*Qres)
             ax = fig.add_subplot(111 + 100*conservation + 100*Qres)
             ylabel = r'Particles [$10^{{{}}}$]'
             self.plotax(ax, xt, nt, ylabel=ylabel, plottot=plottot,
-                    plotmax=self.Np*(not Qres) + 1e3*Qres, plot=plot)
+                    plotmax=self.Np*(not Qres) + 1e3*Qres, plot=plot, legend=legend)
             if plottot:
                 self.plottotpart(ax, n0)
             if Qres:
@@ -2068,28 +1878,5 @@ class Crumpet(Crm, RateData):
             print('tau({})'.format(self.slist[i]).ljust(20,' ')+
                     '= {:.3E}'.format(-1/mat[i,i]))
         return ret 
-
-
-def __main__():
-    from cycler import cycler
-    # Colorblind-compliant color cycle
-    colors = [  '#377eb8', 
-                '#ff7f00', 
-                '#4daf4a',
-                '#f781bf',
-                '#a65628',
-                '#984ea3',
-                '#999999',
-                '#e41a1c',
-                '#dede00',
-                ]*4
-
-    lines = (['-' for x in range(9)]
-            +['--' for x in range(9)]
-            +[':' for x in range(9)]
-            +['-.' for x in range(9)])
-
-    plt.rc('axes', prop_cycle=(cycler(color=colors) +
-                      cycler(linestyle=lines)))
 
 
