@@ -1,0 +1,597 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>RateData &mdash; CRUMPET 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reaction" href="CRUMPET.Reaction.html" />
+    <link rel="prev" title="Crm" href="CRUMPET.Crm.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> CRUMPET
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-greenland-crm-equation">The Greenland CRM equation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#model-limitations-assumptions">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-cr-energy-rates">The CR energy rates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#id1">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../input/input.html">The CRUMPET input file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../input/species.html">Species</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../input/background.html">Background</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../input/reactions.html">Reactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../input/custom.html">CUSTOM rate files</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../input/rates.html">Rates</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../input/settings.html">Settings</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../documentation.html">CRUMPET Classes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Crumpet.html">Crumpet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Crm.html">Crm</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">RateData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Reaction.html">Reaction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Tools.html">Tools</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-input-file">Example input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-custom-reactions">Example custom reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#generate-a-crm-form-the-input-file">Generate a CRM form the input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#time-dependently-evolve-the-initial-distribution">Time-dependently evolve the initial distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#plot-a-synthetic-spectra">Plot a synthetic spectra</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developments.html">Future developments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../LICENSE.html">Crumpet license</a><ul class="simple">
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CRUMPET</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../documentation.html">CRUMPET Classes</a> &raquo;</li>
+        
+      <li>RateData</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/holm10/CRUMPET/blob/masterobjects/CRUMPET.RateData.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="ratedata">
+<h1>RateData<a class="headerlink" href="#ratedata" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="CRUMPET.RateData">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">CRUMPET.</span></span><span class="sig-name descname"><span class="pre">RateData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'ADAS':</span> <span class="pre">None,</span> <span class="pre">'AMJUEL':</span> <span class="pre">None,</span> <span class="pre">'H2VIBR':</span> <span class="pre">None,</span> <span class="pre">'HYDHEL':</span> <span class="pre">None,</span> <span class="pre">'UE':</span> <span class="pre">None}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.RateData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class containing data stored in the default databases</p>
+<p>This class sets up an atomic and molecular reaction rate database
+from a set of default rate databases.</p>
+<p>…</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.RateData.reactions">
+<span class="sig-name descname"><span class="pre">reactions</span></span><a class="headerlink" href="#CRUMPET.RateData.reactions" title="Permalink to this definition">¶</a></dt>
+<dd><p>dictionary containing a sub-dictionary for each default database
+‘AMJUEL’ : dict</p>
+<blockquote>
+<div><p>Handles for each reaction, containing the rate coefficient
+from the AMJUEL database</p>
+</div></blockquote>
+<dl class="simple">
+<dt>‘HYDHEL’<span class="classifier">dict</span></dt><dd><p>Handles for each reaction, containing the rate coefficient
+from the HYDHEL database</p>
+</dd>
+<dt>‘H2VIBR’<span class="classifier">dict</span></dt><dd><p>Handles for each reaction, containing the rate coefficient
+from the H2VIBR database</p>
+</dd>
+<dt>‘ADAS’<span class="classifier">dict</span></dt><dd><p>Handles for each reaction, containing the rate coefficient
+from the ADAS database</p>
+</dd>
+<dt>‘UE’<span class="classifier">dict</span></dt><dd><p>Handles for each reaction, containing the rate coefficient
+from the UE database</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="CRUMPET.RateData.get_coeff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_coeff</span></code></a>(database, reaction)</p></td>
+<td><p>Returns the cofficients of reaction in database</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id1" title="CRUMPET.RateData.read_ADAS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_ADAS</span></code></a>(fname, reactions[, path])</p></td>
+<td><p>Reads coefficents from ADAS databases</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="CRUMPET.RateData.read_EIRENE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_EIRENE</span></code></a>(fname, reactions, settings[, path])</p></td>
+<td><p>Reads reaction coefficents from EIRENE databases</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id2" title="CRUMPET.RateData.read_UE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_UE</span></code></a>(fname, reactions[, path, datalist])</p></td>
+<td><p>Reads coefficents from ADAS databases</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.RateData.get_coeff">
+<span class="sig-name descname"><span class="pre">get_coeff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.RateData.get_coeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the cofficients of reaction in database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>database</strong> (<em>string</em>) – database in which to look for reaction</p></li>
+<li><p><strong>reaction</strong> (<em>string</em>) – reaction handle/ID to retrieve from database</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Reaction object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.RateData.read_ADAS">
+<span class="sig-name descname"><span class="pre">read_ADAS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.RateData.read_ADAS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads coefficents from ADAS databases</p>
+<p>Created to read ADAS data from OPEN-ADAS data files</p>
+<dl class="simple">
+<dt>fname<span class="classifier">string</span></dt><dd><p>file name of file to be read</p>
+</dd>
+<dt>reactions<span class="classifier">dict</span></dt><dd><p>location where the reaction handles are saved to</p>
+</dd>
+<dt>path<span class="classifier">string, optional (default: ‘.’)</span></dt><dd><p>path relative to which fname is searched for</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.RateData.read_EIRENE">
+<span class="sig-name descname"><span class="pre">read_EIRENE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.RateData.read_EIRENE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads reaction coefficents from EIRENE databases</p>
+<p>Created to read EIRENE AMJUEL, HYDHEL, and H2VIBR data from
+the LaTeX files available from eirene.de</p>
+<dl>
+<dt>fname<span class="classifier">string</span></dt><dd><p>file name of file to be read</p>
+</dd>
+<dt>reactions<span class="classifier">dict</span></dt><dd><p>location where the reaction handles are saved to</p>
+</dd>
+<dt>settings<span class="classifier">list</span></dt><dd><p>list of settings specifying the behaviour of the read
+routine, with the four following elements
+settings[0] : int</p>
+<blockquote>
+<div><p>lines to omit from start of file</p>
+</div></blockquote>
+<dl class="simple">
+<dt>settings[1]<span class="classifier">list of strings</span></dt><dd><p>non-coefficient rate entries: omitted</p>
+</dd>
+<dt>settings[2]<span class="classifier">list of strings</span></dt><dd><p>data rate entries to be read (?)</p>
+</dd>
+<dt>settings[3]<span class="classifier">int</span></dt><dd><p>lines to omit from end of file</p>
+</dd>
+</dl>
+</dd>
+<dt>path<span class="classifier">string, optional (default: ‘.’)</span></dt><dd><p>path relative to which fname is searched for</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.RateData.read_UE">
+<span class="sig-name descname"><span class="pre">read_UE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datalist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['IONIZ',</span> <span class="pre">'REC',</span> <span class="pre">'IONIZRAD',</span> <span class="pre">'RECRAD']</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.RateData.read_UE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads coefficents from ADAS databases</p>
+<p>Created to read ADAS data from OPEN-ADAS data files</p>
+<dl>
+<dt>fname<span class="classifier">string</span></dt><dd><p>file name of file to be read</p>
+</dd>
+<dt>reactions<span class="classifier">dict</span></dt><dd><p>location where the reaction handles are saved to</p>
+</dd>
+<dt>path<span class="classifier">string, optional (default: ‘.’)</span></dt><dd><p>path relative to which fname is searched for</p>
+</dd>
+<dt>datalist<span class="classifier">list of strings, optional</span></dt><dd><blockquote>
+<div><p>(default: [‘IONIZ’, ‘REC’, ‘IONIZRAD’, ‘RECRAD’])</p>
+</div></blockquote>
+<p>List of names to give to blocks in rate data file. All
+blocks are read in consecutive order and stores with the
+corresponding datalist entry as their database.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.RateData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'ADAS':</span> <span class="pre">None,</span> <span class="pre">'AMJUEL':</span> <span class="pre">None,</span> <span class="pre">'H2VIBR':</span> <span class="pre">None,</span> <span class="pre">'HYDHEL':</span> <span class="pre">None,</span> <span class="pre">'UE':</span> <span class="pre">None}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.RateData.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amjuel</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'amjuel.tex'</em><em>)</em>) – path to AMJUEL LaTeX file, relative to path</p></li>
+<li><p><strong>hydhel</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'hydhel.tex'</em><em>)</em>) – path to HYDHEL LaTeX file, relative to Crm.path</p></li>
+<li><p><strong>h2vibr</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'h2vibr.tex'</em><em>)</em>) – path to H2VIBR LaTeX file, relative to Crm.path</p></li>
+<li><p><strong>ADAS</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'ich0-1.dat'</em><em>)</em>) – path to ADAS LaTeX file, relative to Crm.path</p></li>
+<li><p><strong>UE</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: 'ehr1.dat'</em><em>)</em>) – path to UEDGE DEGAS2-style LaTeX file, relative to Crm.path</p></li>
+<li><p><strong>path</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default: '.'</em><em>)</em>) – path, to which all other paths are relative</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.RateData.read_factors">
+<span class="sig-name descname"><span class="pre">read_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.RateData.read_factors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">read_EIRENE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads reaction coefficents from EIRENE databases</p>
+<p>Created to read EIRENE AMJUEL, HYDHEL, and H2VIBR data from
+the LaTeX files available from eirene.de</p>
+<dl>
+<dt>fname<span class="classifier">string</span></dt><dd><p>file name of file to be read</p>
+</dd>
+<dt>reactions<span class="classifier">dict</span></dt><dd><p>location where the reaction handles are saved to</p>
+</dd>
+<dt>settings<span class="classifier">list</span></dt><dd><p>list of settings specifying the behaviour of the read
+routine, with the four following elements
+settings[0] : int</p>
+<blockquote>
+<div><p>lines to omit from start of file</p>
+</div></blockquote>
+<dl class="simple">
+<dt>settings[1]<span class="classifier">list of strings</span></dt><dd><p>non-coefficient rate entries: omitted</p>
+</dd>
+<dt>settings[2]<span class="classifier">list of strings</span></dt><dd><p>data rate entries to be read (?)</p>
+</dd>
+<dt>settings[3]<span class="classifier">int</span></dt><dd><p>lines to omit from end of file</p>
+</dd>
+</dl>
+</dd>
+<dt>path<span class="classifier">string, optional (default: ‘.’)</span></dt><dd><p>path relative to which fname is searched for</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">read_ADAS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads coefficents from ADAS databases</p>
+<p>Created to read ADAS data from OPEN-ADAS data files</p>
+<dl class="simple">
+<dt>fname<span class="classifier">string</span></dt><dd><p>file name of file to be read</p>
+</dd>
+<dt>reactions<span class="classifier">dict</span></dt><dd><p>location where the reaction handles are saved to</p>
+</dd>
+<dt>path<span class="classifier">string, optional (default: ‘.’)</span></dt><dd><p>path relative to which fname is searched for</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">read_UE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datalist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['IONIZ',</span> <span class="pre">'REC',</span> <span class="pre">'IONIZRAD',</span> <span class="pre">'RECRAD']</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads coefficents from ADAS databases</p>
+<p>Created to read ADAS data from OPEN-ADAS data files</p>
+<dl>
+<dt>fname<span class="classifier">string</span></dt><dd><p>file name of file to be read</p>
+</dd>
+<dt>reactions<span class="classifier">dict</span></dt><dd><p>location where the reaction handles are saved to</p>
+</dd>
+<dt>path<span class="classifier">string, optional (default: ‘.’)</span></dt><dd><p>path relative to which fname is searched for</p>
+</dd>
+<dt>datalist<span class="classifier">list of strings, optional</span></dt><dd><blockquote>
+<div><p>(default: [‘IONIZ’, ‘REC’, ‘IONIZRAD’, ‘RECRAD’])</p>
+</div></blockquote>
+<p>List of names to give to blocks in rate data file. All
+blocks are read in consecutive order and stores with the
+corresponding datalist entry as their database.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">get_coeff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reaction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the cofficients of reaction in database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>database</strong> (<em>string</em>) – database in which to look for reaction</p></li>
+<li><p><strong>reaction</strong> (<em>string</em>) – reaction handle/ID to retrieve from database</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Reaction object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="CRUMPET.Reaction.html" class="btn btn-neutral float-right" title="Reaction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="CRUMPET.Crm.html" class="btn btn-neutral float-left" title="Crm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Andreas Holm
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

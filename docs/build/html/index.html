@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>CRUMPET: Collisional-Radiative UEDGE Model for Plasma-Edge Theory &mdash; CRUMPET 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Collisional-Radiative theory" href="theory.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home" alt="Documentation Home"> CRUMPET
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Collisional-Radiative theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#the-greenland-crm-equation">The Greenland CRM equation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="theory.html#model-limitations-assumptions">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#the-cr-energy-rates">The CR energy rates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="theory.html#id1">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="input/input.html">The CRUMPET input file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="input/species.html">Species</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="input/background.html">Background</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="input/reactions.html">Reactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="input/custom.html">CUSTOM rate files</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="input/rates.html">Rates</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="input/settings.html">Settings</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">CRUMPET Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Crumpet.html">Crumpet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Crm.html">Crm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.RateData.html">RateData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Reaction.html">Reaction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Tools.html">Tools</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">CRUMPET examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-input-file">Example input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-custom-reactions">Example custom reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#generate-a-crm-form-the-input-file">Generate a CRM form the input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#time-dependently-evolve-the-initial-distribution">Time-dependently evolve the initial distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#plot-a-synthetic-spectra">Plot a synthetic spectra</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="developments.html">Future developments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">Crumpet license</a><ul class="simple">
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">CRUMPET</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>CRUMPET: Collisional-Radiative UEDGE Model for Plasma-Edge Theory</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/holm10/CRUMPET/blob/masterindex.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<section id="crumpet-collisional-radiative-uedge-model-for-plasma-edge-theory">
+<h1>CRUMPET: Collisional-Radiative UEDGE Model for Plasma-Edge Theory<a class="headerlink" href="#crumpet-collisional-radiative-uedge-model-for-plasma-edge-theory" title="Permalink to this headline">¶</a></h1>
+<section id="what-is-crumpet">
+<h2>What is CRUMPET?<a class="headerlink" href="#what-is-crumpet" title="Permalink to this headline">¶</a></h2>
+<p>CRUMPET is a versatile Python script for creating collisional-radiative models, originally developed for fusion plasma application, with the multi-fluid plasma-edge code UEDGE [1]. Collisional-radiative models are necessary under conditions where a system is under neither Saha/LT equilibrium, nor Coronal equilibrium. Under such conditions, the collisional and radiative processes of the system are competing, and the net effect of all such processes, which are often competing, need to be carefully evaluated. CRUMPET has the capability to consider molecular-assisted processes, such as recombination, dissociation, and ionization (MAR, MAD, and MAI, respectively) as well as Franck-Condon and potential energy sinks/sources and molecular and atomic line radiation.</p>
+<p>Neutral dynamics involve a large set of electronically, vibrationally, and rotationally excited species, and a number of reactions associated with each such species. This creates a large number of species, and transitions if each species are to be tracked time-dependently. However, a large number of the species are so-called “conduit” species: their lifetimes are too short for any significant population to survive in the plasma. Rather, such conduit species mediate further reactions yielding more stable particles, which exist in significant populations in the plasma. Simulating all species and reactions, including conduit-species, time-dependently requires vast computational resources. Instead, a collisional-radiative model can be applied to the system, yielding effective reaction rates for only a subset of species which are to be simulated time-dependently.</p>
+<p>Atomic CRMs have been widely applied to fusion plasmas for the last decades as they are straightforward to formulate. However, molecular CRMs impose additional conditions on the formulation of the CRM compared to atomic CRMs. These conditions are outlined in [2], and have been implemented in CRUMPET in order to create molecular collisional-radiative models.</p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Versatile creation of collisonal-radiative models</p></li>
+<li><p>CRM formulations only dependent on data supplied to the model</p></li>
+<li><p>Not bound to a specific element or isotope</p></li>
+<li><p>Capability to read rate data from ADAS and EIRENE data files</p></li>
+<li><p>Capability to use custom rate data</p></li>
+<li><p>Solve the full system of ODEs</p></li>
+<li><p>Create a Greenland-style CRM [2] without any underlying assumptions of the background plasma</p></li>
+<li><p>Solve the energy sinks and sources for a number of processes</p></li>
+<li><p>Write rate coefficients to tabulated data files</p></li>
+<li><p>Assess the accuracy of the current CRM</p></li>
+<li><p>Use Greenland’s algorithm [2] to find the optimal CRM for a given plasmas temperature and density</p></li>
+<li><p>Solve the steady-state CRM populations using external sinks and sources (e.g. from transport codes)</p></li>
+<li><p>Create synthetic spectra for steady-state plasmas, which can be used for post-processing plasma-edge simulations</p></li>
+</ul>
+</section>
+<section id="how-is-it-used">
+<h2>How is it used?<a class="headerlink" href="#how-is-it-used" title="Permalink to this headline">¶</a></h2>
+<p>Crumpet reads a CRUMPET-specific input file where the CRM is set up. The CRM species, background species, and time-dependent/conduit species are defined in the input file, as are the reactions to be considered. The reactions use rate data supplied by the user: a nnumber of standard A&amp;M databases, such as ADAS and EIRENE can also be read in. A number of options and settings can also be used to control the behavior and setup of the CRM.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>CRUMPET is installed by downloading the git repository to either a location that is listed in PYTHONPATH, or by adding the path to the downloaded repository to PYTHONPATH.</p>
+</section>
+<section id="support">
+<h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
+<p>If you have issues, or would like to use CRUMPET for a certain task and need assistance, you can reach the author via andreas.holm{at}aalto.fi.</p>
+</section>
+<section id="contributions">
+<h2>Contributions<a class="headerlink" href="#contributions" title="Permalink to this headline">¶</a></h2>
+<p>Anyone is free to contribute to CRUMPET via github using personal forks or branches with a merge-request.
+- Issue tracker: github.com/holm10/CRUMPET/issues
+- Source code: github.com/holm10/CRUMPET</p>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>CRUMPET is licensed under the MIT License</p>
+<section id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line">[1] T. D. Rognlien and M. E. Rensink, “Users manual for the UEDGE edge-plasma transport code”, LLNL Report, 2017. <a class="reference external" href="https://github.com/LLNL/UEDGE">https://github.com/LLNL/UEDGE</a></div>
+<div class="line">[2] P. T. Greenland, “Collisional–radiative models with molecules,” Proc. R. Soc. Lond. A, vol. 457, pp. 1821–1839, 2001.</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="theory.html" class="btn btn-neutral float-right" title="Collisional-Radiative theory" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Andreas Holm
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

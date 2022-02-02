@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Collisional-Radiative theory &mdash; CRUMPET 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The CRUMPET input file" href="input/input.html" />
+    <link rel="prev" title="CRUMPET: Collisional-Radiative UEDGE Model for Plasma-Edge Theory" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> CRUMPET
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Collisional-Radiative theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-greenland-crm-equation">The Greenland CRM equation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#model-limitations-assumptions">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-cr-energy-rates">The CR energy rates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="input/input.html">The CRUMPET input file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="input/species.html">Species</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="input/background.html">Background</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="input/reactions.html">Reactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="input/custom.html">CUSTOM rate files</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="input/rates.html">Rates</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="input/settings.html">Settings</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">CRUMPET Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Crumpet.html">Crumpet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Crm.html">Crm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.RateData.html">RateData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Reaction.html">Reaction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects/CRUMPET.Tools.html">Tools</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">CRUMPET examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-input-file">Example input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-custom-reactions">Example custom reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#generate-a-crm-form-the-input-file">Generate a CRM form the input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#time-dependently-evolve-the-initial-distribution">Time-dependently evolve the initial distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#plot-a-synthetic-spectra">Plot a synthetic spectra</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="developments.html">Future developments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">Crumpet license</a><ul class="simple">
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CRUMPET</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Collisional-Radiative theory</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/holm10/CRUMPET/blob/mastertheory.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="collisional-radiative-theory">
+<h1>Collisional-Radiative theory<a class="headerlink" href="#collisional-radiative-theory" title="Permalink to this headline">¶</a></h1>
+<p>Here, a short overview of collisional-radiative (CR) theory is given to provide context for the CRUMPET code. The documentation is based on [1] and [2], where a complete description of the CR model implemented can be found.</p>
+<section id="the-greenland-crm-equation">
+<h2>The Greenland CRM equation<a class="headerlink" href="#the-greenland-crm-equation" title="Permalink to this headline">¶</a></h2>
+<p>The time-evolution of neutral species interacting with a background plasma is described by a set of nonlinear rate equations of the form</p>
+<div class="math">
+<p><img src="_images/math/4e30e2ab3f43d28d7a47352055195e0c11aeea5c.png" alt="\dot{n_k}=\sum_{i,j}\mathcal{R}_{i,j}^k(T)n_in_j+\sum_j A_j^kn_j-n_k\sum_{i,j}\mathcal{R}_{i,k}^j(T)n_i-n_k\sum_jA_k^j+\Gamma_k,"/></p>
+</div><p>where <img class="math" src="_images/math/3ef7f0f5dcb76ded27024a49616e0afb74411239.png" alt="n_k"/> is the density of species <img class="math" src="_images/math/9630132210b904754c9ab272b61cb527d12263ca.png" alt="k"/>, <img class="math" src="_images/math/580518686c5bff6c022ace49c85a7ff1a889e354.png" alt="\mathcal{R}_{i,j}^k(T)"/> is the rate coefficient for production of species <img class="math" src="_images/math/9630132210b904754c9ab272b61cb527d12263ca.png" alt="k"/> from collisions between species <img class="math" src="_images/math/5aa339d4daf45a810dda332e3c80a0698e526e04.png" alt="i"/> and <img class="math" src="_images/math/e3fc28292267f066fee7718c64f4bbfece521f24.png" alt="j"/> at plasma temperature <img class="math" src="_images/math/4694f4b016c531e2ced9e34a7edeeeed84d4910a.png" alt="T,~A_j^k"/> is the Einstein A coefficient for radiative decay from <img class="math" src="_images/math/49271bd51bb9438c638a8b73ffb2733e985de8ac.png" alt="j\rightarrow k"/>, and <img class="math" src="_images/math/5d8dc57f375e29af14f591cb0a63d85d72c688b3.png" alt="\Gamma_k"/> is an external sink/source of species <img class="math" src="_images/math/9630132210b904754c9ab272b61cb527d12263ca.png" alt="k"/>, such as recombination or transport.</p>
+<p>The set of equations can be linearized by fixing appropriate densities <img class="math" src="_images/math/e0b90055503d49cb2d8b4b5c807e7594028973f2.png" alt="n_1\cdots n_m"/>, specifying the background plasma environment:</p>
+<div class="math">
+<p><img src="_images/math/2d0101006074f84adb3db86cda8542f634ace1ef.png" alt="\dot{\mathbf{n}}=\mathbf{M}(n_1\cdots n_m)\mathbf{n}+\mathbf{\Gamma}(n_1\cdots n_m)."/></p>
+</div><p>Here, <img class="math" src="_images/math/48a4004691bb4dcbeceecb6e4f2e63e6f4e751ce.png" alt="\mathbf{M}(n_1\cdots n_m)"/> is the full <img class="math" src="_images/math/9e32cdd0b4d023c3e9b3e724291a03bdbcbee572.png" alt="N\times N"/> matrix of rates at plasma temperature <img class="math" src="_images/math/a0828774159ba5b4c0027330b9c60d2b3284384b.png" alt="T_e"/> and <img class="math" src="_images/math/db063ac3b718da47702b1dbb3c52d3feac13333b.png" alt="T_i"/> and <img class="math" src="_images/math/904b66b7ba2f546e103405a8d7c3dd7df75da51c.png" alt="\mathbf{\Gamma}(n_1\cdots n_m)"/> is a source/sink provided by collisions between pairs of backgrounds species, and any external sinks and sources; <img class="math" src="_images/math/f837143c9acba9a572761b5dc67043bf8f9e911d.png" alt="\bf n"/> is a vector of the states whose dynamics are evaluated.</p>
+<p>The states to be evaluated are subsequently divided into two classes, <em>P</em> and <em>Q</em>, which contain the species to be evaluated time-dependently and the conduit species, respectively. The corresponding projection operators <em>P</em> and <em>Q</em> can then be defined: by ordering the states <em>k</em> in the linearized equations, the equation can be expressed as</p>
+<div class="math">
+<p><img src="_images/math/9f12822170c0ef191efab1aed602a5ad83917a61.png" alt="\begin{bmatrix} \dot{\mathbf{n}}_P \\ \dot{\mathbf{n}}_Q \end{bmatrix} = \begin{bmatrix} \mathbf{M}_P &amp; \bf{H} \\ \bf{V} &amp; \mathbf{M}_Q \end{bmatrix} \begin{bmatrix} \mathbf{n}_P \\ \mathbf{n}_Q \end{bmatrix}    + \begin{bmatrix} \mathbf{\Gamma}_P \\ \mathbf{P}_Q \end{bmatrix},"/></p>
+</div><p>where <img class="math" src="_images/math/f96a341e32f873c4886caf20b6db595c3dda39cd.png" alt="P\mathbf{M}P=\mathbf{M}_P"/>, <img class="math" src="_images/math/cdc383deeed48e0a7729a1a58906693d49d8ebc3.png" alt="P\mathbf{M}Q=\mathbf{H}"/>, <img class="math" src="_images/math/76bdd762946382ce0fd3d39fbd349d4ea9598824.png" alt="Q\mathbf{M}P=\mathbf{V}"/>, <img class="math" src="_images/math/ef6097854efd11d540c56475bb9e55945df12fb3.png" alt="Q\mathbf{M}Q=\mathbf{M}_Q"/>, <img class="math" src="_images/math/b98702b36c7de6c1f2a7c3c1cdb5971869a151ec.png" alt="P\mathbf{n}=\mathbf{n}_P"/>,  <img class="math" src="_images/math/7aebb212bf038f913f15a7d4342f945fd4d541ed.png" alt="Q\mathbf{n}=\mathbf{n}_Q"/>, <img class="math" src="_images/math/8883be45eb3af97cdf64784d6781e0956ec9173e.png" alt="P\mathbf{\Gamma}=\mathbf{\Gamma}_P"/>, and <img class="math" src="_images/math/907dc10154d0f796c62c58ab6c90d9c7f0668eb8.png" alt="Q\mathbf{\Gamma}=\mathbf{\Gamma}_Q"/>. Here, there are <img class="math" src="_images/math/7c085620d2b3350f534f896bd266a7cf978b8803.png" alt="N_P"/> <em>P</em>-states and <img class="math" src="_images/math/295827d6cb40d0a7c3dfe846f01b009498d61dda.png" alt="N_Q"/> <em>Q</em>-states.</p>
+<p>It has been shown that the solution of the P-space part of the full, linearized set of equations can be reproduced by the following equation:</p>
+<div class="math">
+<p><img src="_images/math/7cd3b212d41a40f2791b456c9df9f9fe0f620ed6.png" alt="\dot{\mathbf{n}}=\mathbf{M}_{eff}\mathbf{n}'_P+\mathbf{\Gamma}'_P."/></p>
+</div><p>The validity of the above equation is determined using the eigenvectors of <strong>M</strong>: we define <strong>T</strong> as the matrix whose columns are the normalized eigenvectors of <strong>M</strong> and <img class="math" src="_images/math/f0a29bb1a7ebad6ed56075791e9ac4903dc7cbe2.png" alt="\mathbf{D}=\mathrm{diag}\{\lambda^{(1)},\lambda^{(2)},\ldots,\lambda^{(N)}\}"/> in order of increasing order of the absolute magnitude of the eigenvalues <img class="math" src="_images/math/cefc603e5658facb747581f9567192993f21c7ab.png" alt="\lambda"/> such that</p>
+<div class="math">
+<p><img src="_images/math/ea257d189206a5b9ae59907710a59c8f7235d4fa.png" alt="\bf MT = TD"/></p>
+</div><p>holds. Analogous to above, the projection operators can be used to subdivide <strong>T</strong>:</p>
+<div class="math">
+<p><img src="_images/math/c3825ba69d73953cef8610f0b908dcb0bb41c85d.png" alt="\begin{bmatrix} \mathbf{T}_P &amp; \bf{\Delta} \\ \bf{\delta} &amp; \mathbf{P}_Q \end{bmatrix}."/></p>
+</div><p>The validity of the CRM equation, thus, requires <img class="math" src="_images/math/652b9d8b65c10aed0fdcdbde47396c879ed5bd33.png" alt="\delta"/> and <img class="math" src="_images/math/a63d1ddf853ec3e595eb357460cad2f61522481e.png" alt="T_Q^{-1}\delta\ll1"/>, where the equivalence refers to the largest Manhattan norm along the columns of the matrix.</p>
+<p>The remaining terms of the CRM equation are, hence, given by</p>
+<div class="math">
+<p><img src="_images/math/8da15f11d15c7c3f0405ecae48ea4336598821c7.png" alt="\mathbf{M}_{eff} = \mathbf{M}_P - \mathbf{HM}_Q^{-1}\mathbf{V}"/></p>
+</div><p>and</p>
+<div class="math">
+<p><img src="_images/math/6b171968cf7a3d3e65c2f80d4f038772013f749a.png" alt="\mathbf{\Gamma}'_P = \mathbf{\Gamma}_P - \mathbf{\Delta T}_Q^{-1}\mathbf{\Gamma}_Q,"/></p>
+</div><p>with initial conditions given by</p>
+<div class="math">
+<p><img src="_images/math/cd925706591ee60541affa72069ea5f4a3405f2d.png" alt="\mathbf{n}'_P(0)=\mathbf{n}_P(0)-\Delta T_Q^{-1}\mathbf{n}_Q(0)."/></p>
+</div><section id="model-limitations-assumptions">
+<h3>Model limitations/assumptions<a class="headerlink" href="#model-limitations-assumptions" title="Permalink to this headline">¶</a></h3>
+<p>This CRM desctiption of the denity rate coefficients has the following limitations, as described in [1] and [2]:</p>
+<ul class="simple">
+<li><p>Only collisional reactions between a background species and a CRM species are considered: reactions between the CR-modeled species are not treated by this formulation</p></li>
+</ul>
+</section>
+</section>
+<section id="the-cr-energy-rates">
+<h2>The CR energy rates<a class="headerlink" href="#the-cr-energy-rates" title="Permalink to this headline">¶</a></h2>
+<p>The energy rate coefficients <img class="math" src="_images/math/2b331f80917540aae8b7d6ba02975d43c3953574.png" alt="S_j^k(T)"/> associated with a CRM can be constructed in analogy with the CRM equation above, as explained in [2] for the electrons. CRUMPET makes an attempt to extend the energy rate coefficients to other species/processes than the electrons, in a manner analogous to that outlined in [2]. In CRUMPET, the potential energy sink per unit volume, <img class="math" src="_images/math/1722ce11da72aaffbc4285feb7ffc2c68c3c60d4.png" alt="\mathcal{E}"/>, is solved from the equation</p>
+<div class="math">
+<p><img src="_images/math/b1b44253aaf96eb9c054962528d95e129c128d5e.png" alt="\dot{\mathcal{E}}_V^k=\sum_{i,j}\left( V_p - V_r \right)\mathcal{R}_{i,j}^k(T)n_in_j - n_k\sum_j(V_k-V_j)A_k^j,"/></p>
+</div><p>where <img class="math" src="_images/math/4bcdc64a07db3d7711bc2889fe6459e2ae4e65d6.png" alt="V_r"/> and <img class="math" src="_images/math/70bdb5c509a569e9fc814299f3f8d27e4c1f57b9.png" alt="V_p"/> refers to the total potential of the reactants and products, respectively, and <img class="math" src="_images/math/25a9b2ec2aab66899b12fe3e3e8a7df3b452d5f6.png" alt="V_k"/> and <img class="math" src="_images/math/7e1cac0c3a0fdde390ce55e56b7209d0fd211ba5.png" alt="V_j"/> to the potential of CRM species <em>k</em> and <em>j</em>, respectively, and <em>i</em> is a background (non-CRM) species. The energy lost as radiation is solved from</p>
+<div class="math">
+<p><img src="_images/math/41807b1816a8311623afae99edfeda6757c6d300.png" alt="\dot{\mathcal{E}}_{\gamma}^k=n_k\sum_j\left( V_k - V_j\right),"/></p>
+</div><p>which is further divided into atom and molecule radiation depending on whether <em>j</em> and <em>k</em> are atomic or molecular species. For the Franck-Condon energy, CRUMPET applies the UEDGE formalism of a common energy and, thus, temperature for the ions and atoms. Hence, a common Franck-Condon sink/source term is used for the ion/atom energy:</p>
+<div class="math">
+<p><img src="_images/math/3a780c658d6ccf0a433660a0b1c653543f5adae6.png" alt="\dot{\mathcal{E}}_{FC,i/a}^k=\sum_{i,j}\Delta_{i,j}^k\mathcal{R}_{i,j}^k(T)n_in_j,"/></p>
+</div><p>where <img class="math" src="_images/math/daf045947015463ad77551c2d67f35ae8f18e287.png" alt="\Delta_{i,j}^k"/> is the mean kinetic energy of the reaction products, <em>K</em>, for reactions where electrons are one of the reactants, such as dissociation energy.
+.. If the reaction is a proton-impact reaction, i.e. one of the reactions is a plasma ion, producing an electron, <img class="math" src="_images/math/22d522e30558f166509a67f356cd21f58075b89f.png" alt="\Delta_{i,j}^k=-T_e"/> is assumed, where <img class="math" src="_images/math/a0828774159ba5b4c0027330b9c60d2b3284384b.png" alt="T_e"/> is the local electron temperature.
+Here, the Franck-Condon energy resulting from production of conduit species is directly attributed to the ion/atom equation: thus, the energy of the conduit species are not evolved. Subsequently, any energy-dependent reaction rates (heavy-particle interactions) of reactions involving the conduit species are evaluated at the prescribed target energy (or, alternatively, temperature). This approximation is valid unless there is an energy source for the conduit species capable of significantly affecting the target particle energy-dependent reaction rates. Finally, <img class="math" src="_images/math/69826b1241acba7ea1c8c48177d8db2d5c252a10.png" alt="\dot{\mathcal{E}}_e"/> is calculated as the sum of the above energy sinks/sources by assuming energy conservation of the system.</p>
+<p>The CRM evaluation is then done in analogue to the density rate coefficients:</p>
+<div class="math">
+<p><img src="_images/math/fe18d8c2ad6af6eaa17b85537179f0f3387eddac.png" alt="\dot{\mathbf{\mathcal{E}}}=\mathbf{U}(n_1\cdots n_m)\mathbf{n}+\mathbf{\Xi}_{E}(n_1\cdots n_m),"/></p>
+</div><p>where</p>
+<div class="math">
+<p><img src="_images/math/2465027c7b6e9bc2c62f7bfc9bbc9b62215f3611.png" alt="U_{k,j}=S_j^k(T)ne"/></p>
+</div><p>and</p>
+<div class="math">
+<p><img src="_images/math/fb92e56c2ee5756a29d96b22f1224bb479e5168f.png" alt="\Xi_{E,k}=\sum_i S_i^kn_en_i,"/></p>
+</div><p>where <img class="math" src="_images/math/9786c5d6892d991d38a3151eae2437e69ea770c2.png" alt="S_j^k"/> is the appropriate term according to the above equations, <em>j</em> and <em>k</em> are CRM species, and <em>i</em> are background species. Analogous to above, the energy rate matrix <strong>U</strong>, ordered by <em>P</em> and <em>Q</em> space, can be expressed as a block matrix, using the previously defined projection operators:</p>
+<div class="math">
+<p><img src="_images/math/c7590817c656e468f81737a5f56836800a5879d9.png" alt="\mathbf{U}=\begin{bmatrix} \mathbf{U}_P &amp; \mathbf{U}_H \\ \mathbf{U}_V &amp; \mathbf{U}_Q \\ \end{bmatrix}."/></p>
+</div><p>The subsequent CR approximation for the energy terms, thus, becomes:</p>
+<div class="math">
+<p><img src="_images/math/5f1976de219cf9448316dfa479e08c53c16302d5.png" alt="\mathbf{\dot{\mathcal{E}}}_P=\mathbf{U}_{eff}\mathbf{n+\Xi}_E,"/></p>
+</div><p>where</p>
+<div class="math">
+<p><img src="_images/math/7711acaaafeb358157cb78b06f86877dd2f76899.png" alt="\mathbf{U}_eff=\begin{bmatrix}  \mathbf{U}_P - \mathbf{U}_H\mathbf{M}_Q^{-1}\mathbf{V} \\ %
+                                                                \mathbf{U}_V - \mathbf{U}_Q\mathbf{M}_Q^{-1}\mathbf{V} \\ \end{bmatrix},"/></p>
+</div><p>where <img class="math" src="_images/math/d38a88ec6a4a15f08d3544d6f99739228876aeb8.png" alt="\mathbf{M}_Q"/> and <img class="math" src="_images/math/402a17a39021d7cefde222c00f5f758dd2b6c483.png" alt="\mathbf{V}"/> are the same as defined above. This yields an <img class="math" src="_images/math/3b8edfad23e3a3bff83956342245040e73b35064.png" alt="N\times N_P"/> matrix, rather than than the <img class="math" src="_images/math/26614a651292f4abfce86b137f427731277cf7a8.png" alt="N_P\times N_P"/> matrix for the density rate coeffients: this reflects the fact that although a small population change is associated with the conduit species, a large energy change can still be associated with a conduit species if <img class="math" src="_images/math/9786c5d6892d991d38a3151eae2437e69ea770c2.png" alt="S_j^k"/> is sufficiently large. The above CRM is evaluated separately for each energy sink/source, i.e. for the electron energy sink/source, the ion/atom energy sink/source, the potential energy sink/source, the atom line radiation sink/source, and the molecule line radiation sink/source.</p>
+<p>For coupling of CRUMPET to external codes, <img class="math" src="_images/math/4b022b498899f472b39a3828f0fdbae8a6b8c85c.png" alt="\mathbf{\dot{\mathcal{E}}}_P"/> is summed over the columns to yield the net energy change associated with the <em>P</em>-species densities, as the coupled code is assumed to only solve the densities of the <em>P</em>-species.</p>
+<section id="id1">
+<h3>Model limitations/assumptions<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>This CRUMPET description of the energy sinks and sources conforms to the UEDGE formalism and, presently, has the following limitations:</p>
+<ul class="simple">
+<li><p>Presently, the model evaluates a common ion/atom source, which is compatible with the UEDGE formalism</p></li>
+<li><p>The Franck-Condon energy is assumed to go directly into the ion/atom energy, rather than into any resulting conduit species: this assumption is valid unless the energy source is sufficiently strong to significantly alter the target particle energy-dependent reaction rates</p></li>
+</ul>
+<p>..- Electrons stemming from proton-impact reactions are assumed to be heated to the local electron temperature by the impacting particle
+- Electron-impact ionization reactions only assess the energy change associated with the ionization potential: any volumetric cooling due to the newly formed ion/electron pair is assumed to be considered by the coupled transport code
+- The energy sink/source due to electron-ion recombination (radiative and three-body recombination) have not yet been implemented
+- The energy sink/source from molecular re-association has not yet been implemented: considerations of the formulation of the CR formulation raise question about how to consider re-association (see above)</p>
+</section>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<div class="line-block">
+<div class="line">[1] P. T. Greenland, “Collisional–radiative models with molecules,” Proc. R. Soc. Lond. A, vol. 457, pp. 1821–1839, 2001.</div>
+<div class="line">[2] P. T. Greenland, “The CRMOL Manual: Collisional Radiative Models for Molecular Hydrogen in Plasmas”. Forschnungszentrum Jülich report, Jül-3858, 2001.</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="input/input.html" class="btn btn-neutral float-right" title="The CRUMPET input file" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="CRUMPET: Collisional-Radiative UEDGE Model for Plasma-Edge Theory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Andreas Holm
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

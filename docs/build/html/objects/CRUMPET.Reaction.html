@@ -1,0 +1,1026 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Reaction &mdash; CRUMPET 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tools" href="CRUMPET.Tools.html" />
+    <link rel="prev" title="RateData" href="CRUMPET.RateData.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> CRUMPET
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory.html">Collisional-Radiative theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-greenland-crm-equation">The Greenland CRM equation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#model-limitations-assumptions">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#the-cr-energy-rates">The CR energy rates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory.html#id1">Model limitations/assumptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../input/input.html">The CRUMPET input file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../input/species.html">Species</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../input/background.html">Background</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../input/reactions.html">Reactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../input/custom.html">CUSTOM rate files</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../input/rates.html">Rates</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../input/settings.html">Settings</a><ul class="simple">
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../documentation.html">CRUMPET Classes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Crumpet.html">Crumpet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Crm.html">Crm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.RateData.html">RateData</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Reaction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CRUMPET.Tools.html">Tools</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">CRUMPET examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-input-file">Example input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#example-custom-reactions">Example custom reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#generate-a-crm-form-the-input-file">Generate a CRM form the input file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#time-dependently-evolve-the-initial-distribution">Time-dependently evolve the initial distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#plot-a-synthetic-spectra">Plot a synthetic spectra</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developments.html">Future developments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../LICENSE.html">Crumpet license</a><ul class="simple">
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CRUMPET</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../documentation.html">CRUMPET Classes</a> &raquo;</li>
+        
+      <li>Reaction</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/holm10/CRUMPET/blob/masterobjects/CRUMPET.Reaction.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="reaction">
+<h1>Reaction<a class="headerlink" href="#reaction" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="CRUMPET.Reaction">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">CRUMPET.</span></span><span class="sig-name descname"><span class="pre">Reaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeffs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isotope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'H'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tarr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fcf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class containing reaction data</p>
+<p>This class contains data pertaining to a single defined reaction,
+such as energy transfer rates, reactants, products, and reaction
+rates.</p>
+<p>…</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#CRUMPET.Reaction.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>reaction handle/ID</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.database">
+<span class="sig-name descname"><span class="pre">database</span></span><a class="headerlink" href="#CRUMPET.Reaction.database" title="Permalink to this definition">¶</a></dt>
+<dd><p>database where reaction rates are defined</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.rate">
+<span class="sig-name descname"><span class="pre">rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omegaj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the temperature- and density-dependent reaction rate
+coefficients
+Te : float</p>
+<blockquote>
+<div><p>electron temperature in eV</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Ti<span class="classifier">float</span></dt><dd><p>ion temperature in eV</p>
+</dd>
+<dt>ne<span class="classifier">float, optional (default: None)</span></dt><dd><p>electron temperature in m**-3, only used for type=’UE’</p>
+</dd>
+<dt>E<span class="classifier">float, optional (default: None)</span></dt><dd><p>molecular energy in eV, only used for type=’RATE’</p>
+</dd>
+<dt>omegaj<span class="classifier">float, optional (default: 1)</span></dt><dd><p>statistical weight for ADAS reaction rates</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.type">
+<span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#CRUMPET.Reaction.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>identifier for the kind of reaction being defined:
+‘RATE’ : EIRENE-type interpolation in one or two dimensions,</p>
+<blockquote>
+<div><p>depending on the shape of coeffs</p>
+</div></blockquote>
+<p>‘COEFFICIENT’ : Spontaneous transition rate, s**-1
+‘ADAS’ : ADAS-type interpolation
+‘SIGMA’ : Sawada 1995-type cross-section fit
+‘APID’ : APID-type ionization rate
+‘UE’ : UEDGE-type interpolation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.reactants">
+<span class="sig-name descname"><span class="pre">reactants</span></span><a class="headerlink" href="#CRUMPET.Reaction.reactants" title="Permalink to this definition">¶</a></dt>
+<dd><p>a list of the reactant species handles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of strings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.products">
+<span class="sig-name descname"><span class="pre">products</span></span><a class="headerlink" href="#CRUMPET.Reaction.products" title="Permalink to this definition">¶</a></dt>
+<dd><p>a list of the fragment species handles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of strings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.Vp">
+<span class="sig-name descname"><span class="pre">Vp</span></span><a class="headerlink" href="#CRUMPET.Reaction.Vp" title="Permalink to this definition">¶</a></dt>
+<dd><p>the total potential of the products</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.Vr">
+<span class="sig-name descname"><span class="pre">Vr</span></span><a class="headerlink" href="#CRUMPET.Reaction.Vr" title="Permalink to this definition">¶</a></dt>
+<dd><p>the total potential of the reactants</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.K">
+<span class="sig-name descname"><span class="pre">K</span></span><a class="headerlink" href="#CRUMPET.Reaction.K" title="Permalink to this definition">¶</a></dt>
+<dd><p>the kinetic energy transferred to the procucts in the reaction:
+if a species is born in the reaction, they are assigned the
+local temperature of that species, which is evaluated upon
+calls to getS</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float/string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.Kdep">
+<span class="sig-name descname"><span class="pre">Kdep</span></span><a class="headerlink" href="#CRUMPET.Reaction.Kdep" title="Permalink to this definition">¶</a></dt>
+<dd><p>marker determining wheter K is dependent on the species
+temperature, i.e. whether a new species is born</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.S_V">
+<span class="sig-name descname"><span class="pre">S_V</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.S_V" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the change in potential for the reaction calculated
+from the potential of the reactions and products</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.S_e">
+<span class="sig-name descname"><span class="pre">S_e</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.S_e" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the electron energy increase for the reaction. Only
+relevant for ionization reactions. Te is the electron
+temperature in eV</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.S_g">
+<span class="sig-name descname"><span class="pre">S_g</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.S_g" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the gamma energy for the reaction calculated from the
+potential difference between the reactants and products. Only
+nonzero if the reaction is radiative decay</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.S_r">
+<span class="sig-name descname"><span class="pre">S_r</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.S_r" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the background reactant energy loss, calculated from
+the net energy balance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.Smat">
+<span class="sig-name descname"><span class="pre">Smat</span></span><a class="headerlink" href="#CRUMPET.Reaction.Smat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smat has len=8 along axis=0 and len=2 along axis=1. The first 4
+entries along axis=0 are: reactant energy loss, potential energy
+change, radiated energy in atomic lines, and radiated energy in
+molecular lines, all for electron-impact processes. The next 4
+entries are the corresponding energy terms but for proton-impact
+processes. The first entries along axis=1 are the internal terms
+and the second due to external sinks and sources (currently 0)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>2D list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.Tarr">
+<span class="sig-name descname"><span class="pre">Tarr</span></span><a class="headerlink" href="#CRUMPET.Reaction.Tarr" title="Permalink to this definition">¶</a></dt>
+<dd><p>A vector containing the electron temperature points of ADAS fits
+only relevant for ADAS rates, otherwise not used</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.absorption">
+<span class="sig-name descname"><span class="pre">absorption</span></span><a class="headerlink" href="#CRUMPET.Reaction.absorption" title="Permalink to this definition">¶</a></dt>
+<dd><p>marker determining if the reaction is an electron-absorption
+reaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.coeffs">
+<span class="sig-name descname"><span class="pre">coeffs</span></span><a class="headerlink" href="#CRUMPET.Reaction.coeffs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the reaction rate coefficients. The shape and values depend on
+the type of reaction. Used by rate() to calculate the reaction
+rates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.decay">
+<span class="sig-name descname"><span class="pre">decay</span></span><a class="headerlink" href="#CRUMPET.Reaction.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p>marker whether the reaction is non-radiative decay, e.g. decay
+from an unstable state into dissociation products</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.radrelax">
+<span class="sig-name descname"><span class="pre">radrelax</span></span><a class="headerlink" href="#CRUMPET.Reaction.radrelax" title="Permalink to this definition">¶</a></dt>
+<dd><p>marker whether the reaction is radiative relaxation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.prode">
+<span class="sig-name descname"><span class="pre">prode</span></span><a class="headerlink" href="#CRUMPET.Reaction.prode" title="Permalink to this definition">¶</a></dt>
+<dd><p>marker whether an electron is created in the reaction, i.e. the
+reaction does not conserve electron energy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.e">
+<span class="sig-name descname"><span class="pre">e</span></span><a class="headerlink" href="#CRUMPET.Reaction.e" title="Permalink to this definition">¶</a></dt>
+<dd><p>marker whether the reaction is an electron-impact reaction or
+not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.p">
+<span class="sig-name descname"><span class="pre">p</span></span><a class="headerlink" href="#CRUMPET.Reaction.p" title="Permalink to this definition">¶</a></dt>
+<dd><p>marker whether the reaction is and proton-impact reaction or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.p_mult">
+<span class="sig-name descname"><span class="pre">p_mult</span></span><a class="headerlink" href="#CRUMPET.Reaction.p_mult" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of fragment mutipliers, same length as products</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.e_mult">
+<span class="sig-name descname"><span class="pre">e_mult</span></span><a class="headerlink" href="#CRUMPET.Reaction.e_mult" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of product mutipliers, same length as products</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods Summary</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id9" title="CRUMPET.Reaction.ADAS_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ADAS_rate</span></code></a>(Te, Ti[, omegaj])</p></td>
+<td><p>Function returning the ADAS rate for T</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id13" title="CRUMPET.Reaction.APID_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">APID_rate</span></code></a>(Te, Ti[, ne, ni, frequency])</p></td>
+<td><p>Function returning the APID rate for T</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id12" title="CRUMPET.Reaction.SAWADASIGMA_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SAWADASIGMA_rate</span></code></a>(Te, Ti, **kwargs)</p></td>
+<td><p>Function returning the Sawada-Sigma rate for T</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id11" title="CRUMPET.Reaction.UE_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UE_rate</span></code></a>(Te, *args[, E, ne])</p></td>
+<td><p>Function returning the UEDGE rate for T and n</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id10" title="CRUMPET.Reaction.coeff_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coeff_rate</span></code></a>(*args[, frequency, ne, ni])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id6" title="CRUMPET.Reaction.depSe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">depSe</span></code></a>(Te, *args)</p></td>
+<td><p>Electron energy gain</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id4" title="CRUMPET.Reaction.fSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fSV</span></code></a>(*args)</p></td>
+<td><p>Potential difference</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id5" title="CRUMPET.Reaction.fSg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fSg</span></code></a>(*args)</p></td>
+<td><p>Gamma energy</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id2" title="CRUMPET.Reaction.getS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getS</span></code></a>(Te, Ti, Tm, E[, marker])</p></td>
+<td><p>Evaluates Smat at given Te, Ti, Tm, and E</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id1" title="CRUMPET.Reaction.parseS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parseS</span></code></a>(data, bg, species, isotope)</p></td>
+<td><p>Derives the reaction information</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id8" title="CRUMPET.Reaction.pick_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pick_rate</span></code></a>()</p></td>
+<td><p>Initialization of the rate attribute</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id7" title="CRUMPET.Reaction.print_reaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_reaction</span></code></a>()</p></td>
+<td><p>Returns formatted a string with the reaction</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="CRUMPET.Reaction.ret0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ret0</span></code></a>(*args)</p></td>
+<td><p>Zero-function</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods Documentation</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.ADAS_rate">
+<span class="sig-name descname"><span class="pre">ADAS_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omegaj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.ADAS_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the ADAS rate for T</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.APID_rate">
+<span class="sig-name descname"><span class="pre">APID_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.APID_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the APID rate for T</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.SAWADASIGMA_rate">
+<span class="sig-name descname"><span class="pre">SAWADASIGMA_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.SAWADASIGMA_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the Sawada-Sigma rate for T</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.UE_rate">
+<span class="sig-name descname"><span class="pre">UE_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.UE_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the UEDGE rate for T and n</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.coeff_rate">
+<span class="sig-name descname"><span class="pre">coeff_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.coeff_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.depSe">
+<span class="sig-name descname"><span class="pre">depSe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.depSe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Electron energy gain</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.fSV">
+<span class="sig-name descname"><span class="pre">fSV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.fSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Potential difference</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.fSg">
+<span class="sig-name descname"><span class="pre">fSg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.fSg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gamma energy</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.getS">
+<span class="sig-name descname"><span class="pre">getS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.getS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates Smat at given Te, Ti, Tm, and E</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>Ti</strong> (<em>float</em>) – ion temperature in eV</p></li>
+<li><p><strong>Tm</strong> (<em>float</em>) – molecular temperature in eV</p></li>
+<li><p><strong>E</strong> (<em>float</em>) – assumed molecular rest energy in eV</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Evaluated ndarray of Smat</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.parseS">
+<span class="sig-name descname"><span class="pre">parseS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isotope</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.parseS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives the reaction information</p>
+<p>Assigns the majority of the object attributes, including
+the energy sinks/sources for the different components</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> (<em>list of strings</em>) – reactant handles</p></li>
+<li><p><strong>p</strong> (<em>list of strings</em>) – fragment handles</p></li>
+<li><p><strong>K</strong> (<em>string</em>) – string of kinetic energy information</p></li>
+<li><p><strong>bg</strong> (<em>dict</em>) – Crm.bg, dict of background species and potentials</p></li>
+<li><p><strong>species</strong> (<em>dict</em>) – Crm.species, dict of CRM species and potentials</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.pick_rate">
+<span class="sig-name descname"><span class="pre">pick_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.pick_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialization of the rate attribute</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.print_reaction">
+<span class="sig-name descname"><span class="pre">print_reaction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.print_reaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns formatted a string with the reaction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.ret0">
+<span class="sig-name descname"><span class="pre">ret0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.ret0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zero-function</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeffs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isotope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'H'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tarr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fcf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>string</em>) – reaction handle/ID</p></li>
+<li><p><strong>database</strong> (<em>string</em>) – database where reaction rates are defined</p></li>
+<li><p><strong>rtype</strong> (<em>string</em>) – database fit type according to EIRENE definitions</p></li>
+<li><p><strong>coeffs</strong> (<em>ndarray</em>) – the reaction rate coefficients. The shape and values depend
+on the type of reaction. Used by rate() to calculate the
+reaction rates</p></li>
+<li><p><strong>type</strong> (<em>string</em>) – <p>identifier for the kind of reaction being defined:
+‘RATE’ : EIRENE-type interpolation in one or two dimensions,</p>
+<blockquote>
+<div><p>depending on the shape of coeffs</p>
+</div></blockquote>
+<p>’COEFFICIENT’ : Spontaneous transition rate, s**-1
+‘ADAS’ : ADAS-type interpolation
+‘SIGMA’ : Sawada 1995-type cross-section fit
+‘APID’ : APID-type ionization rate
+‘UE’ : UEDGE-type interpolation</p>
+</p></li>
+<li><p><strong>S</strong> (<em>dict</em>) – <p>dict containing the reaction information, requiring the
+following keys:
+‘reactants’ : list of strings</p>
+<blockquote>
+<div><p>reactant handles</p>
+</div></blockquote>
+<dl class="simple">
+<dt>’products’<span class="classifier">list of strings</span></dt><dd><p>fragment handles</p>
+</dd>
+<dt>’K’<span class="classifier">string</span></dt><dd><p>string of kinetic energy information</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>bg</strong> (<em>dict</em>) – Crm.bg, dict of background species and potentials</p></li>
+<li><p><strong>species</strong> (<em>dict</em>) – Crm.species, dict of CRM species and potentials</p></li>
+<li><p><strong>Tarr</strong> (<em>list</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – Array of ADAS temperature point. Only used when typ=ADAS</p></li>
+<li><p><strong>isotope</strong> (<em>string</em>) – The handle for the isotope being used. Used to identify
+atomic and molecular species</p></li>
+<li><p><strong>mass</strong> (<em>float</em>) – The isotope mass in AMU, used for calculations in Crm</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">rate</span></span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>print(‘==============’)
+print(self.database, self.type, self.name)
+print(self.coeffs)
+print(self.rate(1,1,ne=1e12,E=0.1))
+print(self.rate(10,10,ne=1e13,E=1))</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">parseS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isotope</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives the reaction information</p>
+<p>Assigns the majority of the object attributes, including
+the energy sinks/sources for the different components</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> (<em>list of strings</em>) – reactant handles</p></li>
+<li><p><strong>p</strong> (<em>list of strings</em>) – fragment handles</p></li>
+<li><p><strong>K</strong> (<em>string</em>) – string of kinetic energy information</p></li>
+<li><p><strong>bg</strong> (<em>dict</em>) – Crm.bg, dict of background species and potentials</p></li>
+<li><p><strong>species</strong> (<em>dict</em>) – Crm.species, dict of CRM species and potentials</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">getS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates Smat at given Te, Ti, Tm, and E</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Te</strong> (<em>float</em>) – electron temperature in eV</p></li>
+<li><p><strong>Ti</strong> (<em>float</em>) – ion temperature in eV</p></li>
+<li><p><strong>Tm</strong> (<em>float</em>) – molecular temperature in eV</p></li>
+<li><p><strong>E</strong> (<em>float</em>) – assumed molecular rest energy in eV</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Evaluated ndarray of Smat</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">ret0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zero-function</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">fSV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Potential difference</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">fSg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gamma energy</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.Sr">
+<span class="sig-name descname"><span class="pre">Sr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.Sr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Temperature-dependent reactant sink
+try:</p>
+<blockquote>
+<div><p>ret = self.Vr - self.Vp - eval(self.K)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>except:</dt><dd><p>ret = self.Vr - self.Vp - self.K</p>
+</dd>
+</dl>
+<p>return ret</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.decaySr">
+<span class="sig-name descname"><span class="pre">decaySr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.decaySr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Temperature-dependent fragmentation
+# TODO: IS SIGN MISMATCH WARRANTED??!
+try:</p>
+<blockquote>
+<div><p>ret = -eval(self.K)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>except:</dt><dd><p>ret = self.K</p>
+</dd>
+</dl>
+<p>return ret</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">depSe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Electron energy gain</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.get_nsum">
+<span class="sig-name descname"><span class="pre">get_nsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ne</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.get_nsum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.get_n">
+<span class="sig-name descname"><span class="pre">get_n</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ne</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.get_n" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">print_reaction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns formatted a string with the reaction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">pick_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialization of the rate attribute</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">ADAS_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omegaj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id9" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the ADAS rate for T</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.extrapolate_polyfit">
+<span class="sig-name descname"><span class="pre">extrapolate_polyfit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fittype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.extrapolate_polyfit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.polyfit_H2">
+<span class="sig-name descname"><span class="pre">polyfit_H2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrapolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.polyfit_H2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the EIRENE rate for T</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.polyfit_H3">
+<span class="sig-name descname"><span class="pre">polyfit_H3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrapolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.polyfit_H3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the EIRENE rate for T</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.polyfit_H4">
+<span class="sig-name descname"><span class="pre">polyfit_H4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrapolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.polyfit_H4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the EIRENE rate for T</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.loglog_interp">
+<span class="sig-name descname"><span class="pre">loglog_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.loglog_interp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CRUMPET.Reaction.coeff_constant">
+<span class="sig-name descname"><span class="pre">coeff_constant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CRUMPET.Reaction.coeff_constant" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">coeff_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id10" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id11">
+<span class="sig-name descname"><span class="pre">UE_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id11" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the UEDGE rate for T and n</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id12">
+<span class="sig-name descname"><span class="pre">SAWADASIGMA_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id12" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the Sawada-Sigma rate for T</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id13">
+<span class="sig-name descname"><span class="pre">APID_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Te</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ti</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id13" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function returning the APID rate for T</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="CRUMPET.Tools.html" class="btn btn-neutral float-right" title="Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="CRUMPET.RateData.html" class="btn btn-neutral float-left" title="RateData" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Andreas Holm
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
