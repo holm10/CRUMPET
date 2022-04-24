@@ -195,6 +195,7 @@ class Crm(Tools):
                 return
             for h123, h123content in dbcontent.items():
                 for rea, reactiondata in h123content.items():
+                    EIRreaction = reactiondata.pop(0)
                     # Split the definitions into names and databases
                     reastr = reactiondata[0].upper()
                     if db in ['FCF', 'AIK']:
@@ -253,7 +254,24 @@ class Crm(Tools):
                                                 self.bg, self.species, 
                                                 self.isotope, self.mass, fcf=rdata[db][datafile][x,y])
     
-        
+                    elif db.upper() == 'MCCCDB':
+                        del self.reactions[db][h123][rea]
+                        coeffs = [[0,0]]
+                        with open(reactiondata.pop(1), 'r') as f:
+                            for l in f:
+                                l = l.strip()
+                                if l[0] == '#':
+                                    pass
+                                else:
+                                    coeffs.append([float(x) for x in l.split()])
+                        coeffs.append([1e20,0])
+                        coeffs = array(coeffs)
+                        coeffs[:,-1] *= (5.29177210903e-9)**2
+                        self.reactions[db][h123][rea] = Reaction(db, h123, reactiondata[0],
+                                    reactiondata, coeffs, self.bg, 
+                                    self.species, self.isotope, self.mass)
+                                    
+
                     else:
                         ''' Branch for ground-state transitions '''
                         # Loop through states, if necessary. Dynamicallt set boundaries
@@ -334,7 +352,7 @@ class Crm(Tools):
                                             coeffs, self.bg, self.species, 
                                             self.isotope, self.mass)
                             else:
-                                coeffs = set_coeffs(db, h123, rea.upper(), rdata)
+                                coeffs = set_coeffs(db, h123, EIRreaction.upper(), rdata)
                                 if coeffs is False:
                                     coeffs = None
                                 self.reactions[db][h123][rea] = Reaction(db, h123, rea,
@@ -342,13 +360,6 @@ class Crm(Tools):
                                             self.species, self.isotope, self.mass)
 
 
-        # Define reactions for UEDGE raditation
-        #self.ionizrad=Reaction('IONIZRAD','UE',
-                #self.get_coeff('UE','IONIZRAD'),'UE',['','',''],bg,species,
-                #['','',None,None,[0,0,0,0]])
-        #self.recrad=Reaction('RECRAD','UE',self.get_coeff('UE','RECRAD'),
-                #'UE',['','',''],bg,species,['','',None,None,[0,0,0,0]])
-        #return
         # Create the rate matrix M based on the input
         print('Constructing functional rate matrix')
         self.create_M()
@@ -665,7 +676,8 @@ class Crm(Tools):
             for dkey, database in self.reactions.items():
                 for h123, h123data in database.items():
                     for rkey, r in h123data.items():
-                        #print(dkey, h123, rkey)
+                        
+                        #print(dkey, h123, rkey, r)
                         #%%% Sort the species of each reaction into %%%
                         #%%%  the appropriate column %%%
                         # Specify density for external source
@@ -981,7 +993,7 @@ class Crm(Tools):
                 (rec + ext + div + self.source)*self.evolvearr**mask
  
 
-    def Sgl(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, **kwargs):
+    def Sgl(self, Te, ne, Ti=None, ni=None, E=0.1, Tm=0, write=False, **kwargs):
         ''' Returns the energy rates in eV s**-1
 
         Parameters
@@ -1017,7 +1029,7 @@ class Crm(Tools):
             Ti=Te # Check for Ti, set if necessary
         if ni is None: 
             ni=ne # Check for ni, set if necessary
-        mat, ext = self.eval_Sgl(Te=Te, ne=ne, Ti=Ti, ni=ni, E=E, Tm=Tm)    
+        mat, ext = self.eval_Sgl(Te=Te, ne=ne, Ti=Ti, ni=ni, Energy=E, Tm=Tm)    
         if write:
             title = ['Sgl_el', 'Sgl_ia', 'Sgl_v', 'Sgl_ga', 'Sgl_gm']
             for i in range(5):

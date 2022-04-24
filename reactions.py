@@ -164,12 +164,21 @@ class Reaction:
         self.isotope = isotope.upper()
         self.name = name
         self.type = rtype.upper()
+        self.scale = 1
         self.mass = mass
         self.K = '0'
         self.fcf = fcf
         self.tag = '{} {} {}'.format(self.database, self.type, self.name)
 
         reaction = data.pop(0)
+        ix = None
+        for i in range(len(data)):
+            if 'SCALEFACTOR' in data[i].upper():
+                self.scale = float(data[i].split()[1])
+                ix = i
+        if ix is not None:
+            ix = data.pop(i)
+
         self.educts = [x.strip() for x in \
                             reaction.split(' > ')[0].split(' + ')]
         self.products = [x.strip() for x in \
@@ -217,6 +226,8 @@ class Reaction:
                 self.coeffs=log10(array(self.coeffs))
             elif self.type.upper() == 'COEFFICIENT':
                 self.coeffs = float(data[0])
+            elif self.type.upper() == 'SIGMA':
+                self.coeffs = [float(x) for x in data.pop(0).split()]
             else:
                 print('Reaction database "{}" and type "{}"'
                         ' not recognized!'.format(self.database, self.type))
@@ -231,8 +242,6 @@ class Reaction:
                 self.coeffs[:,1] *= fcf # FCF scaling
                 self.coeffs=log10(array(self.coeffs))
 
-            
-                    
         # If user-defined, get it from data
 #        if database.upper() == 'USER':
 #            self.coeffs = data.pop(0) 
@@ -250,7 +259,7 @@ class Reaction:
 
 
         self.Tarr = array(Tarr)
-        self.parseS(data, bg, species, isotope)
+        self.parseS(bg, species, isotope)
         self.rate = self.pick_rate()
 
         '''
@@ -261,7 +270,7 @@ class Reaction:
         print(self.rate(10,10,ne=1e13,E=1))'''
 
 
-    def parseS(self, data, bg, species, isotope):
+    def parseS(self, bg, species, isotope):
         ''' Derives the reaction information
         
         Assigns the majority of the object attributes, including
@@ -488,7 +497,7 @@ class Reaction:
     def pick_rate(self):
         ''' Initialization of the rate attribute '''
         # TODO: Dynamically choose between ni and ne in reaction
-        from scipy.interpolate import interp2d,interp1d
+        from scipy.interpolate import interp1d
         from numpy import pi
         if self.database == 'ADAS': 
             # TODO: verify ADAS
@@ -566,13 +575,17 @@ class Reaction:
             self.coeffs = Afac
             return self.coeff_constant
 
+        elif self.database == 'MCCCDB':
+            self.xsec = interp1d(self.coeffs[:,0], self.coeffs[:,1])
+            return self.integrated
+
         elif 'H.' in self.type.upper(): 
             if self.type.upper() == 'H.0':
                 print('Potential: TBD')
                 return
             elif self.type.upper() == 'H.1':
-                print('Cross-section vs energy: TBD')
-                return
+                self.xsec = self.polyfit_H1
+                return self.integrated
             elif self.type.upper() == 'H.2':
                 return self.polyfit_H2
             elif self.type.upper() == 'H.3':
@@ -617,7 +630,8 @@ class Reaction:
             return self.loglog_interp
         elif self.type.upper() == 'SIGMA': 
             # TODO: verify SIGMA
-            print('TBD')
+            print('Sigma rates to be verified!')
+            # NOTE: To be verified
             return self.SAWADASIGMA_rate
         else: 
             print('Unknown type "{} {}"'.format(self.database, self.type))
@@ -653,46 +667,61 @@ class Reaction:
         b = y1 - k*log10(x1)
         return self.get_n(ne, ni)**frequency*(10**(k*x+b))
 
-    def polyfit_H2(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, extrapolate = True, **kwargs):
+
+    def polyfit_H1(self, Te, Ti=0, E=0, ne=0, ni=0, extrapolate=True):
+        ''' Function returning the EIRENE rate for T '''
+        from numpy import log, exp, log10
+        ep = ((self.e + self.p) ==2)
+        ret = 0
+        if (Te < 0.5) and (extrapolate is True):   
+            return self.extrapolate_polyfit(Te, self.polyfit_H1, 0, 0, 0, False)
+        # Rate coefficient vs temperature
+        for i in range(9):
+            ret += self.coeffs[i]*(log(Te)**i)
+        return exp(ret)
+
+    def polyfit_H2(self, Te, Ti, E=0, ne=0, ni=0, frequency=False, extrapolate = True, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
         ep = ((self.e + self.p) ==2)
         T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
         if (T < 0.5) and (extrapolate is True):   
-            return self.extrapolate_polyfit(T, self.polyfit_H2, E, ne, ni, frequency)
+            return self.scale*self.extrapolate_polyfit(T, self.polyfit_H2, E, ne, ni, frequency)
         # Rate coefficient vs temperature
         for i in range(9):
             ret += self.coeffs[i]*(log(T)**i)    
-        return self.get_n(ne,ni)**frequency*exp(ret)
+        return self.scale*self.get_n(ne,ni)**frequency*exp(ret)
     
-    def polyfit_H3(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, extrapolate=True, **kwargs):
+    def polyfit_H3(self, Te, Ti, E=None, ne=0, ni=0, frequency=False, extrapolate=True, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
         ep = ((self.e + self.p) ==2)
         T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
         if (T < 0.5) and (extrapolate is True):   
-            return self.extrapolate_polyfit(T, self.polyfit_H3, E, ne, ni, frequency)
+            return self.scale*self.extrapolate_polyfit(T, self.polyfit_H3, E, ne, ni, frequency)
         # Rate coefficient vs temperature and energy
         for i in range(9):
             for j in range(9):
                 ret += self.coeffs[i,j]*(log(T)**i)*(log(E)**j)
-        return self.get_n(ne,ni)**frequency*exp(ret)
+        return self.scale*self.get_n(ne,ni)**frequency*exp(ret)
 
-    def polyfit_H4(self, Te, Ti, E=None, ne=None, ni=None, frequency=False, extrapolate=True, **kwargs):
+    def polyfit_H4(self, Te, Ti, E=0, ne=None, ni=None, frequency=False, extrapolate=True, **kwargs):
         ''' Function returning the EIRENE rate for T '''
         from numpy import log, exp, log10
         ep = ((self.e + self.p) ==2)
         T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
         if (T < 0.5) and (extrapolate is True):   
-            return self.extrapolate_polyfit(T, self.polyfit_H4, E, ne, ni, frequency)
+            return self.scale*self.extrapolate_polyfit(T, self.polyfit_H4, E, ne, ni, frequency)
         # Rate coefficient vs temperature and density
         for i in range(9):
             for j in range(9):
                 ret += self.coeffs[i,j]*(log(T)**i)*(log(ne*1e-8)**j)
-        return self.get_n(ne,ni)**frequency*exp(ret)
+        return self.scale*self.get_n(ne,ni)**frequency*exp(ret)
+
+
 
     def loglog_interp(self, Te, Ti=0, E=None, ne=None, ni=None, frequency=False, **kwargs):
         from numpy import log10
@@ -704,15 +733,15 @@ class Reaction:
             fit = self.coeffs(log10(self.Tl))
         elif T > self.Tu:
             fit = self.coeffs(log10(self.Tu))
-        return (self.get_n(ne,ni)**frequency)*10**fit
+        return self.scale*(self.get_n(ne,ni)**frequency)*10**fit
 
     def coeff_constant(self, *args, frequency=False, ne=None, ni=None, **kwargs):
         # NOTE: These are always assumed to be in 1/s 
-        return self.coeffs
+        return self.coeffs*self.scale
             
     def coeff_rate(self, *args, frequency=False, ne=None, ni=None, **kwargs):
         # NOTE: These are always assumed to be in 1/s 
-        return self.coeffs*self.get_n(ne,ni)**frequency
+        return self.scale*self.coeffs*self.get_n(ne,ni)**frequency
             
 
     def UE_rate(self, Te, *args, E=None, ne=None, **kwargs):
@@ -758,7 +787,7 @@ class Reaction:
             return x*sigma(x*T, *self.coeffs)*exp(-x)
 
         # Perform integration over velocity space according to JUEL-3858
-        return (4/sqrt(pi))*sqrt((T*ev)/(2*me))*\
+        return self.scale*(4/sqrt(pi))*sqrt((T*ev)/(2*me))*\
                 quad(R, 0, inf, args=(T, self.coeffs))[0]
     
 
@@ -785,7 +814,7 @@ class Reaction:
             if p < 0 or (p == 0 and k == 1): 
                 return None
             elif k*p == 0: 
-                return (k == 0)*exp(-p)/p + (p == 0)*(1/(k-1))
+                return self.scale*(k == 0)*exp(-p)/p + (p == 0)*(1/(k-1))
 
             elif p < 8 or k == 1:
                 if p < 1:
@@ -803,12 +832,12 @@ class Reaction:
                     ze1 = exp(-p)*znum/(zden*p)
 
                 if k == 1:
-                    return ze1
+                    return self.scale*ze1
                 else:
                     zek = ze1
                     for i in range(2, k+1):
                         zek = (exp(-p) - p*zek)/(i - 1)
-                    return zek
+                    return self.scale*zek
             
             else:
                 kp = int(p + 0.5)
@@ -818,9 +847,9 @@ class Reaction:
                     zek = en(kp, p)
                     for i in range(kp - 1, k - 1, -1): 
                         zek=(exp(-p) - i*zek)/p
-                    return zek
+                    return self.scale*zek
             
-                else: return en(k, p)
+                else: return self.scale*en(k, p)
             return 'Fell through'
 
         # Use set constants to eval sigma
@@ -869,4 +898,17 @@ class Reaction:
 
         return n*ret
             
+
+    def integrated(self, Te, Ti, ne=0, ni=0,E=None, **kwargs):
+        from scipy.integrate import quad
+        from numpy import inf, pi
+        T = (self.e*Te+self.p*Ti)
+        return self.scale*100*(4/pi**0.5)*((1.602e-19*T)/\
+                (2*9.1093837e-31))**0.5*\
+                quad(self.integrand, 0, inf, args=(T))[0]
+
+    def integrand(self, x, T):
+        from numpy import pi, exp
+        return x*self.xsec(x*T)*exp(-x)
+
 

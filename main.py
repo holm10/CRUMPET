@@ -76,6 +76,7 @@ class Crumpet(Crm, RateData):
 
         self.ver = 'V1.0'
         self.ev = 1.602e-19
+        self.fname  = fname
 
         def build_reactions(reaction_id):
             if reaction_id:
@@ -113,8 +114,18 @@ class Crumpet(Crm, RateData):
                                  
                                 parse_file('', ' '.join(l.split()[2:]), data)
                             elif card == 'REACTIONS':
-                                [subcard, h123, reaction] = l.split()[1:]
-                                merge_reactions(data[card], build_reactions(l.split()[1:]))
+                                try:
+                                    [subcard, h123, reaction] = l.split()[1:]
+                                    EIRreaction = reaction
+                                    merge_reactions(data[card], build_reactions(l.split()[1:]))
+                                except:
+                                    # Account for name not matching reaction 
+                                    # EIRENE database
+                                    [subcard, h123, reaction, 
+                                            EIRreaction] = l.split()[1:]
+                                    merge_reactions(data[card], build_reactions(l.split()[1:-1]))
+                                data[card][subcard][h123][reaction].append(EIRreaction)
+        
                             else:
                                 subcard = l.split()[1]
                                 data[card][subcard] = [] 
@@ -184,7 +195,7 @@ class Crumpet(Crm, RateData):
 
 
 
-    def write_ue_rates( self, fname='crumpet', E=0.1, Srec=True, Tm=0, 
+    def write_ue_rates( self, fname='crumpet', E=0.1, Tm=0, 
                         groundstate=['(n=1)','(v=0)']):
         ''' Writes UEDGE-compatible tab-delimited rate files
 
@@ -206,9 +217,6 @@ class Crumpet(Crm, RateData):
             prefix to tabulated rate data files
         E : floar, optional (default: 0.1)
             assumed temperature of the molecules for rates it Tm=False
-        Srec : boolean, optional (default: True)
-            switch for considering 'external' sinks/sources (e.g. 
-            re-association)
         Tm : float, optional (default: 0)
             local molecular temperature for calculating energy losses 
             associated with molecules. Defaults to E if Tm=0.
@@ -266,7 +274,7 @@ class Crumpet(Crm, RateData):
 
                 # Store density rate to matrix
                 ret[i,j,:,:], ext[i,j,:], _ = self.gl_crm(
-                        *self.M(Te, ne, Te, ne, E, write=False), Srec=Srec)
+                        Te, ne)
                 
                 # Calculate energy rates
                 U = self.Sgl(Te, ne, Te, ne, E, Tm, write=False)
@@ -329,6 +337,7 @@ class Crumpet(Crm, RateData):
             f.write('\n{} by user {} using CRUMPET {}'.format(
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     getuser(), self.ver))
+            f.write('\nCalculated from file "{}"'.format(self.fname))
 
 
         print(' Writing UEDGE energy rates to {}'.format(fname + '_Erates'))
@@ -369,9 +378,10 @@ class Crumpet(Crm, RateData):
                         if (k + 1)/6 in range(1, 11): # Split string into ten rows
                             out += '\n'
                     f.write(out + '\n')   # Write the data to file
-            f.write('\n{} by user {} using CRUMPET {}'.format(
+            f.write('\n {} by user {} using CRUMPET {}'.format(
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     getuser(), self.ver))
+            f.write('\nCalculated from file "{}"'.format(self.fname))
 
 
     def plot_depletion(
@@ -1114,8 +1124,7 @@ class Crumpet(Crm, RateData):
         for i in range(len(Te)):
             T = Te[i]
             # Store to matrix
-            ret[i,:,:], ext[i,:], _ = self.gl_crm(
-                    *self.M(T, ne, T, ne, E, write=False), Srec=True) 
+            ret[i,:,:], ext[i,:], _ = self.gl_crm(T, ne)
         setups = [
                 ['H0_depl', ret[:,0,0]],
                 ['H0_create', ret[:,0,1]],
@@ -1451,7 +1460,7 @@ class Crumpet(Crm, RateData):
             if xlim is not None:
                 ax.set_xlim(xlim)
             ax.set_ylim(ylim)
-        fig.suptitle(suptitle)
+#        fig.suptitle(suptitle)
         if savename is not None:
             try:
                 mkdir('output/figs')
