@@ -113,7 +113,12 @@ class Crumpet(Crm, RateData):
                                 fnamepath = ' '.join(l.split()[2:])
                                  
                                 parse_file('', ' '.join(l.split()[2:]), data)
-                            elif card == 'REACTIONS':
+                            elif card.upper() == 'REACTIONS':
+                                if isinstance(data[card],dict):
+                                    data[card] = []
+                                data[card].append([l[2:]])
+                                subcard = True
+                                '''
                                 try:
                                     [subcard, h123, reaction] = l.split()[1:]
                                     EIRreaction = reaction
@@ -124,7 +129,8 @@ class Crumpet(Crm, RateData):
                                     [subcard, h123, reaction, 
                                             EIRreaction] = l.split()[1:]
                                     merge_reactions(data[card], build_reactions(l.split()[1:-1]))
-                                data[card][subcard][h123][reaction].append(EIRreaction)
+                                print(card, subcard)
+                                data[card][subcard][h123][reaction].append(EIRreaction)'''
         
                             else:
                                 subcard = l.split()[1]
@@ -136,8 +142,9 @@ class Crumpet(Crm, RateData):
                                 data[card][l.split()[0].strip()] = \
                                         ' '.join(l.split()[1:])
                             else:
-                                if card == 'REACTIONS':
-                                    data[card][subcard][h123][reaction].append(l)
+                                if card.upper() == 'REACTIONS':
+                                    #data[card][subcard][h123][reaction].append(l)
+                                    data[card][-1].append(l)
                                 else:
                                     data[card][subcard].append(l)
 
@@ -145,7 +152,7 @@ class Crumpet(Crm, RateData):
         # Parse the input file into the dict data
         data = {} # Hierarchy: Card - Subcard - Data
         parse_file(path, fname, data)
-                    
+
         ''' Store required input parameters '''
         # Species
         species = {}

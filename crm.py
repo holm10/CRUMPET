@@ -172,213 +172,171 @@ class Crm(Tools):
                 for rname, data in reactions.items():
                     print(database, h123, rname, data)
         '''
-        def set_coeffs(db, h123, r, rdata):
-            if db in ['AMJUEL','HYDHEL','H2VIBR']:
+        def set_coeffs(header):
+            header = header.split()
+            if header[0] in ['AMJUEL','HYDHEL','H2VIBR']:
                 try:
-                    return rdata[db][h123][r.upper()]
+                    return rdata[header[0]][header[1]][header[-1].upper()]
                 except:
-                    if '-' in r:
-                        return rdata[db][h123][r.split('-')[0].upper()]
-                    else: 
-                        print('Reaction "{}" of type "{}" not '
-                            'found in database "{}"!'.format(r, h123, db))
+                    #if '-' in r:
+                    #    return rdata[header[0]][header[1]][header[-1].split('-')[0].upper()]
+                    #else: 
+                    print('Reaction "{}" of type "{}" not '
+                            'found in database "{}"!'.format(header[-1], header[1], header[0]))
                     return False
             else:
                 return False
-            
-        
-        self.static = list(array(self.slist)[where(self.evolvearr == 0)[0]])
-        self.reactions = deepcopy(reactions)
-        for db, dbcontent in reactions.items():
-            if (db in ['AMJUEL', 'HYDHEL', 'H2VIBR']) and (db not in rdata.keys()):
-                print('Required database "{}" not found, aborting!'.format(db))
+
+
+        def merge_reactions(dct, merge_dct):
+            from collections import Mapping
+            """ Adapted from https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
+            """
+            for k, v in merge_dct.items():
+                if (k in dct and isinstance(dct[k], dict)
+                        and isinstance(merge_dct[k], Mapping)):
+                    merge_reactions(dct[k], merge_dct[k])
+                else:
+                    dct[k] = merge_dct[k]
+
+
+
+        def create_reaction(header, reactiondata, coeffs, scale):
+            ''' Creates a reaction dict with the correct structure and
+                merges the dict with self.reactions
+            '''
+            header = header.split()
+
+            reaction = {header[0]: {header[1]: {header[2]: Reaction(header[0], 
+                header[1], header[2], reactiondata, coeffs, self.bg, 
+                self.species, self.isotope, self.mass, scale=scale)}}}
+            merge_reactions(self.reactions, reaction) 
+
+
+        def append_reaction(reaction, scale=1):
+            header = reaction.pop(0)
+
+            # Use user-defined scaling factor if no scale factor 
+            # requested through other means (lowest priority)
+            if scale == 1:
+                try:
+                    scale = float([s for s in reaction if 'SCALEFACTOR' in s.upper()][-1].split()[1])
+                except:
+                    pass
+            reaction = [s for s in reaction if 'SCALEFACTOR' not in s.upper()]
+
+            rea = reaction.pop(0)
+            # Check if FCF: then, do recursive
+            if header.split()[0].upper() == 'FCF':            
+                vl, vu = reaction.pop(1), reaction.pop(1)
+                vl = tuple([int(x) for x in vl.split()])
+                vu = tuple([int(x) for x in vu.split()])
+                # Make single entries into two-len tuples to 
+                # access the correct ranges
+                vl += vl*(len(vl)==1)
+                vu += vu*(len(vu)==1) 
+                fcfs = rdata['FCF'][reaction.pop(0)]
+                # Call  function recursively for each FCF scaling factor
+                for x in range(vl[0], vl[1]+1):
+                    for y in range(vu[0], vu[1]+1):
+                        reaction_buff = [self.XY2num(rea, x, y)]+reaction 
+                        reaction_buff.insert(0,self.XY2num(header[4:],x,y))
+                        if vl[0]-vl[1] == 0:
+                            reaction_buff = [self.XY2num(rea, y)]+reaction 
+                            reaction_buff.insert(0,self.XY2num(header[4:], y))
+                        if vu[0]-vu[1] == 0:
+                            reaction_buff = [self.XY2num(rea, x)]+reaction 
+                            reaction_buff.insert(0,self.XY2num(header[4:], x))
+                        append_reaction(reaction_buff, fcfs[x,y])
                 return
-            for h123, h123content in dbcontent.items():
-                for rea, reactiondata in h123content.items():
-                    # TODO: tidy this part up!
-                    scale = 1
-                    ix = None
-                    for i in range(len(reactiondata)):
-                        if 'SCALEFACTOR' in reactiondata[i].upper():
-                            scale = float(reactiondata[i].split()[1])
-                            ix = i
-                    if ix is not None:
-                        ix = reactiondata.pop(ix)
 
-                    EIRreaction = reactiondata.pop(0)
-                    # Split the definitions into names and databases
-                    reastr = reactiondata[0].upper()
-                    ''' Branch for vibrational H2 transitions by factors '''
-                    if db == 'AIK':
-                        del self.reactions[db][h123][rea]
-                        datafile = reactiondata[1]
-                        [ve, vp] = [int(x) for x in reactiondata[2].split()]
-                        # Read table of Einstein coefficients
-                        for x in range(ve+1):
-                            for y in range(vp+1):
-                                reabuff = self.XY2num(rea,x,y)
-#                                    print(rdata[db][datafile][y,x])
-                                self.reactions[db][h123][reabuff] = \
-                                        Reaction(db, h123, 
-                                        reabuff, [self.XY2num(reactiondata[0],x,y)], 
-                                        rdata[db][datafile][y,x],
-                                        self.bg, self.species, 
-                                        self.isotope, self.mass, scale=scale)
-                    elif db == 'FCF':
-                        # TODO: figure out a way to consider FCFs
-                        # in other reaction types than interpolation!
-                        del self.reactions[db][h123][rea]
-                        datafile = reactiondata.pop(1)
-                        # Read table of Franck-Condon factors
-                        vl, vu = reactiondata.pop(1), reactiondata.pop(1)
-                        vl = [int(x) for x in vl.split()]
-                        vu = [int(x) for x in vu.split()]
-                        if len(vl) == 1:
-                            x = vl[0]
-                            # Only upper state to be read from FCFs
-                            for y in range(vu[0], vu[1]+1):
-                                reabuff = self.XY2num(rea,y)
-                                self.reactions[db][h123][reabuff] = \
-                                        Reaction(db, h123, 
-                                        reabuff, [self.XY2num(reactiondata[0],y)]+reactiondata[1:], 
-                                        0,
-                                        self.bg, self.species, 
-                                        self.isotope, self.mass, 
-                                        scale=rdata[db][datafile][x,y])
-                        elif len(vu) == 1:
-                            # Only lower state to be read from FCFs
-                            y = vu[0]
-                            for x in range(vl[0], vl[1]+1):
-                                reabuff = self.XY2num(rea,y)
-                                self.reactions[db][h123][reabuff] = \
-                                        Reaction(db, h123, 
-                                        reabuff, [self.XY2num(reactiondata[0],y)]+reactiondata[1:], 
-                                        0,
-                                        self.bg, self.species, 
-                                        self.isotope, self.mass, 
-                                        scale=rdata[db][datafile][x,y])
-                            # Only lower state to be read from FCFs
+            # Otherwise, check which type of data is supplied
+            if header.split()[0].upper() == 'AIK':
+                datafile = reaction.pop(0)
+                [ve, vp] = [int(x) for x in reaction.pop(0).split()]
+                # Read table of Einstein coefficients
+                for x in range(ve+1):
+                    for y in range(vp+1):
+                        create_reaction(self.XY2num(header, x, y),
+                            [self.XY2num(rea, x, y)], 
+                            rdata[header.split()[0]][datafile][y,x], 
+                            scale)
+
+            elif header.split()[0].upper() == 'MCCCDB':
+                coeffs = [[0,0]]
+                with open(reaction.pop(0), 'r') as f:
+                    for l in f:
+                        l = l.strip()
+                        if l[0] == '#':
+                            pass
                         else:
-                            # Both upper and lower states are to be read
-                            for x in range(vl[0], vl[1]+1):
-                                for y in range(vu[0], vu[1]+1):
-                                    reabuff = self.XY2num(rea,x,y)
-                                    self.reactions[db][h123][reabuff] = \
-                                            Reaction(db, h123, 
-                                            reabuff, [self.XY2num(reactiondata[0],x,y)]+reactiondata[1:], 
-                                            0,
-                                            self.bg, self.species, 
-                                            self.isotope, self.mass, 
-                                            scale=rdata[db][datafile][x,y])
+                            coeffs.append([float(x) for x in l.split()])
+                coeffs.append([1e20,0])
+                coeffs = array(coeffs)
+                coeffs[:,-1] *= (5.29177210903e-9)**2 # Convert to CS to SI units
+                reaction.insert(0,rea)
+                create_reaction(header, reaction, coeffs, scale)
 
-                    elif db.upper() == 'MCCCDB':
-                        del self.reactions[db][h123][rea]
-                        coeffs = [[0,0]]
-                        with open(reactiondata.pop(1), 'r') as f:
-                            for l in f:
-                                l = l.strip()
-                                if l[0] == '#':
-                                    pass
-                                else:
-                                    coeffs.append([float(x) for x in l.split()])
-                        coeffs.append([1e20,0])
-                        coeffs = array(coeffs)
-                        coeffs[:,-1] *= (5.29177210903e-9)**2
-                        self.reactions[db][h123][rea] = Reaction(db, h123, reactiondata[0],
-                                    reactiondata, coeffs, self.bg, 
-                                    self.species, self.isotope, self.mass, scale=scale)
-                                    
+            else:
+                ''' Branch for ground-state transitions '''
+                # Loop through states, if necessary. Dynamicallt set boundaries
+                # according to electronic or vibrational transitions
+                isn, isv  = ('N=$' in rea.upper()), ('V=$' in rea.upper())
+                for x in range(isn, 1 + isv*self.vmax + isn*self.nmax):
+                    # Vibrational/electronic dependence present
+                    if '$' in rea:
+                        # %%% n- or v-dependent upper rate %%%
+                        if '&' in rea:
+
+                            # Relaxation - only move down during reaction
+                            if header.split()[1].upper() == 'RELAXATION':
+                                for y in range(int(isn), x):
+                                    coeffs = set_coeffs(self.XY2num(header,x, y))
+                                    if coeffs is False:
+                                        coeffs = (x, y)
+                                    create_reaction(self.XY2num(header,x, y), [self.XY2num(rea,x,y)]+reaction, coeffs, scale)
+
+                            # Excitation - only move up during reaction
+                            elif header.split()[1].upper() == 'EXCITATION':
+                                for y in range(x + 1, 1 + isn*self.nmax + 
+                                                    isv*self.vmax):
+                                    coeffs = set_coeffs(self.XY2num(header,x, y))
+                                    if coeffs is False:
+                                        coeffs = (x, y)
+                                    create_reaction(self.XY2num(header,x, y), [self.XY2num(rea,x,y)]+reaction, coeffs, scale)
+
+                            # Ladder-like process assumed
+                            elif 'H.' in header.split()[1].upper():
+                                for y in range(-1*('&' in rea), 2, 2):
+                                    # Limit transitions to [0,vmax]
+                                    if x + y in range(self.vmax + 1):
+                                        # Retain intial and final states in name
+                                        coeffs = set_coeffs(self.XY2num(header,x, x+y))
+                                        if coeffs is False:
+                                            coeffs = (x, y)
+                                        create_reaction(self.XY2num(header,x, x+y), [self.XY2num(rea,x,x+y)]+reaction, coeffs, scale)
+                            else:
+                                print('Reaction specifier "{}" not' 
+                                    ' recognized. Omitting '
+                                    '{} {} {}'.format(h123, db, h123, rea))
+
+                        # Independent upper state
+                        else:
+                            coeffs = set_coeffs(self.XY2num(header,x))
+                            if coeffs is False:
+                                coeffs = x
+                            create_reaction(self.XY2num(header,x), [self.XY2num(rea,x)]+reaction, coeffs, scale)
 
                     else:
-                        ''' Branch for ground-state transitions '''
-                        # Loop through states, if necessary. Dynamicallt set boundaries
-                        # according to electronic or vibrational transitions
-                        isn, isv  = ('N=$' in reastr), ('V=$' in reastr)
-                        if isn or isv:
-                            del self.reactions[db][h123][rea]
-                        for x in range(isn, 1 + isv*self.vmax + isn*self.nmax):
-                            # Vibrational/electronic dependence present
-                            if '$' in reastr:
-                                buff = reactiondata.copy()
-                                reabuff = rea
-                                # Substitute state into educts and product strings 
-                                buff[0] = self.XY2num(buff[0], x)
-                                reabuff = self.XY2num(reabuff, x)
-                                # %%% n- or v-dependent upper rate %%%
-                                if '&' in reastr:
-                                    # Relaxation - only move down during reaction
-                                    if h123.upper() == 'RELAXATION':
-                                        for y in range(int(isn), x):
-                                            rebuff = buff.copy()
-                                            rereabuff = reabuff
-                                            rebuff[0] = self.XY2num(rebuff[0], x, y) 
-                                            rereabuff = self.XY2num(rereabuff, x, y) 
-                                            coeffs = set_coeffs(db, h123, rereabuff.upper(), rdata)
-                                            if coeffs is False:
-                                                coeffs = (x, y)
-                                            self.reactions[db][h123][rereabuff] = \
-                                                    Reaction(db, h123, 
-                                                    rereabuff, rebuff, coeffs,
-                                                    self.bg, self.species, 
-                                                    self.isotope, self.mass,
-                                                    scale = scale)
-                                    # Excitation - only move up during reaction
-                                    elif h123.upper() == 'EXCITATION':
-                                        for y in range(x + 1, 1 + isn*self.nmax + 
-                                                            isv*self.vmax):
-                                            rebuff = buff.copy()
-                                            rereabuff = reabuff
-                                            rebuff[0] = self.XY2num(rebuff[0], x, y) 
-                                            rereabuff = self.XY2num(rereabuff, x, y) 
-                                            coeffs = set_coeffs(db, h123, rereabuff.upper(), rdata)
-                                            if coeffs is False:
-                                                coeffs = (x, y)
-                                            self.reactions[db][h123][rereabuff] = \
-                                                    Reaction(db, h123, 
-                                                    rereabuff, rebuff, coeffs,
-                                                    self.bg, self.species, 
-                                                    self.isotope, self.mass,
-                                                    scale=scale)
-                                    # Ladder-like process assumed
-                                    elif 'H.' in h123.upper():
-                                        for y in range(-1*('&' in buff[0]), 2, 2):
-                                            # Limit transitions to [0,vmax]
-                                            if x + y in range(self.vmax + 1):
-                                                rebuff = buff.copy()
-                                                rereabuff = reabuff
-                                                # Retain intial and final states in name
-                                                rebuff[0] = self.XY2num(rebuff[0], x, x + y) 
-                                                rereabuff = self.XY2num(rereabuff, x, x + y) 
-                                                coeffs = set_coeffs(db, h123, rereabuff.upper(), rdata)
-                                                if coeffs is False:
-                                                    coeffs = (x, y)
-                                                self.reactions[db][h123][rereabuff] = \
-                                                        Reaction(db, h123, 
-                                                        rereabuff, rebuff, coeffs,
-                                                        self.bg, self.species, 
-                                                        self.isotope, self.mass,
-                                                        scale=scale)
-                                    else:
-                                        print('Reaction specifier "{}" not' 
-                                            ' recognized. Omitting '
-                                            '{} {} {}'.format(h123, db, h123, rea))
-                                # Independent upprt state
-                                else:
-                                    coeffs = set_coeffs(db, h123, reabuff.upper(), rdata)
-                                    if coeffs is False:
-                                        coeffs = x
-                                    self.reactions[db][h123][reabuff] = \
-                                            Reaction(db, h123, reabuff, buff,
-                                            coeffs, self.bg, self.species, 
-                                            self.isotope, self.mass, scale=scale)
-                            else:
-                                coeffs = set_coeffs(db, h123, EIRreaction.upper(), rdata)
-                                if coeffs is False:
-                                    coeffs = None
-                                self.reactions[db][h123][rea] = Reaction(db, h123, rea,
-                                            reactiondata, coeffs, self.bg, 
-                                            self.species, self.isotope, self.mass,
-                                            scale=scale)
+                        reaction.insert(0,rea)
+                        create_reaction(header, reaction, set_coeffs(header), scale)
+
+        self.static = list(array(self.slist)[where(self.evolvearr == 0)[0]])
+
+        self.reactions = {}
+        for reaction in reactions:
+            append_reaction(reaction)
+
 
 
         # Create the rate matrix M based on the input

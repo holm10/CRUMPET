@@ -213,6 +213,8 @@ class Reaction:
                 self.coeffs = float(data[0])
             elif self.type.upper() == 'SIGMA':
                 self.coeffs = [float(x) for x in data.pop(0).split()]
+            elif self.type.upper() == 'INTERPOLATION':
+                pass
             else:
                 print('Reaction database "{}" and type "{}"'
                         ' not recognized!'.format(self.database, self.type))
