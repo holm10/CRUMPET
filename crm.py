@@ -195,65 +195,82 @@ class Crm(Tools):
                 return
             for h123, h123content in dbcontent.items():
                 for rea, reactiondata in h123content.items():
+                    # TODO: tidy this part up!
+                    scale = 1
+                    ix = None
+                    for i in range(len(reactiondata)):
+                        if 'SCALEFACTOR' in reactiondata[i].upper():
+                            scale = float(reactiondata[i].split()[1])
+                            ix = i
+                    if ix is not None:
+                        ix = reactiondata.pop(ix)
+
                     EIRreaction = reactiondata.pop(0)
                     # Split the definitions into names and databases
                     reastr = reactiondata[0].upper()
-                    if db in ['FCF', 'AIK']:
-                        ''' Branch for vibrational H2 transitions by factors '''
+                    ''' Branch for vibrational H2 transitions by factors '''
+                    if db == 'AIK':
                         del self.reactions[db][h123][rea]
                         datafile = reactiondata[1]
-                        if db == 'AIK':
-                            [ve, vp] = [int(x) for x in reactiondata[2].split()]
-                            # Read table of Einstein coefficients
-                            for x in range(ve+1):
-                                for y in range(vp+1):
-                                    reabuff = self.XY2num(rea,x,y)
+                        [ve, vp] = [int(x) for x in reactiondata[2].split()]
+                        # Read table of Einstein coefficients
+                        for x in range(ve+1):
+                            for y in range(vp+1):
+                                reabuff = self.XY2num(rea,x,y)
 #                                    print(rdata[db][datafile][y,x])
-                                    self.reactions[db][h123][reabuff] = \
-                                            Reaction(db, h123, 
-                                            reabuff, [self.XY2num(reactiondata[0],x,y)], 
-                                            rdata[db][datafile][y,x],
-                                            self.bg, self.species, 
-                                            self.isotope, self.mass)
-                        elif db == 'FCF':
-                            # Read table of Franck-Condon factors
-                            vl = [int(x) for x in reactiondata[2].split()]
-                            vu = [int(x) for x in reactiondata[3].split()]
-                            if len(vl) == 1:
-                                x = vl[0]
-                                # Only upper state to be read from FCFs
+                                self.reactions[db][h123][reabuff] = \
+                                        Reaction(db, h123, 
+                                        reabuff, [self.XY2num(reactiondata[0],x,y)], 
+                                        rdata[db][datafile][y,x],
+                                        self.bg, self.species, 
+                                        self.isotope, self.mass, scale=scale)
+                    elif db == 'FCF':
+                        # TODO: figure out a way to consider FCFs
+                        # in other reaction types than interpolation!
+                        del self.reactions[db][h123][rea]
+                        datafile = reactiondata.pop(1)
+                        # Read table of Franck-Condon factors
+                        vl, vu = reactiondata.pop(1), reactiondata.pop(1)
+                        vl = [int(x) for x in vl.split()]
+                        vu = [int(x) for x in vu.split()]
+                        if len(vl) == 1:
+                            x = vl[0]
+                            # Only upper state to be read from FCFs
+                            for y in range(vu[0], vu[1]+1):
+                                reabuff = self.XY2num(rea,y)
+                                self.reactions[db][h123][reabuff] = \
+                                        Reaction(db, h123, 
+                                        reabuff, [self.XY2num(reactiondata[0],y)]+reactiondata[1:], 
+                                        0,
+                                        self.bg, self.species, 
+                                        self.isotope, self.mass, 
+                                        scale=rdata[db][datafile][x,y])
+                        elif len(vu) == 1:
+                            # Only lower state to be read from FCFs
+                            y = vu[0]
+                            for x in range(vl[0], vl[1]+1):
+                                reabuff = self.XY2num(rea,y)
+                                self.reactions[db][h123][reabuff] = \
+                                        Reaction(db, h123, 
+                                        reabuff, [self.XY2num(reactiondata[0],y)]+reactiondata[1:], 
+                                        0,
+                                        self.bg, self.species, 
+                                        self.isotope, self.mass, 
+                                        scale=rdata[db][datafile][x,y])
+                            # Only lower state to be read from FCFs
+                        else:
+                            # Both upper and lower states are to be read
+                            for x in range(vl[0], vl[1]+1):
                                 for y in range(vu[0], vu[1]+1):
-                                    reabuff = self.XY2num(rea,y)
+                                    reabuff = self.XY2num(rea,x,y)
                                     self.reactions[db][h123][reabuff] = \
                                             Reaction(db, h123, 
-                                            reabuff, [self.XY2num(reactiondata[0],y)]+reactiondata[4:], 
+                                            reabuff, [self.XY2num(reactiondata[0],x,y)]+reactiondata[1:], 
                                             0,
                                             self.bg, self.species, 
-                                            self.isotope, self.mass, fcf=rdata[db][datafile][x,y])
-                            elif len(vu) == 1:
-                                # Only lower state to be read from FCFs
-                                y = vu[0]
-                                for x in range(vl[0], vl[1]+1):
-                                    reabuff = self.XY2num(rea,y)
-                                    self.reactions[db][h123][reabuff] = \
-                                            Reaction(db, h123, 
-                                            reabuff, [self.XY2num(reactiondata[0],y)]+reactiondata[4:], 
-                                            0,
-                                            self.bg, self.species, 
-                                            self.isotope, self.mass, fcf=rdata[db][datafile][x,y])
-                                # Only lower state to be read from FCFs
-                            else:
-                                # Both upper and lower states are to be read
-                                for x in range(vl[0], vl[1]+1):
-                                    for y in range(vu[0], vu[1]+1):
-                                        reabuff = self.XY2num(rea,x,y)
-                                        self.reactions[db][h123][reabuff] = \
-                                                Reaction(db, h123, 
-                                                reabuff, [self.XY2num(reactiondata[0],x,y)]+reactiondata[4:], 
-                                                0,
-                                                self.bg, self.species, 
-                                                self.isotope, self.mass, fcf=rdata[db][datafile][x,y])
-    
+                                            self.isotope, self.mass, 
+                                            scale=rdata[db][datafile][x,y])
+
                     elif db.upper() == 'MCCCDB':
                         del self.reactions[db][h123][rea]
                         coeffs = [[0,0]]
@@ -269,7 +286,7 @@ class Crm(Tools):
                         coeffs[:,-1] *= (5.29177210903e-9)**2
                         self.reactions[db][h123][rea] = Reaction(db, h123, reactiondata[0],
                                     reactiondata, coeffs, self.bg, 
-                                    self.species, self.isotope, self.mass)
+                                    self.species, self.isotope, self.mass, scale=scale)
                                     
 
                     else:
@@ -303,7 +320,8 @@ class Crm(Tools):
                                                     Reaction(db, h123, 
                                                     rereabuff, rebuff, coeffs,
                                                     self.bg, self.species, 
-                                                    self.isotope, self.mass)
+                                                    self.isotope, self.mass,
+                                                    scale = scale)
                                     # Excitation - only move up during reaction
                                     elif h123.upper() == 'EXCITATION':
                                         for y in range(x + 1, 1 + isn*self.nmax + 
@@ -319,7 +337,8 @@ class Crm(Tools):
                                                     Reaction(db, h123, 
                                                     rereabuff, rebuff, coeffs,
                                                     self.bg, self.species, 
-                                                    self.isotope, self.mass)
+                                                    self.isotope, self.mass,
+                                                    scale=scale)
                                     # Ladder-like process assumed
                                     elif 'H.' in h123.upper():
                                         for y in range(-1*('&' in buff[0]), 2, 2):
@@ -337,7 +356,8 @@ class Crm(Tools):
                                                         Reaction(db, h123, 
                                                         rereabuff, rebuff, coeffs,
                                                         self.bg, self.species, 
-                                                        self.isotope, self.mass)
+                                                        self.isotope, self.mass,
+                                                        scale=scale)
                                     else:
                                         print('Reaction specifier "{}" not' 
                                             ' recognized. Omitting '
@@ -350,14 +370,15 @@ class Crm(Tools):
                                     self.reactions[db][h123][reabuff] = \
                                             Reaction(db, h123, reabuff, buff,
                                             coeffs, self.bg, self.species, 
-                                            self.isotope, self.mass)
+                                            self.isotope, self.mass, scale=scale)
                             else:
                                 coeffs = set_coeffs(db, h123, EIRreaction.upper(), rdata)
                                 if coeffs is False:
                                     coeffs = None
                                 self.reactions[db][h123][rea] = Reaction(db, h123, rea,
                                             reactiondata, coeffs, self.bg, 
-                                            self.species, self.isotope, self.mass)
+                                            self.species, self.isotope, self.mass,
+                                            scale=scale)
 
 
         # Create the rate matrix M based on the input

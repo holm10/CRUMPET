@@ -114,7 +114,7 @@ class Reaction:
 
 
     def __init__(self, database, rtype, name, data, coeffs=None, bg=None,
-                    species=None, isotope='H', mass=1, Tarr=0, fcf=1):
+                    species=None, isotope='H', mass=1, Tarr=0, scale=1):
         ''' 
         Parameters 
         ----------
@@ -164,21 +164,12 @@ class Reaction:
         self.isotope = isotope.upper()
         self.name = name
         self.type = rtype.upper()
-        self.scale = 1
+        self.scale = scale
         self.mass = mass
         self.K = '0'
-        self.fcf = fcf
         self.tag = '{} {} {}'.format(self.database, self.type, self.name)
 
         reaction = data.pop(0)
-        ix = None
-        for i in range(len(data)):
-            if 'SCALEFACTOR' in data[i].upper():
-                self.scale = float(data[i].split()[1])
-                ix = i
-        if ix is not None:
-            ix = data.pop(i)
-
         self.educts = [x.strip() for x in \
                             reaction.split(' > ')[0].split(' + ')]
         self.products = [x.strip() for x in \
@@ -218,12 +209,6 @@ class Reaction:
                 self.coeffs = array(self.coeffs)
             elif self.type.upper() == 'RELAXATION':
                 self.coeffs = float(data.pop(0))
-            elif self.type.upper() == 'INTERPOLATION':
-                # Read the number of data points defined
-                self.coeffs = []
-                for i in range(int(data.pop(0))):
-                    self.coeffs.append([float(x) for x in data.pop(0).strip().split()])
-                self.coeffs=log10(array(self.coeffs))
             elif self.type.upper() == 'COEFFICIENT':
                 self.coeffs = float(data[0])
             elif self.type.upper() == 'SIGMA':
@@ -232,15 +217,12 @@ class Reaction:
                 print('Reaction database "{}" and type "{}"'
                         ' not recognized!'.format(self.database, self.type))
 
-        if self.database == 'FCF':
-            if self.type.upper() == 'INTERPOLATION':
-                # Read the number of data points defined
-                self.coeffs = []
-                for i in range(int(data.pop(0))):
-                    self.coeffs.append([float(x) for x in data.pop(0).strip().split()])
-                self.coeffs=array(self.coeffs)
-                self.coeffs[:,1] *= fcf # FCF scaling
-                self.coeffs=log10(array(self.coeffs))
+        if self.type.upper() == 'INTERPOLATION':
+            # Read the number of data points defined
+            self.coeffs = []
+            for i in range(int(data.pop(0))):
+                self.coeffs.append([float(x) for x in data.pop(0).strip().split()])
+            self.coeffs=log10(array(self.coeffs))
 
         # If user-defined, get it from data
 #        if database.upper() == 'USER':
