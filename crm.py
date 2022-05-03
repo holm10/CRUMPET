@@ -197,6 +197,9 @@ class Crm(Tools):
                         and isinstance(merge_dct[k], Mapping)):
                     merge_reactions(dct[k], merge_dct[k])
                 else:
+                    if k in dct.keys():
+                        print("Warning! Entry {} is doubly defined!".format(k))
+                        quit()
                     dct[k] = merge_dct[k]
 
 
@@ -239,15 +242,16 @@ class Crm(Tools):
                 # Call  function recursively for each FCF scaling factor
                 for x in range(vl[0], vl[1]+1):
                     for y in range(vu[0], vu[1]+1):
-                        reaction_buff = [self.XY2num(rea, x, y)]+reaction 
-                        reaction_buff.insert(0,self.XY2num(header[4:],x,y))
-                        if vl[0]-vl[1] == 0:
-                            reaction_buff = [self.XY2num(rea, y)]+reaction 
-                            reaction_buff.insert(0,self.XY2num(header[4:], y))
-                        if vu[0]-vu[1] == 0:
-                            reaction_buff = [self.XY2num(rea, x)]+reaction 
-                            reaction_buff.insert(0,self.XY2num(header[4:], x))
-                        append_reaction(reaction_buff, fcfs[x,y])
+                        if fcfs[x,y] != 0: 
+                            reaction_buff = [self.XY2num(rea, x, y)]+reaction 
+                            reaction_buff.insert(0,self.XY2num(header[4:],x,y))
+                            if vl[0]-vl[1] == 0:
+                                reaction_buff = [self.XY2num(rea, y)]+reaction 
+                                reaction_buff.insert(0,self.XY2num(header[4:], y))
+                            if vu[0]-vu[1] == 0:
+                                reaction_buff = [self.XY2num(rea, x)]+reaction 
+                                reaction_buff.insert(0,self.XY2num(header[4:], x))
+                            append_reaction(reaction_buff, fcfs[x,y])
                 return
 
             # Otherwise, check which type of data is supplied
@@ -257,10 +261,11 @@ class Crm(Tools):
                 # Read table of Einstein coefficients
                 for x in range(ve+1):
                     for y in range(vp+1):
-                        create_reaction(self.XY2num(header, x, y),
-                            [self.XY2num(rea, x, y)], 
-                            rdata[header.split()[0]][datafile][y,x], 
-                            scale)
+                        ratecoeff = rdata[header.split()[0]][datafile][y,x]
+                        if ratecoeff != 0:
+                            create_reaction(self.XY2num(header, x, y),
+                                [self.XY2num(rea, x, y)], 
+                                ratecoeff, scale)
 
             elif header.split()[0].upper() == 'MCCCDB':
                 coeffs = [[0,0]]
