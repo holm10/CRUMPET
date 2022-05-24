@@ -883,11 +883,12 @@ class Reaction:
         return n*ret
             
 
-    def integrated(self, Te, Ti, ne=0, ni=0,E=None, **kwargs):
+    def integrated(self, Te, Ti, ne=0, ni=0,E=None, frequency=False, **kwargs):
         from scipy.integrate import quad
         from numpy import inf, pi
         T = (self.e*Te+self.p*Ti)
-        return self.scale*100*(4/pi**0.5)*((1.602e-19*T)/\
+        return self.scale*100*self.get_n(ne,ni)**frequency\
+                *(4/pi**0.5)*((1.602e-19*T)/\
                 (2*9.1093837e-31))**0.5*\
                 quad(self.integrand, 0, inf, args=(T))[0]
 

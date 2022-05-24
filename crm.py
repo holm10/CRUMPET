@@ -199,7 +199,6 @@ class Crm(Tools):
                 else:
                     if k in dct.keys():
                         print("Warning! Entry {} is doubly defined!".format(k))
-                        quit()
                     dct[k] = merge_dct[k]
 
 
