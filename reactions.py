@@ -459,6 +459,11 @@ class Reaction:
             return ni
         else: # Neither electron or ion impact: assume spontaneous
             return 1
+
+    def interp1d_loglog(self,T):
+        from numpy import log10
+        return 10**self.interp(log10(T))
+        
         
     
     def print_reaction(self):
@@ -482,7 +487,7 @@ class Reaction:
         ''' Initialization of the rate attribute '''
         # TODO: Dynamically choose between ni and ne in reaction
         from scipy.interpolate import interp1d
-        from numpy import pi
+        from numpy import pi, log10
         if self.database == 'ADAS': 
             # TODO: verify ADAS
             print('TBD')
@@ -560,7 +565,9 @@ class Reaction:
             return self.coeff_constant
 
         elif self.database == 'MCCCDB':
-            self.xsec = interp1d(self.coeffs[:,0], self.coeffs[:,1])
+            self.interp = interp1d(log10(self.coeffs[:,0]),
+                                log10(self.coeffs[:,1]))
+            self.xsec = self.interp1d_loglog
             return self.integrated
 
         elif 'H.' in self.type.upper(): 

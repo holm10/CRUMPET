@@ -1607,7 +1607,7 @@ class Crm(Tools):
         
     def intensity(
             self, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, n0=None, 
-            units='l', norm=False, write=False, **kwargs):
+            units='l', norm=False, write=False, n_ss=None,**kwargs):
         ''' Returns energy and gammas and the respective counts at SS
 
         Parameters
@@ -1671,8 +1671,9 @@ class Crm(Tools):
         from matplotlib.pyplot import figure
 
 
-        n_ss = self.steady_state(Te, ne, E=E, Ti=Ti, ni=ni, 
-                Srec=Srec, gl=False, plot=False, n0=n0, dt=False, **kwargs)
+        if n_ss is None:
+            n_ss = self.steady_state(Te, ne, E=E, Ti=Ti, ni=ni, 
+                    Srec=Srec, gl=False, plot=False, n0=n0, dt=False, **kwargs)
 
         x,y = self.EI(Te, ne, Ti, Te, E, write=False)
         if write:
