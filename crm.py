@@ -216,13 +216,14 @@ class Crm(Tools):
 
 
         def append_reaction(reaction, scale=1):
+            from numpy import log10
             header = reaction.pop(0)
 
             # Use user-defined scaling factor if no scale factor 
             # requested through other means (lowest priority)
             if scale == 1:
                 try:
-                    scale = float([s for s in reaction if 'SCALEFACTOR' in s.upper()][-1].split()[1])
+                    scale = float([s for s in reaction if 'SCALEFACTOR' in s.upper()][-1].split()[-1])
                 except:
                     pass
             reaction = [s for s in reaction if 'SCALEFACTOR' not in s.upper()]
@@ -267,6 +268,28 @@ class Crm(Tools):
                                 ratecoeff, scale)
 
             elif header.split()[0].upper() == 'MCCCDB':
+#                coeffs=[[1e-99,1e-99]]
+                coeffs=[[0.0, 0.0]]
+                with open(reaction.pop(0), 'r') as f:
+                    for l in f:
+                        l = l.strip()
+                        if l[0] == '#':
+                            pass
+                        else:
+                            coeffs.append([float(x) for x in l.split()])
+                #coeffs[1][1] = 1e-99
+                # Log-Log extrapolate final point
+                [x1,y1] = [log10(c) for c in coeffs[-2]]
+                [x2,y2] = [log10(c) for c in coeffs[-1]]
+                xf = 20
+                yf = xf*(y2-y1)/(x2-x1)
+                coeffs.append([float(10**xf), 10**yf])
+                coeffs = array(coeffs)
+                coeffs[:,-1] *= (5.29177210903e-9)**2 # Convert to CS to SI units
+                coeffs[coeffs == 0] = 1e-99
+                reaction.insert(0,rea)
+                create_reaction(header, reaction, coeffs, scale)
+                '''
                 coeffs = [[0,0]]
                 with open(reaction.pop(0), 'r') as f:
                     for l in f:
@@ -280,6 +303,7 @@ class Crm(Tools):
                 coeffs[:,-1] *= (5.29177210903e-9)**2 # Convert to CS to SI units
                 reaction.insert(0,rea)
                 create_reaction(header, reaction, coeffs, scale)
+                '''
 
             else:
                 ''' Branch for ground-state transitions '''

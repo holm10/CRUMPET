@@ -43,6 +43,7 @@ class Crumpet(Crm, RateData):
         a string defining the code version
     '''
 
+    # TODO: Store input file name and include it in all output files!
 
     def __init__(
             self, fname='input/CRUMPET.dat', path='./', vmax=14, nmax=8,
@@ -242,6 +243,7 @@ class Crumpet(Crm, RateData):
         from os import mkdir
         from datetime import datetime
         from getpass import getuser
+        from tqdm import tqdm
 
         # Parse into full handles
         h0h2=['{}{}'.format(self.isotope, groundstate[0]),
@@ -270,12 +272,10 @@ class Crumpet(Crm, RateData):
 
         # Calculate the Greenland (Np) space rates for the T-n space
         print('Creating UEDGE rate output')
-        for i in range(15): # 15 density points in log-log space
+        for i in tqdm(range(15)): # 15 density points in log-log space
     
-            print('    Density step {}/15'.format(i + 1))
             for j in range(60): # 60 temperature points in log-log space
 
-                print('        Temperature step {}/60'.format(j + 1))
                 Te = 10**(-1.2 + j/10)
                 ne = 10**(10 + 0.5*i) # Convert to ev and cm**-3
 
@@ -906,10 +906,14 @@ class Crumpet(Crm, RateData):
         self.read_UE(nratefile, rates, datalist=datalist, path=self.path)
         # Create custom reaction
         reactions = {}
+        print(rates.keys())
         for r in rates.keys():
-            reactions[r] = Reaction(r, rates[r], 'UE', {'reactants':['H2(v=0)'], 
-                    'fragments':['H2(v=0)'], 'K':'0'}, self.bg,
-                    self.species, self.isotope, self.mass)
+#            reactions[r] = Reaction(r, rates[r], 'UE', {'reactants':['H2(v=0)'], 
+#                    'fragments':['H2(v=0)'], 'K':'0'}, self.bg,
+#                    self.species, self.isotope, self.mass)
+            print(rates[r])
+            reactions[r] =  Reaction('UE', 'UE', r, reactiondata, coeffs, self.bg, 
+                self.species, self.isotope, self.mass, scale=scale)
 
         # Read the data from ratefile into dict
         datalist=['Hel', 'H2el', 'extel', 'Hia', 'H2ia', 'extia', 'HV', 'H2V',

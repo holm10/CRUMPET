@@ -669,7 +669,7 @@ class Reaction:
         # Rate coefficient vs temperature
         for i in range(9):
             ret += self.coeffs[i]*(log(Te)**i)
-        return exp(ret)
+        return self.scale*selg.get_n(ne,ni)**frequency*exp(ret)
 
     def polyfit_H2(self, Te, Ti, E=0, ne=0, ni=0, frequency=False, extrapolate = True, **kwargs):
         ''' Function returning the EIRENE rate for T '''
@@ -678,7 +678,7 @@ class Reaction:
         T = (Te*self.e + Ti*(self.p - ep))/(self.e + self.p - ep)
         ret = 0
         if (T < 0.5) and (extrapolate is True):   
-            return self.scale*self.extrapolate_polyfit(T, self.polyfit_H2, E, ne, ni, frequency)
+            return self.extrapolate_polyfit(T, self.polyfit_H2, E, ne, ni, frequency)
         # Rate coefficient vs temperature
         for i in range(9):
             ret += self.coeffs[i]*(log(T)**i)    
@@ -890,6 +890,11 @@ class Reaction:
         return n*ret
             
 
+    '''
+    def integrand(self, x, T):
+        from numpy import exp, log
+        return x*self.xsec(x*T)*exp(-x)
+
     def integrated(self, Te, Ti, ne=0, ni=0,E=None, frequency=False, **kwargs):
         from scipy.integrate import quad
         from numpy import inf, pi
@@ -899,8 +904,26 @@ class Reaction:
                 (2*9.1093837e-31))**0.5*\
                 quad(self.integrand, 0, inf, args=(T))[0]
 
+
+    '''
+
     def integrand(self, x, T):
-        from numpy import pi, exp
-        return x*self.xsec(x*T)*exp(-x)
+        from numpy import exp, log
+        ret = x*self.xsec(x*T)*exp(-x)
+        ret[ret==0] = 1e-99
+        return log(ret)
 
+    def integrated(self, Te, Ti, ne=0, ni=0, E=None, frequency=False, **kwargs):
+        """ Integration in log-log space using trapezoidal rule """
+        from numpy import logspace,exp,log, pi, diff
+        from scipy.special import logsumexp
 
+        T = (self.e*Te+self.p*Ti)
+        x = logspace(-10,4,1000)
+        y = self.integrand(x, T)
+        deltas = log(diff(x))
+        integrand = exp(-log(2.) + logsumexp([logsumexp(y[:-1]+deltas), logsumexp(y[1:]+deltas)]))
+
+        return self.scale*100*self.get_n(ne,ni)**frequency\
+                *(4/pi**0.5)*((1.602e-19*T)/\
+                (2*9.1093837e-31))**0.5*integrand
