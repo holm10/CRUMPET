@@ -203,7 +203,7 @@ class Crm(Tools):
 
 
 
-        def create_reaction(header, reactiondata, coeffs, scale):
+        def create_reaction(header, reactiondata, coeffs, scale, sourcefile):
             ''' Creates a reaction dict with the correct structure and
                 merges the dict with self.reactions
             '''
@@ -211,7 +211,8 @@ class Crm(Tools):
 
             reaction = {header[0]: {header[1]: {header[2]: Reaction(header[0], 
                 header[1], header[2], reactiondata, coeffs, self.bg, 
-                self.species, self.isotope, self.mass, scale=scale)}}}
+                self.species, self.isotope, self.mass, scale=scale,
+                sourcefile=sourcefile)}}}
             merge_reactions(self.reactions, reaction) 
 
 
@@ -265,12 +266,13 @@ class Crm(Tools):
                         if ratecoeff != 0:
                             create_reaction(self.XY2num(header, x, y),
                                 [self.XY2num(rea, x, y)], 
-                                ratecoeff, scale)
+                                ratecoeff, scale, 'TODO: implement this')
 
             elif header.split()[0].upper() == 'MCCCDB':
 #                coeffs=[[1e-99,1e-99]]
                 coeffs=[[0.0, 0.0]]
-                with open(reaction.pop(0), 'r') as f:
+                sourcefile=reaction.pop(0)
+                with open(sourcefile, 'r') as f:
                     for l in f:
                         l = l.strip()
                         if l[0] == '#':
@@ -288,7 +290,7 @@ class Crm(Tools):
                 coeffs[:,-1] *= (5.29177210903e-9)**2 # Convert to CS to SI units
                 coeffs[coeffs == 0] = 1e-99
                 reaction.insert(0,rea)
-                create_reaction(header, reaction, coeffs, scale)
+                create_reaction(header, reaction, coeffs, scale, sourcefile)
                 '''
                 coeffs = [[0,0]]
                 with open(reaction.pop(0), 'r') as f:
@@ -322,7 +324,9 @@ class Crm(Tools):
                                     coeffs = set_coeffs(self.XY2num(header,x, y))
                                     if coeffs is False:
                                         coeffs = (x, y)
-                                    create_reaction(self.XY2num(header,x, y), [self.XY2num(rea,x,y)]+reaction, coeffs, scale)
+                                    create_reaction(self.XY2num(header,x, y), 
+                                        [self.XY2num(rea,x,y)]+reaction, 
+                                        coeffs, scale, '')
 
                             # Excitation - only move up during reaction
                             elif header.split()[1].upper() == 'EXCITATION':
@@ -331,7 +335,9 @@ class Crm(Tools):
                                     coeffs = set_coeffs(self.XY2num(header,x, y))
                                     if coeffs is False:
                                         coeffs = (x, y)
-                                    create_reaction(self.XY2num(header,x, y), [self.XY2num(rea,x,y)]+reaction, coeffs, scale)
+                                    create_reaction(self.XY2num(header,x, y), 
+                                        [self.XY2num(rea,x,y)]+reaction, 
+                                        coeffs, scale, '')
 
                             # Ladder-like process assumed
                             elif 'H.' in header.split()[1].upper():
@@ -342,7 +348,9 @@ class Crm(Tools):
                                         coeffs = set_coeffs(self.XY2num(header,x, x+y))
                                         if coeffs is False:
                                             coeffs = (x, y)
-                                        create_reaction(self.XY2num(header,x, x+y), [self.XY2num(rea,x,x+y)]+reaction, coeffs, scale)
+                                        create_reaction(self.XY2num(header,x, x+y), 
+                                            [self.XY2num(rea,x,x+y)]+reaction, 
+                                            coeffs, scale, '')
                             else:
                                 print('Reaction specifier "{}" not' 
                                     ' recognized. Omitting '
@@ -353,11 +361,14 @@ class Crm(Tools):
                             coeffs = set_coeffs(self.XY2num(header,x))
                             if coeffs is False:
                                 coeffs = x
-                            create_reaction(self.XY2num(header,x), [self.XY2num(rea,x)]+reaction, coeffs, scale)
+                            create_reaction(self.XY2num(header,x), 
+                                [self.XY2num(rea,x)]+reaction, 
+                                coeffs, scale, '')
 
                     else:
                         reaction.insert(0,rea)
-                        create_reaction(header, reaction, set_coeffs(header), scale)
+                        create_reaction(header, reaction, set_coeffs(header), 
+                            scale, '')
 
         self.static = list(array(self.slist)[where(self.evolvearr == 0)[0]])
 

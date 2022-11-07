@@ -114,7 +114,8 @@ class Reaction:
 
 
     def __init__(self, database, rtype, name, data, coeffs=None, bg=None,
-                    species=None, isotope='H', mass=1, Tarr=0, scale=1):
+                    species=None, isotope='H', mass=1, Tarr=0, scale=1,
+                    sourcefile=None):
         ''' 
         Parameters 
         ----------
@@ -166,6 +167,7 @@ class Reaction:
         self.type = rtype.upper()
         self.scale = scale
         self.mass = mass
+        self.sourcefile = sourcefile
         self.K = '0'
         self.tag = '{} {} {}'.format(self.database, self.type, self.name)
 

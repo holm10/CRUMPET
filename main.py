@@ -1752,6 +1752,44 @@ class Crumpet(Crm, RateData):
             pass
             return
 
+    def write_reaction_index(self, outname='reaction_index_{}.csv', outpath='output'):
+        from pandas import DataFrame
+
+        df = DataFrame(columns=['Identifier', 'Database', 'Reaction type',
+                        'Reactants', 'Products', 'Source file', 
+                        'Scaling factor'])
+
+        i = 0
+        for database, dbdata in self.reactions.items():
+            for rtype, rdata in dbdata.items():
+                for reaction, readata in rdata.items():
+                    if rtype.upper() == 'RELAXATION':
+                        src = '{:.4E}'.format(readata.coeffs)
+                    else:
+                        try:
+                            src = readata.sourcefile.split('/')
+                            if ('H2' in src[-2]) or ('D2' in src[-2]):                        
+                                src = '{}/{}'.format(src[-2], src[-1])
+                            else:
+                                src = '{}/{}/{}'.format(src[-3], src[-2], src[-1])
+                        except:
+                            src = readata.sourcefile.split('/')[-1]
+
+                    buff = readata.print_reaction().split(':')[1].strip()
+                    df.loc[i] = [ reaction, database, rtype,
+                            buff.split('=>')[0].strip(),
+                            buff.split('=>')[1].strip(),
+                            src, 
+                            ''*(readata.scale==1)+str(readata.scale)*(readata.scale!=1)]
+                    i += 1
+        try:
+            mkdir('{}/{}'.format(self.path, outpath))
+        except:
+            pass
+        df.sort_values('Identifier')
+        df.to_csv('{}/{}/{}'.format(self.path, outpath, 
+                outname.format(self.isotope)))
+
 
     def lifetimes(self, Te, ne, E=0.1, Ti=None, ni=None, Srec=True, n=None):
         ''' **INCOMPLETE** Species lifetimes perturbation from equilibrium
